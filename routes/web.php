@@ -1,0 +1,58 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\YugiohPackController;
+use App\Http\Controllers\MagicController;
+use App\Http\Controllers\MagicPackController;
+use App\Http\Controllers\YugiohController;
+use App\Http\Controllers\RegisterUserController;
+use App\Http\Controllers\SessionController;
+use App\Http\Controllers\DeckController;
+
+Route::get('/', fn() => view('dashboard'));
+// Public Pages
+Route::get('/aboutme', fn() => view('aboutme'));
+Route::get('/profile', fn() => view('account.profile'));
+Route::get('/decks', fn() => view('account.mydecks'));
+
+// Auth
+Route::get('/register', [RegisterUserController::class, 'create'])->name('register')->middleware('guest');
+Route::post('/register', [RegisterUserController::class, 'store'])->middleware('guest');
+Route::get('/login', [SessionController::class, 'create'])->name('login')->middleware('guest');
+Route::post('/login', [SessionController::class, 'store'])->middleware('guest');
+Route::post('/logout', [SessionController::class, 'destroy'])->middleware('auth');
+
+// Magic Routes
+Route::prefix('magic')->group(function () {
+    Route::get('/', fn() => view('home'));
+    Route::get('/cards', [MagicController::class, 'index'])->name('magic.cards.index');
+    Route::get('/card/{card}', [MagicController::class, 'show'])->name('magic.cards.show');
+    Route::get('/packs', [MagicPackController::class, 'index'])->name('magic.packs.index');
+    Route::get('/pack/{pack}', [MagicPackController::class, 'show'])->name('magic.packs.show');
+
+    // Public decks
+    Route::get('/public-deck', fn() => view('decks.public-deck'));
+
+    // Deck builder routes
+    Route::get('/deck-builder', [DeckController::class, 'builder'])
+        ->name('magic.deck.builder');
+    Route::post('/deck-builder/save', [DeckController::class, 'save'])
+        ->name('magic.deck.builder.save');
+});
+
+// Yu-Gi-Oh Routes
+Route::prefix('yugioh')->group(function () {
+    Route::get('/', fn() => view('home'));
+    Route::get('/cards', [YugiohController::class, 'index'])->name('yugioh.cards.index');
+    Route::get('/card/{card}', [YugiohController::class, 'show'])->name('yugioh.cards.show');
+    Route::get('/packs', [YugiohPackController::class, 'index'])->name('yugioh.packs.index');
+    Route::get('/pack/{pack}', [YugiohPackController::class, 'show'])->name('yugioh.packs.show');
+
+    // Public decks
+    Route::get('/public-deck', fn() => view('decks.public-deck'));
+
+    Route::get('/deck-builder', [DeckController::class, 'builder'])
+        ->name('yugioh.deck.builder');
+    Route::post('/deck-builder/save', [DeckController::class, 'save'])
+        ->name('yugioh.deck.builder.save');
+});
