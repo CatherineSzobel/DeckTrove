@@ -1,4 +1,4 @@
-<x-layout js="resources/js/carousel.js">
+<x-layout :js="['resources/js/carousel.js']">
     <x-slot:header>
         Register
     </x-slot:header>

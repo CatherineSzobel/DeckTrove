@@ -1,4 +1,8 @@
-@props([ 'js' => "" ])
+@props([
+'js' => [], // default empty array
+'css' => [], // default empty array
+])
+
 <!DOCTYPE html>
 <html lang="en" class="h-full bg-gray-100">
 
@@ -7,14 +11,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DeckTrove</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    @vite([
+    @php
+    $defaultAssets = [
     'resources/css/layout.css',
     'resources/js/layout.js',
     'resources/js/card-database-core.js',
     'resources/js/card-database.js',
     'resources/js/app.js',
-    $js
-    ])
+    ];
+
+    // Merge default assets with additional assets
+    $allAssets = array_merge($defaultAssets, $css, $js);
+    @endphp
+
+    @vite($allAssets)
 
     <link rel="shortcut icon" href="{{ Vite::asset('resources/img/decktrove-logo.png') }}" />
 
@@ -94,7 +104,7 @@
                         @if (!request()->is('/') && !request()->is('*/card/*'))
                         <div class="hidden md:block ml-10">
                             <div class="flex items-baseline space-x-4">
-                                @if (!request()->routeIs('register', 'login'))
+                                @if (!request()->routeIs('register', 'login','profile', 'decks'))
                                 <x-select-dropdown :class="'series-selector'" :options="['yugioh' => 'Yu-Gi-Oh!', 'magic' => 'Magic: The Gathering']">
                                 </x-select-dropdown>
                                 @endif
