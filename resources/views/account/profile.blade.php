@@ -22,7 +22,7 @@
 
             {{-- Description --}}
             <p class="text-gray-700 mt-4 text-center max-w-md">
-                {{ auth()->user()->description ?? 'No description available.' }}
+                {{ auth()->user()->about ?? 'No description available.' }}
             </p>
 
             {{-- Buttons --}}

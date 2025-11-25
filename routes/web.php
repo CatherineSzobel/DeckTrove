@@ -11,9 +11,9 @@ use App\Http\Controllers\DeckController;
 
 Route::get('/', fn() => view('dashboard'));
 // Public Pages
-Route::get('/aboutme', fn() => view('aboutme'));
-Route::get('/profile', fn() => view('account.profile'));
-Route::get('/decks', fn() => view('account.mydecks'));
+Route::get('/aboutme', fn() => view('aboutme'))->name('aboutme');
+Route::get('/profile', fn() => view('account.profile'))->name('profile');
+Route::get('/decks', fn() => view('account.mydecks'))->name('decks');
 
 // Auth
 Route::get('/register', [RegisterUserController::class, 'create'])->name('register')->middleware('guest');
