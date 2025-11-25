@@ -1,6 +1,35 @@
-.card{
-    border: 1px solid #ccc;
+.dropzone {
+    width: 100%; /* or any larger fixed width like 1200px */
+    min-height: 120px;
     padding: 10px;
-    margin: 10px;
-    display: inline-block;
+    border: 2px dashed #888;
+    margin-bottom: 20px;
+    overflow-x: hidden;
+}
+
+.card-wrapper {
+    width: 120px;
+    height: 160px;
+    background: #ddd;
+    border: 1px solid #aaa;
+    margin: 10px 0;
+    padding: 10px;
+}
+
+.drag-link {
+    color: blue;
+    text-decoration: underline;
+    cursor: grab;
+}
+.drop-hover {
+    border: 2px dashed #3b82f6; /* Tailwind blue-500 */
+    background-color: rgba(59, 130, 246, 0.08);
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.drop-invalid {
+    border: 2px solid #ef4444; /* Tailwind red-500 */
+    background-color: rgba(239, 68, 68, 0.1);
+    transition: all 0.2s ease;
 }
