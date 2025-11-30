@@ -2,10 +2,10 @@
 
     <div id="deckApp"
         data-game="{{ $game }}"
-        class="grid grid-cols-3 gap-4">
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 
         <!-- LEFT: Card Search -->
-        <div class="col-span-2">
+        <div class="col-span-1 md:col-span-2">
             <button id="resetButton">Reset</button>
             <!-- Main Deck -->
             <div class="p-3 bg-white rounded shadow deckContainer active">
@@ -37,6 +37,23 @@
 
         <!-- RIGHT: Deck Zones -->
         <div class="space-y-4 z-[999]">
+            <div class="flex w-full md:w-[400px] lg:w-[600px] gap-2">
+                <!-- Card Search - 80% -->
+                <div class="flex-[4] p-3 bg-white rounded shadow">
+                    <h2 class="font-bold text-lg mb-2 bg-white">Card Search</h2>
+                    <input type="text" id="searchInput" placeholder="Search cards..." class="w-full p-2 border rounded">
+                </div>
+
+                <!-- Buttons - 20% -->
+                <div class="flex-[1] p-3 bg-white rounded shadow flex flex-col gap-2">
+                    <button id="filter-button" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 transition-colors">
+                        Filter
+                    </button>
+                    <button id="clear-filter-button" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors">
+                        Clear
+                    </button>
+                </div>
+            </div>
 
             @include("decks.$game.cards-view", ['cards' => $cards])
 
@@ -46,14 +63,15 @@
             </div>
 
             <!-- SAVE BUTTON -->
-            <form id="saveForm" action="/{{ $game }}/deck-builder/save" method="post">
+            <form id="saveForm" action="/{{ $game }}/deck-builder/save" method="post" class="flex w-full md:w-[400px] lg:w-[600px]">
                 @csrf
                 <input type="hidden" name="cards" id="cardData">
 
-                <button class="mt-4 w-full bg-blue-600 text-white p-3 rounded" disabled>
+                <button class="mt-4 bg-blue-600 text-white p-3 rounded hover:bg-blue-700 transition-colors w-full" disabled>
                     Save Deck
                 </button>
             </form>
+
         </div>
 
     </div>
