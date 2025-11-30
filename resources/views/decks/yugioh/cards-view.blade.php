@@ -1,4 +1,6 @@
-<div class="p-3 bg-white rounded shadow search-pool max-h-[600px] overflow-x-hidden">
+<div class="p-3 bg-white rounded shadow search-pool 
+            max-h-[600px] w-full md:w-[400px] lg:w-[600px] 
+            overflow-x-hidden">
     @foreach ($cards as $card)
     <div class="relative w-32 h-44 mb-4 mx-auto group card-wrapper cursor-pointer"
         data-card-id="{{ $card['id'] }}">
