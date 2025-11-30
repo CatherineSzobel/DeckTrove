@@ -21,14 +21,12 @@ $filterOptions = $filterOptions ?? []; // From controller
                     </div>
 
                     <!-- Filter button (only for Yugioh) -->
-                    @if($series === 'yugioh')
                     <button id="filter-button" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 transition-colors">
                         Filter
                     </button>
                     <button id="clear-filter-button" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors">
                         Clear
                     </button>
-                    @endif
 
                     <!-- Results count -->
                     <div class="text-sm text-gray-600">
