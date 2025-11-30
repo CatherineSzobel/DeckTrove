@@ -1,4 +1,4 @@
-<x-layout js="resources/js/carousel.js">
+<x-layout :js="['resources/js/carousel.js']">
     <x-slot:header>
         Register
     </x-slot:header>
@@ -38,6 +38,6 @@
         </form>
 
         <!-- Right Panel: Non-form content -->
-       <x-welcome-div heading="Welcome to DeckTrove!"></x-welcome-div>
+        <x-welcome-div heading="Welcome to DeckTrove!"></x-welcome-div>
     </div>
 </x-layout>
