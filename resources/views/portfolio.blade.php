@@ -1,4 +1,4 @@
-<x-layout :js="['resources/js/portfolio.js']" :css="['resources/css/portfolio.css']">
+<x-layout :js="['resources/js/portfolio.js', 'resources/js/carousel.js']" :css="['resources/css/portfolio.css']">
     <navbar>
         <a href=".aboutme" class="mr-4">About me</a>
         <a href=".skills" class="mr-4">skills</a>
@@ -64,13 +64,38 @@
                     </p>
                     <div class="mt-5">
                         <x-carousel :images="[
-                        'resources/img/decktrove-1.png',
-                        'resources/img/decktrove-2.png',
-                        'resources/img/decktrove-3.png']" />
+                        'resources/img/portfolio/decktrove-1.png',
+                        'resources/img/portfolio/decktrove-2.png',
+                        'resources/img/portfolio/decktrove-3.png']" />
                     </div>
                     <p class="mt-5 text-gray-700">
                         <span class="font-semibold">Tools used:</span>
                         <x-tech-list :items="['Laravel','PHP','MySQL','HTML','CSS','JavaScript','Tailwind']" />
+                    </p>
+                </x-modal>
+
+                <x-project-card
+                    title="Vending Machine"
+                    subtitle="Personal project"
+                    modalId="vending-machine-modal">
+                    <p>As part of my first React project, I created a vending machine simulator.</p>
+                    <x-tech-list :items="['React.js','HTML','CSS','JavaScript','Tailwind']" />
+                </x-project-card>
+
+                <x-modal id="vending-machine-modal">
+                    <h1 class="text-2xl font-bold text-gray-800">Vending Machine</h1>
+                    <p class="mt-3 text-gray-600">
+                        A vending machine simulator where users can select products, insert money, and receive change.
+                    </p>
+                    <div class="mt-5">
+                        <x-carousel :images="[
+                        'resources/img/portfolio/vendingmachine-light.png',
+                        'resources/img/portfolio/vendingmachine-dark.png',
+                        'resources/img/portfolio/vendingmachine-dark-filled.png']" />
+                    </div>
+                    <p class="mt-5 text-gray-700">
+                        <span class="font-semibold">Tools used:</span>
+                        <x-tech-list :items="['React.js','HTML','CSS','JavaScript','Tailwind']" />
                     </p>
                 </x-modal>
             </div>
