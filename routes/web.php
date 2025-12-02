@@ -11,7 +11,7 @@ use App\Http\Controllers\DeckController;
 
 Route::get('/', fn() => view('dashboard'));
 // Public Pages
-Route::get('/aboutme', fn() => view('aboutme'))->name('aboutme');
+Route::get('/portfolio', fn() => view('portfolio'))->name('portfolio');
 Route::get('/profile', fn() => view('account.profile'))->name('profile');
 Route::get('/decks', fn() => view('account.mydecks'))->name('decks');
 

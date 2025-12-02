@@ -14,6 +14,7 @@ export default defineConfig({
                 'resources/js/card-database-core.js',
                 'resources/js/card-database.js',
                 'resources/js/deck-builder.js',
+                'resources/js/portfolio.js',
             ],
             refresh: true,
         }),

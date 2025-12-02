@@ -17,7 +17,6 @@
     'resources/js/layout.js',
     'resources/js/card-database-core.js',
     'resources/js/card-database.js',
-    'resources/js/app.js',
     ];
 
     // Merge default assets with additional assets
@@ -133,7 +132,7 @@
                                 </div>
 
                                 <!-- Other nav links -->
-                                <x-nav-link href="/aboutme" :active="request()->is('about_me')">About me</x-nav-link>
+                                <x-nav-link href="/portfolio" :active="request()->is('about_me')">About me</x-nav-link>
 
                             </div>
                         </div>
