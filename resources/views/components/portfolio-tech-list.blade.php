@@ -20,6 +20,11 @@ $techColors = [
 'VsCode' => 'bg-blue-400 text-white',
 'Visual Studio' => 'bg-purple-700 text-white',
 'Jetbrains' => 'bg-gray-800 text-white',
+'Unreal Engine' => 'bg-blue-900 text-white',
+'Unity' => 'bg-black text-white',
+'C++' => 'bg-blue-700 text-white',
+'C#' => 'bg-purple-600 text-white',
+'Python (very basic)' => 'bg-yellow-400 text-black',
 ];
 $defaultColor = 'bg-gray-300 text-black';
 @endphp
@@ -30,7 +35,7 @@ $defaultColor = 'bg-gray-300 text-black';
             @php
                 $color = $techColors[$item] ?? $defaultColor;
             @endphp
-        <x-tech-badge :label="$item" :color="$color" />
+        <x-portfolio-tech-badge :label="$item" :color="$color" />
 
         @endforeach
     </div>

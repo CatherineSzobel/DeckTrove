@@ -1,0 +1,60 @@
+.animated-text {
+    font-size: 24px;
+    font-weight: bold;
+    min-width: 300px;
+}
+.animated-text span {
+    position: relative;
+    color: #3b82f6; /* Tailwind's blue-500 */
+}
+
+.animated-text span::before {
+    content: "Full-Stack Developer";
+    color: #3b82f6; /* Tailwind's blue-500 */
+    animation: words 8s infinite;
+}
+
+.animated-text span::after {
+    content: "";
+    position: absolute;
+    width: calc(100% + 8px);
+    height: 100%;
+    border-left: 2px solid #000;
+    animation: cursor 0.8s infinite, typing s steps(4) infinite;
+}
+
+@keyframes cursor {
+    to {
+        border-left: 2px solid transparent;
+    }
+}
+
+@keyframes words {
+    0%,
+    20% {
+        content: "Full-Stack Developer";
+    }
+    25%,
+    45% {
+        content: "Game Developer";
+    }
+    50%,
+    95% {
+        content: "Gamer";
+    }
+}
+@keyframes typing {
+    10%,
+    15%,
+    30%,
+    35%,
+    50%,
+    55%,
+    70%,
+    95% {
+        width: 0;
+    }
+   5%,20%, 25%, 40%, 45%, 60%, 80%, 85%{
+        width: calc(100% + 8px);
+    }
+}
