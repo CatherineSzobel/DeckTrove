@@ -31,11 +31,5 @@ document.querySelectorAll(".carousel-container").forEach((container) => {
         });
     });
 
-    // Optional: auto-slide every 5 seconds
-    setInterval(() => {
-        index = (index + 1) % totalSlides;
-        updateCarousel();
-    }, 5000);
-
     updateCarousel();
 });
