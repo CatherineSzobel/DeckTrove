@@ -26,7 +26,7 @@
                     flex flex-col justify-center items-center text-center pointer-events-auto">
 
             <a href="{{ url('/yugioh/card/' . $card['id']) }}"
-                class="drag-link pointer-events-auto" draggable="true"
+                class="drag-link pointer-events-auto text-white" draggable="true"
                 data-card-id="{{ $card['id'] }}">
                 <h3 class="font-bold text-xs">{{ $card['name'] }}</h3>
             </a>

@@ -2,104 +2,148 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Collection;
 
 class DeckController extends Controller
 {
+    /**
+     * Entry point for the deck builder
+     */
     public function builder(Request $request)
     {
-
         if ($request->routeIs('yugioh.deck.builder')) {
             return $this->generateYugiohCards($request);
-        } elseif ($request->routeIs('magic.deck.builder')) {
+        }
+
+        if ($request->routeIs('magic.deck.builder')) {
             return $this->generateMagicCards($request);
         }
 
         abort(404);
     }
 
+    /**
+     * Generate Yugioh cards with filters, search, and pagination
+     */
     public function generateYugiohCards(Request $request)
     {
-        // JSON file path
         $jsonPath = public_path('json/yugioh-cards.json');
+        if (!file_exists($jsonPath)) abort(404, 'Cards file not found');
 
-        if (!file_exists($jsonPath)) {
-            abort(404, 'Cards file not found');
-        }
-        // Read and decode JSON
         $json = file_get_contents($jsonPath);
         $cards = json_decode($json, true)['data'] ?? [];
 
-        // Pagination settings
-        $page = $request->get('page', 1);
-        $perPage = 20; // or $this->getItemsPerPage($request) if dynamic
+        // Apply filters and search
+        $filteredCards = $this->applyYugiohFilters($cards, $request);
 
-        // Paginate the cards array
+        // Pagination
+        $page = $request->get('page', 1);
+        $perPage = 20;
+        $collection = collect($filteredCards);
         $paginated = new LengthAwarePaginator(
-            array_slice($cards, ($page - 1) * $perPage, $perPage),
-            count($cards),
+            $collection->forPage($page, $perPage)->values()->all(),
+            $collection->count(),
             $perPage,
             $page,
-            [
-                'path' => $request->url(),
-                'query' => $request->query(),
-            ]
+            ['path' => $request->url(), 'query' => $request->query()]
         );
+
+        // Generate filter options from ALL cards
+        $filterOptions = $this->generateYugiohFilterOptions($cards);
+
+        if ($request->ajax()) {
+            return view('decks.yugioh.cards-view', ['cards' => $paginated])->render();
+        }
 
         return view('decks.deck-builder', [
             'cards' => $paginated,
-            'game' => 'yugioh'
+            'game' => 'yugioh',
+            'filterOptions' => $filterOptions,
         ]);
     }
+
+    /**
+     * Apply filters and search for Yugioh cards
+     */
+    private function applyYugiohFilters(array $cards, Request $request): array
+    {
+        $filtered = $cards;
+
+        // General search across multiple fields
+        if ($request->filled('search')) {
+            $term = strtolower($request->search);
+            $filtered = array_filter($filtered, fn($card) =>
+                str_contains(strtolower($card['name'] ?? ''), $term) ||
+                str_contains(strtolower($card['type'] ?? ''), $term) ||
+                str_contains(strtolower($card['race'] ?? ''), $term) ||
+                str_contains(strtolower($card['archetype'] ?? ''), $term) ||
+                str_contains(strtolower($card['desc'] ?? ''), $term)
+            );
+        }
+
+        // Individual filters
+        foreach (['type', 'attribute', 'race', 'archetype'] as $field) {
+            if ($request->filled($field)) {
+                $filtered = array_filter($filtered, fn($card) => ($card[$field] ?? '') === $request->$field);
+            }
+        }
+
+        return array_values($filtered);
+    }
+
+    /**
+     * Generate filter options for Yugioh
+     */
+    private function generateYugiohFilterOptions(array $cards): array
+    {
+        $collection = collect($cards);
+
+        return [
+            'type' => $collection->pluck('type')->filter()->unique()->sort()->values()->all(),
+            'attribute' => $collection->pluck('attribute')->filter()->unique()->sort()->values()->all(),
+            'race' => $collection->pluck('race')->filter()->unique()->sort()->values()->all(),
+            'archetype' => $collection->pluck('archetype')->filter()->unique()->sort()->values()->all(),
+        ];
+    }
+
+    /**
+     * Generate Magic cards with search, pagination, and optional filters
+     */
     public function generateMagicCards(Request $request)
     {
         $page = $request->get('page', 1);
+        $perPage = 20;
         $search = $request->get('search', null);
-        $perPage = 20; // Items per page
-        $view = $request->get('view', 'default'); // optional, for cache key
+        $view = $request->get('view', 'default');
 
         $apiPath = 'https://api.scryfall.com/cards/search';
-
-        // Build query parameters
         $queryParams = [
             'order' => 'name',
             'page' => $page,
             'q' => $search ? ($search . ' game:paper') : 'game:paper',
         ];
 
-        // Cache key
+        // Cache the API response for 10 minutes
         $cacheKey = "magic-cards-page-{$page}-view-{$view}" . ($search ? "-search-{$search}" : '');
-
-        // Fetch cards from API with caching
         $apiResponse = cache()->remember($cacheKey, 600, function () use ($apiPath, $queryParams) {
             $response = Http::get($apiPath, $queryParams);
-
-            if ($response->failed()) {
-                abort(500, 'Failed to fetch cards from API');
-            }
-
+            if ($response->failed()) abort(500, 'Failed to fetch cards from API');
             return $response->json();
         });
 
         $cards = $apiResponse['data'] ?? [];
         $total = $apiResponse['total_cards'] ?? count($cards);
 
-        // Slice cards for pagination (in case Scryfall returns more than perPage)
         $paginatedCards = array_slice($cards, 0, $perPage);
-
-        // Create paginator
         $paginated = new LengthAwarePaginator(
             $paginatedCards,
             $total,
             $perPage,
             $page,
-            [
-                'path' => $request->url(),
-                'query' => $request->query(),
-            ]
+            ['path' => $request->url(), 'query' => $request->query()]
         );
 
         return view('decks.deck-builder', [

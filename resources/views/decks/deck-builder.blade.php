@@ -41,7 +41,14 @@
                 <!-- Card Search - 80% -->
                 <div class="flex-[4] p-3 bg-white rounded shadow">
                     <h2 class="font-bold text-lg mb-2 bg-white">Card Search</h2>
-                    <input type="text" id="searchInput" placeholder="Search cards..." class="w-full p-2 border rounded">
+                    <div class="text-sm text-gray-600">
+                        @if(isset($cards) && method_exists($cards, 'total'))
+                        Showing {{ $cards->firstItem() }}-{{ $cards->lastItem() }} of {{ $cards->total() }} cards
+                        @else
+                        Loading cards...
+                        @endif
+                    </div>
+                    <input type="text" id="searchInput" placeholder="Search cards..." class="w-full p-2 border rounded" value="{{ request('search') }}">
                 </div>
 
                 <!-- Buttons - 20% -->
