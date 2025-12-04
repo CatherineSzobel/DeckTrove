@@ -4,7 +4,7 @@ $currentView = request('view', 'full');
 $filterOptions = $filterOptions ?? []; // From controller
 @endphp
 
-<x-layout>
+<x-layout :js="['resources/js/card-database-core.js', 'resources/js/card-database.js']">
     <div class="container mx-auto px-4" data-series="{{ $series }}">
         <x-database-header :title="$title ?? ucfirst($series)">
             <!-- Your existing header with view switcher -->

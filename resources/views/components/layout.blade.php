@@ -15,9 +15,7 @@
     @php
     $defaultAssets = [
     'resources/css/layout.css',
-    'resources/js/layout.js',
-    'resources/js/card-database-core.js',
-    'resources/js/card-database.js',
+    'resources/js/layout.js'
     ];
 
     // Merge default assets with additional assets
