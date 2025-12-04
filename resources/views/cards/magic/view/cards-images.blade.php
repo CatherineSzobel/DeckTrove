@@ -1,26 +1,26 @@
-<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+<div class="relative grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 p-2">
     @foreach($cards as $card)
 
-    <div class="relative group bg-white rounded-lg shadow hover:shadow-lg p-2 flex justify-center transition transform hover:-translate-y-1 card-with-tooltip"
-        data-desc="{{ $card['oracle_text'] ?? 'No description available' }}">
-
+    <x-card :desc="$card['oracle_text'] ?? 'No description available'">
         <!-- Card Image -->
         <a href="{{ url('/magic/card/' . $card['id']) }}">
-            <img src="{{ $card['image_uris']['normal'] 
-                ?? $card['card_faces'][0]['image_uris']['normal'] 
-                ?? 'https://via.placeholder.com/200x280?text=No+Image' }}"
+            <img src="{{ $card['image_uris']['normal']
+                    ?? $card['card_faces'][0]['image_uris']['normal']
+                    ?? 'https://via.placeholder.com/200x280?text=No+Image' }}"
                 alt="{{ $card['name'] }}"
                 class="max-w-full max-h-64 w-auto h-auto object-contain rounded">
         </a>
+        <!-- Hover Overlay -->
+        <x-card-hover-overlay
+            :name="$card['name']"
+            :underTitle="$card['type_line'] ?? 'unknown'"
+            :url="url('/magic/card/' . $card['id'])">
 
-        <!-- Hover Overlay (Same style as Yugioh) -->
-        <div class="absolute inset-0 bg-black bg-opacity-70 text-white opacity-0 group-hover:opacity-100 transition-opacity rounded p-2 flex flex-col justify-center items-center text-center z-30">
-            <h3 class="font-bold text-xs">{{ $card['name'] }}</h3>
-        </div>
+            @if(isset($card['power']) && isset($card['toughness']))
+            <p class="text-[10px] mt-1">Power: {{ $card['power'] }} | Toughness: {{ $card['toughness'] }}</p>
+            @endif
+        </x-card-hover-overlay>
+    </x-card>
 
-    </div>
     @endforeach
-</div>
-<div id="global-tooltip" class="fixed top-0 left-0 z-50 pointer-events-none opacity-0 transition-opacity">
-
 </div>
