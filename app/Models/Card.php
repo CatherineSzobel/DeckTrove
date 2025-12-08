@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Card extends Model
 {
-    protected $fillable = ['game', 'external_id', 'name', 'stats', 'image_url'];
+    protected $fillable = ['game', 'external_id', 'name', 'type', 'subtype', 'image_url', 'stats'];
 
     protected $casts = [
         'stats' => 'array'
@@ -14,6 +14,9 @@ class Card extends Model
 
     public function decks()
     {
-        return $this->belongsToMany(Deck::class, 'deck_cards');
+        // Include pivot fields for count & zone
+        return $this->belongsToMany(Deck::class, 'deck_cards')
+            ->withPivot('count', 'zone')
+            ->withTimestamps();
     }
 }

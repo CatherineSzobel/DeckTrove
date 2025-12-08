@@ -3,7 +3,13 @@
             overflow-x-hidden">
     @foreach ($cards as $card)
     <div class="relative w-32 h-44 mb-4 mx-auto group card-wrapper cursor-pointer"
-        data-card-id="{{ $card['id'] }}">
+        data-card-id="{{ $card['id'] }}"
+        data-card-name="{{ $card['name'] }}"
+        data-card-image="{{ $card['card_images'][0]['image_url_small'] ?? $card['card_images'][0]['image_url'] }}"
+        data-card-type="{{ $card['type'] ?? '' }}"
+        data-card-race="{{ $card['race'] ?? '' }}"
+        data-card-desc="{{ $card['desc'] ?? '' }}">
+
 
         <!-- Minus Button (Top Left) -->
         <button class="minus-btn absolute top-1 left-1 z-20 px-1 py-0.5 bg-red-500 text-white rounded text-xs">

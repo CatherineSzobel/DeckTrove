@@ -6,7 +6,12 @@
 
         <!-- LEFT: Card Search -->
         <div class="col-span-1 md:col-span-2">
-            <button id="resetButton">Reset</button>
+            <div class="p-3 bg-white rounded shadow">
+                <input type="text" id="deckTitleInput" placeholder="Enter deck title..." class="w-full p-2 border rounded" value="{{ request('deck_title') }}">
+                <input type="text" id="deckDescInput" placeholder="Enter deck description..." class="w-full p-2 border rounded mt-2" value="{{ request('deck_description') }}">
+                <button id="resetButton">Reset</button>
+            </div>
+
             <!-- Main Deck -->
             <div class="p-3 bg-white rounded shadow deckContainer active">
                 <h2 class="font-bold text-lg mb-2 bg-white">
@@ -70,11 +75,14 @@
             </div>
 
             <!-- SAVE BUTTON -->
-            <form id="saveForm" action="/{{ $game }}/deck-builder/save" method="post" class="flex w-full md:w-[400px] lg:w-[600px]">
+            <form id="saveForm" action="{{ route($game . '.deck.builder.save') }}" method="post" class="flex w-full md:w-[400px] lg:w-[600px]">
                 @csrf
                 <input type="hidden" name="cards" id="cardData">
+                <input type="hidden" name="game" value="{{ $game }}">
+                <input type="hidden" name="deck_title" id="deckTitle" value="{{ request('deck_title') }}">
+                <input type="hidden" name="deck_description" id="deckDescription" value="{{ request('deck_description') }}">
 
-                <button class="mt-4 bg-blue-600 text-white p-3 rounded hover:bg-blue-700 transition-colors w-full" disabled>
+                <button class="mt-4 bg-blue-600 text-white p-3 rounded hover:bg-blue-700 transition-colors w-full">
                     Save Deck
                 </button>
             </form>

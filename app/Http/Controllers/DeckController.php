@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Collection;
+use App\Models\Deck;
+use App\Models\Card;
+use App\Models\DeckCard;
+use Illuminate\Support\Facades\Auth;
 
 class DeckController extends Controller
 {
@@ -75,12 +78,14 @@ class DeckController extends Controller
         // General search across multiple fields
         if ($request->filled('search')) {
             $term = strtolower($request->search);
-            $filtered = array_filter($filtered, fn($card) =>
+            $filtered = array_filter(
+                $filtered,
+                fn($card) =>
                 str_contains(strtolower($card['name'] ?? ''), $term) ||
-                str_contains(strtolower($card['type'] ?? ''), $term) ||
-                str_contains(strtolower($card['race'] ?? ''), $term) ||
-                str_contains(strtolower($card['archetype'] ?? ''), $term) ||
-                str_contains(strtolower($card['desc'] ?? ''), $term)
+                    str_contains(strtolower($card['type'] ?? ''), $term) ||
+                    str_contains(strtolower($card['race'] ?? ''), $term) ||
+                    str_contains(strtolower($card['archetype'] ?? ''), $term) ||
+                    str_contains(strtolower($card['desc'] ?? ''), $term)
             );
         }
 
@@ -150,5 +155,83 @@ class DeckController extends Controller
             'cards' => $paginated,
             'game' => 'magic',
         ]);
+    }
+    public function save(Request $request)
+    {
+        $request->validate([
+            'cards' => 'required|string',
+            'deck_title' => 'nullable|string|max:255',
+            'deck_description' => 'nullable|string',
+            'game' => 'required|string',
+        ]);
+        $cardsData = json_decode($request->cards, true);
+
+        if (!$cardsData || !is_array($cardsData)) {
+            return back()->withErrors(['cards' => 'Invalid deck data']);
+        }
+
+        // Create the deck entry
+        $deck = Deck::create([
+            'user_id' => Auth::id(),
+            'game' => $request->game,
+            'name' => $request->deck_title ?? 'New Deck',
+            'description' => $request->deck_description,
+        ]);
+
+        // Loop through each zone (main, extra, side)
+        foreach ($cardsData as $zone => $cards) {
+
+            // count duplicates BY external_id
+            $grouped = collect($cards)->groupBy('id');
+
+            foreach ($grouped as $externalId => $cardGroup) {
+
+                $first = $cardGroup->first(); // contains full card data
+
+                // Save or retrieve the card in DB
+                $card = Card::firstOrCreate(
+                    [
+                        'external_id' => $externalId,
+                        'game' => $request->game,
+                    ],
+                    [
+                        'name' => $first['name'] ?? 'Unknown Card',
+                        'type' => $first['type'] ?? null,
+                        'subtype' => null,
+                        'image_url' => $first['image_uris']['normal'] ?? null,
+                    ]
+                );
+
+                // Save pivot (deck → card)
+                DeckCard::create([
+                    'deck_id' => $deck->id,
+                    'card_id' => $card->id,
+                    'zone' => $zone,
+                    'count' => $cardGroup->count(),
+                ]);
+            }
+        }
+
+        return redirect()->route('decks')
+            ->with('success', 'Deck saved successfully!');
+    }
+    public function show($id)
+    {
+        $deck = Deck::with('cards')->findOrFail($id);
+
+        // Fetch full API data for each card based on external_id
+        $cards = $deck->cards->map(function ($card) {
+            $response = Http::get("https://db.ygoprodeck.com/api/v7/cardinfo.php", [
+                'id' => $card->external_id
+            ]);
+
+            if ($response->ok() && isset($response->json()['data'][0])) {
+                return $response->json()['data'][0]; // return API card data
+            }
+
+            return null;
+        })->filter();
+
+        return view('decks.deck', compact('deck', 'cards'));
     }
 }

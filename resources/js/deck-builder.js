@@ -362,6 +362,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     );
                     link.draggable = true;
                     link.dataset.cardId = cardData.id;
+                    link.dataset.cardName = cardData.name;
+                    link.dataset.cardImage = cardData.image ?? "";
+                    link.dataset.cardType = cardData.type ?? "";
+                    link.dataset.cardRace = cardData.race ?? "";
+                    link.dataset.cardDesc = cardData.desc ?? "";
 
                     const title = document.createElement("h3");
                     title.classList.add("font-bold", "text-xs");
@@ -650,4 +655,66 @@ document.addEventListener("DOMContentLoaded", () => {
     restoreDeckState();
     updateCounts();
     updateSearchPoolButtons();
+});
+//@TODO After gotta make a check that u can only have a minimum of 40 cards in a deck for yugioh (magic need to check)
+//else add a warning asking this isnt a usable deck are u sure u wanna add? (cannot be added to the public deck)
+
+// Enable Save Deck button if there's something in the deck
+function enableSaveButton() {
+    const saveBtn = document.querySelector("#saveForm button");
+    const mainDeckCount = document.getElementById("mainDeck").children.length;
+    const extraDeckCount =
+        document.getElementById("extraDeck")?.children.length || 0;
+    const sideDeckCount =
+        document.getElementById("sideDeck")?.children.length || 0;
+
+    saveBtn.disabled =
+        mainDeckCount === 0 && extraDeckCount === 0 && sideDeckCount === 0;
+}
+
+// Update save button state after deck changes
+function updateCounts() {
+    const mainDeck = document.getElementById("mainDeck");
+    const extraDeck = document.getElementById("extraDeck");
+    const sideDeck = document.getElementById("sideDeck");
+
+    document.getElementById("mainCount").textContent = mainDeck.children.length;
+    document.getElementById("extraCount").textContent =
+        extraDeck?.children.length ?? 0;
+    document.getElementById("sideCount").textContent =
+        sideDeck?.children.length ?? 0;
+
+    if (deckLimits.mainDeck) highlightDeck(mainDeck, deckLimits.mainDeck);
+    if (deckLimits.extraDeck) highlightDeck(extraDeck, deckLimits.extraDeck);
+    if (deckLimits.sideDeck) highlightDeck(sideDeck, deckLimits.sideDeck);
+
+    saveDeckState();
+    enableSaveButton();
+}
+
+document.getElementById("saveForm").addEventListener("submit", function (e) {
+    const zones = ["mainDeck", "extraDeck", "sideDeck"];
+    const state = {};
+
+    zones.forEach((zone) => {
+        const list = document.getElementById(zone);
+        if (!list) return;
+
+        state[zone] = Array.from(list.children).map((card) => ({
+            id: card.dataset.cardId,
+            name: card.dataset.cardName,
+            image_url: card.dataset.cardImage,
+            type: card.dataset.cardType,
+            race: card.dataset.cardRace,
+            desc: card.dataset.cardDesc,
+        }));
+    });
+
+    document.getElementById("cardData").value = JSON.stringify(state);
+
+    document.getElementById("deckTitle").value =
+        document.getElementById("deckTitleInput").value;
+
+    document.getElementById("deckDescription").value =
+        document.getElementById("deckDescInput").value;
 });
