@@ -93,10 +93,33 @@ class MagicController extends Controller
             }
         }
 
+        // Also fetch other cards from the same set (server-side thumbnails)
+        $setCards = collect();
+        $setCode = $card['set'] ?? null;
+        if ($setCode) {
+            $cacheKey = "scryfall_set_{$setCode}_cards";
+            $setResults = cache()->remember($cacheKey, 300, function () use ($setCode) {
+                $resp = Http::get($this->apiPath, ['q' => "set:{$setCode} game:paper", 'order' => 'name']);
+                if ($resp->ok()) {
+                    return $resp->json()['data'] ?? [];
+                }
+                return [];
+            });
+
+            $setCards = collect($setResults)
+                ->reject(function ($c) use ($card) {
+                    // exclude same oracle_id if present
+                    return (isset($c['oracle_id']) && isset($card['oracle_id']) && $c['oracle_id'] === $card['oracle_id']);
+                })
+                ->shuffle()
+                ->take(12);
+        }
+
         return view('cards.card', [
             'card'   => $card,
             'prints' => $prints,
-            'series' => 'magic'
+            'series' => 'magic',
+            'setCards' => $setCards,
         ]);
     }
 

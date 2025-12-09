@@ -9,10 +9,12 @@ use Illuminate\Support\Facades\Log;
 class YugiohPackController extends Controller
 {
     public $packsPath;
+    public $packs;
 
     public function __construct()
     {
         $this->packsPath = public_path('json/yugioh-packs.json'); // main packs info
+        $this->packs = json_decode(file_get_contents($this->packsPath), true);
     }
 
     public function index(Request $request)
@@ -23,19 +25,19 @@ class YugiohPackController extends Controller
         }
 
         // Load packs from JSON file
-        $packs = collect(json_decode(file_get_contents($this->packsPath), true));
+        $packsCollection = collect($this->packs)->sortBy('release_date', SORT_NATURAL | SORT_FLAG_CASE);
 
         // Pagination values
         $page = $request->get('page', 1);
         $perPage = 24;
 
         // Slice data for current page
-        $currentPageItems = $packs->slice(($page - 1) * $perPage, $perPage)->values();
+        $currentPageItems = $packsCollection->slice(($page - 1) * $perPage, $perPage)->values();
 
         // Build paginator
         $paginated = new LengthAwarePaginator(
             $currentPageItems,
-            $packs->count(),  // total items
+            $packsCollection->count(),
             $perPage,
             $page,
             [
@@ -45,7 +47,7 @@ class YugiohPackController extends Controller
         );
 
         return view('packs.packs', [
-            'packs' => $paginated, // this is now the paginator
+            'packs' => $paginated,
             'series' => $series
         ]);
     }
@@ -54,8 +56,7 @@ class YugiohPackController extends Controller
     public function show($code)
     {
         // Load pack info
-        $packs = json_decode(file_get_contents($this->packsPath), true);
-        $pack = collect($packs)->firstWhere('set_code', $code);
+        $pack = collect($this->packs)->firstWhere('set_code', $code);
 
         if (!$pack) {
             Log::warning("Pack not found", ['code' => $code]);
@@ -70,10 +71,6 @@ class YugiohPackController extends Controller
             $cards = collect(); // empty collection
         } else {
             $cards = collect(json_decode(file_get_contents($packFile), true));
-            Log::info("Pack Loaded pack cards", [
-                'pack_code' => $code,
-                'count' => $cards->count()
-            ]);
         }
 
         return view('packs.pack', [
