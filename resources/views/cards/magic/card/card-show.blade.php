@@ -1,27 +1,27 @@
-<div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-start text-black">
+<div class="flex flex-col md:flex-row md:items-start gap-6 md:gap-8 text-black">
 
     <!-- LEFT: Card Image -->
-    <div class="flex justify-center">
+    <div class="md:w-1/2 flex-shrink-0 flex items-center justify-center">
         @php
-            $img = data_get($card, 'image_uris.normal')
-                ?: data_get($card, 'card_faces.0.image_uris.normal')
-                ?: data_get($card, 'image_url');
+        $img = data_get($card, 'image_uris.normal')
+        ?: data_get($card, 'card_faces.0.image_uris.normal')
+        ?: data_get($card, 'image_url');
         @endphp
 
         @if($img)
-            <img src="{{ $img }}"
-                 alt="{{ $card['name'] ?? data_get($card,'name') }}"
-                 class="w-full max-w-md rounded-lg shadow-lg bg-black object-contain">
+        <img src="{{ $img }}"
+            alt="{{ $card['name'] ?? data_get($card,'name') }}"
+            class="w-full max-w-md rounded-lg shadow-lg bg-black object-contain">
         @else
-            <div class="w-full max-w-xs h-56 rounded-lg bg-gray-800 flex items-center justify-center">
-                <span class="text-slate-400">No image available</span>
-            </div>
+        <div class="w-full max-w-xs h-56 rounded-lg bg-gray-800 flex items-center justify-center">
+            <span class="text-slate-400">No image available</span>
+        </div>
         @endif
     </div>
 
 
     <!-- RIGHT: Info Panel -->
-    <div class=" w-full p-4 bg-slate-500 rounded-lg">
+    <div class="md:flex-1">
 
         <h1 class="text-2xl font-bold mb-2 text-black">
             {{ $card['name'] ?? data_get($card,'name','Unknown Card') }}
@@ -57,65 +57,44 @@
         <div class="prose prose-invert text-black mb-4">
             <p>
                 {!! nl2br(e(
-                    data_get($card,'oracle_text')
-                    ?? data_get($card,'card_faces.0.oracle_text')
-                    ?? 'No description available'
+                data_get($card,'oracle_text')
+                ?? data_get($card,'card_faces.0.oracle_text')
+                ?? 'No description available'
                 )) !!}
             </p>
         </div>
 
         <div class="mb-4">
             <h3 class="text-lg font-semibold mb-2 text-black">Printings</h3>
-
-            @if(isset($prints) && count($prints))
-            <ul class="list-inside list-disc text-slate-200">
-                @foreach($prints as $set)
-                <li>
-                    @if(!empty($set['set']))
-                    <a href="{{ url('/magic/pack/' . urlencode($set['set'])) }}"
-                       class="text-amber-300 hover:text-amber-400">
-                       {{ $set['set_name'] ?? $set['set'] }}
-                    </a>
-                    @else
-                    <span class="text-slate-200">{{ $set['set_name'] ?? 'Unknown' }}</span>
-                    @endif
-                </li>
-                @endforeach
-            </ul>
-            @else
-            <p class="text-slate-200">No print data loaded</p>
-            @endif
+            <x-print-list :sets="[ (object)['set_code' => $card['set'] ?? '',
+            'set_name' => $card['set_name'] ?? 'Unknown']]"
+                id="prints-{{ $card['id'] ?? 'default' }}" tcg-game="magic" />
         </div>
 
         @if(!empty($setCards) && $setCards->count())
-        <div class="mt-6">
+        <div class="mt-6  border-slate-700 p-6 ">
             <h3 class="text-lg text-black font-semibold mb-3">More from this set</h3>
 
-            @php
-                $thumbsId = 'set-thumbs-magic-'.(data_get($card,'id') ?? substr(data_get($card,'name') ?? '',0,8));
-            @endphp
-
-            <div id="{{ $thumbsId }}"
-                 class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
 
                 @foreach($setCards as $s)
                 @php
-                    $img = data_get($s,'image_uris.normal')
-                        ?: data_get($s,'card_faces.0.image_uris.normal')
-                        ?: data_get($s,'image_url');
+                $img = data_get($s,'image_uris.normal')
+                ?: data_get($s,'card_faces.0.image_uris.normal')
+                ?: data_get($s,'image_url');
 
-                    $link = isset($s['id']) ? url('/card/'.$s['id']) : '#';
-                    $name = data_get($s,'name','Card');
+                $link = isset($s['id']) ? url('magic/card/'.$s['id']) : '#';
+                $name = data_get($s,'name','Card');
                 @endphp
 
                 <a href="{{ $link }}"
-                   class="hover:scale-105 transform transition block"
-                   aria-label="{{ $name }}">
+                    class="hover:scale-105 transform transition block"
+                    aria-label="{{ $name }}">
                     <div class="aspect-[3/4] w-full rounded shadow bg-black">
                         <img src="{{ $img }}"
-                             alt="{{ $name }}"
-                             loading="lazy"
-                             class="w-full h-full object-contain rounded">
+                            alt="{{ $name }}"
+                            loading="lazy"
+                            class="w-full h-full object-contain rounded">
                     </div>
                 </a>
                 @endforeach
@@ -125,15 +104,8 @@
         @endif
 
         <div class="mt-6 flex gap-3">
-            <a href="/magic/cards"
-               class="inline-block bg-slate-700 hover:bg-slate-600 text-white font-bold px-4 py-2 rounded">
-               Back to Database
-            </a>
-
-            <a href="#"
-               class="inline-block bg-amber-500 hover:bg-amber-600 text-slate-900 px-4 py-2 rounded font-bold">
-               Add to Deck
-            </a>
+            <a href="/magic/cards" class="inline-block bg-slate-700 hover:bg-slate-600 text-white font-bold px-4 py-2 rounded">Back to Database</a>
+            <a href="{{ url('/magic/deck-builder') }}" class="inline-block bg-amber-500 hover:bg-amber-600 text-slate-900 px-4 py-2 rounded font-bold"> Go to deckbuilder</a>
         </div>
 
     </div>

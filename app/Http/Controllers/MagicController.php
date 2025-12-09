@@ -112,7 +112,7 @@ class MagicController extends Controller
                     return (isset($c['oracle_id']) && isset($card['oracle_id']) && $c['oracle_id'] === $card['oracle_id']);
                 })
                 ->shuffle()
-                ->take(12);
+                ->take(6);
         }
 
         return view('cards.card', [

@@ -43,6 +43,9 @@
             @endforeach
         </select>
     </div>
+      <div class="w-full md:w-1/5">
+         <a href="/magic/packs" class="inline-block bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded">Back to Database</a>
+     </div>
 </div>
 
 {{-- Cards Grid --}}

@@ -9,7 +9,9 @@
         @endphp
 
         @if($img)
-        <img src="{{ $img }}" alt="{{ $card->name }}" class="w-full max-w-md rounded-lg shadow-lg bg-black object-contain">
+        <img src="{{ $img }}"
+            alt="{{ $card->name }}"
+            class="w-full max-w-md rounded-lg shadow-lg bg-black object-contain">
         @else
         <div class="w-full max-w-xs h-56 rounded-lg bg-gray-800 flex items-center justify-center">
             <span class="text-slate-400">No image available</span>
@@ -92,7 +94,7 @@
         {{-- Actions --}}
         <div class="mt-6 flex gap-3">
             <a href="/yugioh/cards" class="inline-block bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded">Back to Database</a>
-            <a href="#" class="inline-block bg-amber-500 hover:bg-amber-600 text-slate-900 px-4 py-2 rounded">Add to Deck</a>
+            <a href="{{ url('/yugioh/deck-builder') }}" class="inline-block bg-amber-500 hover:bg-amber-600 text-slate-900 px-4 py-2 rounded font-bold"> Go to deckbuilder</a>
         </div>
 
     </div>
