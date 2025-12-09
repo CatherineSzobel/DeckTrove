@@ -5,16 +5,6 @@ document.addEventListener("DOMContentLoaded", () => {
     // Setup series selector, dashboard links, and logo clicks
     seriesSelectorSetup();
 
-    // Optional: home button redirect based on selected series
-    const homeButton = document.getElementById("home");
-    if (homeButton) {
-        homeButton.addEventListener("click", (e) => {
-            e.preventDefault();
-            const selectedSeries = localStorage.getItem("selectedSeries");
-            window.location.href = selectedSeries ? `/${selectedSeries}` : "/";
-        });
-    }
-
     // Showcase toggle (if you have a showcase section)
     const showcaseButton = document.getElementById("showcase_button");
     if (showcaseButton) {
@@ -77,7 +67,7 @@ function seriesSelectorSetup() {
             }
 
             const currentPath = cleanPath(window.location.pathname);
-            window.location.href = `/${series}${currentPath}`;
+            window.location.href = `/${series}/cards`;
         });
     });
 
@@ -91,7 +81,7 @@ function seriesSelectorSetup() {
             updateLinks(series);
 
             const currentPath = cleanPath(window.location.pathname);
-            window.location.href = `/${series}${currentPath}`;
+            window.location.href = `/${series}/cards`;
         });
     });
 
@@ -112,7 +102,7 @@ function updateLinks(series) {
 
         const cleanHref = cleanPath(href);
         const newHref =
-            cleanHref === "/" ? `/${series}` : `/${series}${cleanHref}`;
+            cleanHref === "/" ? `/${series}/cards` : `/${series}${cleanHref}`;
         link.setAttribute("href", newHref);
     });
 }

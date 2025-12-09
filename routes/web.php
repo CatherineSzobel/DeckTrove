@@ -10,9 +10,10 @@ use App\Http\Controllers\SessionController;
 use App\Http\Controllers\DeckController;
 use App\Models\Deck;
 use Illuminate\Support\Facades\Auth;
-use App\Http\Controllers\HomeController;
+use App\Http\Controllers\DashboardController;
 
-Route::get('/', fn() => view('dashboard'));
+Route::get('/', fn() => view('index'))->name('home');
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware('auth');
 // Public Pages
 Route::get('/portfolio', fn() => view('portfolio'))->name('portfolio');
 Route::get('/profile', fn() => view('account.profile'))->name('profile');
@@ -61,7 +62,6 @@ Route::prefix('magic')->group(function () {
 
 // Yu-Gi-Oh Routes
 Route::prefix('yugioh')->group(function () {
-    Route::get('/', [HomeController::class, 'index']);
     Route::get('/cards', [YugiohController::class, 'index'])->name('yugioh.cards.index');
     Route::get('/card/{card}', [YugiohController::class, 'show'])->name('yugioh.cards.show');
     Route::get('/packs', [YugiohPackController::class, 'index'])->name('yugioh.packs.index');
@@ -77,20 +77,3 @@ Route::prefix('yugioh')->group(function () {
         ->defaults('game', 'yugioh');
 });
 
-// Digimon Routes   
-Route::prefix('digimon')->group(function () {
-    Route::get('/', [HomeController::class, 'index']);
-    Route::get('/cards', [YugiohController::class, 'index'])->name('digimon.cards.index');
-    Route::get('/card/{card}', [YugiohController::class, 'show'])->name('digimon.cards.show');
-    Route::get('/packs', [YugiohPackController::class, 'index'])->name('digimon.packs.index');
-    Route::get('/pack/{pack}', [YugiohPackController::class, 'show'])->name('digimon.packs.show');
-
-    // Public decks
-    Route::get('/public-deck', fn() => view('decks.public-deck'));
-
-    Route::get('/deck-builder', [DeckController::class, 'builder'])
-        ->name('digimon.deck.builder');
-    Route::post('/deck-builder/save', [DeckController::class, 'save'])
-        ->name('digimon.deck.builder.save')
-        ->defaults('game', 'digimon');
-});

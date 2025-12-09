@@ -97,7 +97,6 @@
                         <div class="shrink-0">
                             <a href="/"><img src="{{ Vite::asset('resources/img/decktrove-logo-white.png') }}" alt="Logo" class="h-20 w-20 mt-2" /></a>
                         </div>
-
                         <!-- Desktop Menu - Hidden on homepage -->
                         @if (!request()->is('/') && !request()->is('*/card/*'))
                         <div class="hidden md:block ml-10">
@@ -107,8 +106,10 @@
                                 </x-select-dropdown>
                                 @endif
 
-                                <x-nav-link id="home" href="/" :active="request()->is('home')" class="dashboard-link">Home</x-nav-link>
-
+                                @auth
+                                <x-nav-link id="home" href="/dashboard" :active="request()->is('home')" class="dashboard-link">Home</x-nav-link>
+                                @endauth
+                                
                                 <!-- Cards Dropdown -->
                                 <div class="relative group inline-block text-left">
                                     <x-dropdown-button>Cards</x-dropdown-button>
