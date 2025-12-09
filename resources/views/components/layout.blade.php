@@ -93,15 +93,16 @@
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div class="flex h-16 items-center justify-between">
                     <!-- Logo - Will be centered when on homepage -->
-                    <div class="flex items-center @if(request()->is('/') || request()->is('*/card/*')) flex-1 justify-center @endif">
+                    <div class="flex items-center">
                         <div class="shrink-0">
                             <a href="/"><img src="{{ Vite::asset('resources/img/decktrove-logo-white.png') }}" alt="Logo" class="h-20 w-20 mt-2" /></a>
                         </div>
                         <!-- Desktop Menu - Hidden on homepage -->
-                        @if (!request()->is('/') && !request()->is('*/card/*'))
+                        @if (!request()->is('/'))
                         <div class="hidden md:block ml-10">
                             <div class="flex items-baseline space-x-4">
-                                @if (!request()->routeIs('register', 'login','profile', 'decks'))
+                                @if (!request()->routeIs('register', 'login','profile', 'decks') &&
+                                    !request()->is('*/card/*') && !request()->is('*/pack/*'))
                                 <x-select-dropdown :class="'series-selector'" :options="['yugioh' => 'Yu-Gi-Oh!', 'magic' => 'Magic: The Gathering']">
                                 </x-select-dropdown>
                                 @endif

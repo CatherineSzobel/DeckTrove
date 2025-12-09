@@ -1,25 +1,21 @@
 @php
 $series = $series ?? 'yugioh';
+$currentView = request('view', 'full');
 @endphp
+
 <x-layout>
     <div class="container mx-auto px-4" data-series="{{ $series }}">
         <x-database-header title="Packs">
 
             <!-- Flex container: dropdowns left, search right -->
             <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
-
-                <!-- Left side: dropdowns -->
-                <div class="flex gap-4 flex-wrap">
-
-                    <!-- Dropdown 2 -->
-                    <div class="relative group inline-block text-left">
-                        <p> Show <x-select-dropdown
-                                :class="'entries-selector'"
-                                :options="[10 => 10, 25 => 25, 50 => 50, 100 => 100]"
-                                :layout="'inline-flex justify-center rounded-md bg-gray-800 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700'">
-
-                            </x-select-dropdown> entries </p>
-                    </div>
+                <div class="flex gap-2">
+                    @foreach(['full' => 'Full', 'list' => 'List'] as $key => $label)
+                    <a href="{{ request()->fullUrlWithQuery(['view' => $key, 'page' => 1]) }}"
+                        class="px-3 py-1 rounded text-sm {{ $currentView === $key ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700' }}">
+                        {{ $label }}
+                    </a>
+                    @endforeach
                 </div>
 
                 <!-- Right side: search bar -->
@@ -30,10 +26,10 @@ $series = $series ?? 'yugioh';
 
     </div>
     <!-- Pack container: JS will populate this -->
-    <div class="container mx-auto px-4">
+    <div class="container mx-auto">
         <div class="flex justify-center w-full">
-            <div class="w-full max-w-5xl">
-                @include("packs.{$series}.packs-list", ['packs' => $packs])
+            <div class="w-full ">
+                @include("packs.{$series}.packs-{$currentView}", ['packs' => $packs])
             </div>
         </div>
 

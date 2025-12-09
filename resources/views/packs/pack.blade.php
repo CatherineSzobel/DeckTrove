@@ -1,5 +1,3 @@
-<x-layout>
-    <x-label-button href="/packs">Back to Packs</x-label-button>
-
+<x-layout :js="['resources/js/pack.js']">
     @include("packs.$series.pack-show")
 </x-layout>

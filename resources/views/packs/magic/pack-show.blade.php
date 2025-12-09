@@ -8,76 +8,83 @@
 
     <div>
         <h1 class="text-3xl font-bold mb-2">{{ $set['name'] ?? 'Unknown Set' }}</h1>
-
         <p class="mb-1">Code: {{ strtoupper($set['code'] ?? '-') }}</p>
         <p class="mb-1">Set Type: {{ ucfirst(str_replace('_', ' ', $set['set_type'] ?? '-')) }}</p>
         <p class="mb-1">Card Count: {{ $set['card_count'] ?? '-' }}</p>
         <p class="mb-1">Released: {{ $set['released_at'] ?? 'Unknown' }}</p>
     </div>
 </div>
-<div class="overflow-x-auto mt-6">
-    <table class="w-full border-collapse border border-gray-300 text-sm">
-        <thead class="bg-gray-100">
-            <tr>
-                <th class="p-2 border">Image</th>
-                <th class="p-2 border">Name</th>
-                <th class="p-2 border">Type</th>
-                <th class="p-2 border">Rarity</th>
-                <th class="p-2 border">Mana Cost</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse($cards as $card)
-            <tr class="hover:bg-gray-50">
 
-                {{-- IMAGE WITH HOVER INFO --}}
-                <td class="p-2 border relative group">
-                    <img src="{{ $card['image_uris']['small'] ?? ($card['card_faces'][0]['image_uris']['small'] ?? '') }}"
-                        alt="{{ $card['name'] ?? 'Unknown' }}"
-                        class="w-20 h-auto rounded shadow transition-transform duration-300 group-hover:scale-150">
+{{-- Search / Filter --}}
+<div class="mt-4 mb-4 flex flex-col md:flex-row gap-4">
+    <div class="w-full md:w-1/2">
+        <label for="card-filter" class="sr-only">Filter cards</label>
+        <input id="card-filter" type="search" placeholder="Filter cards by name..."
+            class="w-full bg-slate-700 text-white px-4 py-2 rounded border border-slate-600 focus:outline-none" />
+    </div>
 
-                    {{-- HOVER INFO --}}
-                    <div class="absolute top-0 left-0 w-64 bg-white border border-gray-300 rounded shadow-lg p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-50 pointer-events-none">
-                        <p class="font-bold">{{ $card['name'] ?? 'Unknown' }}</p>
-                        <p class="text-sm text-gray-700 mb-1">Type: {{ $card['type_line'] ?? ($card['card_faces'][0]['type_line'] ?? '-') }}</p>
-                        <p class="text-sm text-gray-700 mb-1">Rarity: {{ $card['rarity'] ?? '-' }}</p>
-                        <p class="text-sm text-gray-700 mb-1">Mana Cost: {{ $card['mana_cost'] ?? ($card['card_faces'][0]['mana_cost'] ?? '-') }}</p>
-                        @if(!empty($card['oracle_text']))
-                        <p class="text-sm text-gray-800 mt-2">{{ $card['oracle_text'] }}</p>
-                        @elseif(!empty($card['card_faces'][0]['oracle_text']))
-                        <p class="text-sm text-gray-800 mt-2">{{ $card['card_faces'][0]['oracle_text'] }}</p>
-                        @endif
-                    </div>
-                </td>
+    <div class="w-full md:w-1/3">
+        <label for="rarity-filter" class="sr-only">Filter by rarity</label>
+        <select id="rarity-filter"
+            class="w-full bg-slate-700 text-white px-4 py-2 rounded border border-slate-600 focus:outline-none">
+            <option value="">All Rarities</option>
 
-                {{-- NAME --}}
-                <td class="p-2 border">
-                    <a href="{{ url('/magic/card/' . $card['id']) }}" class="text-blue-600 underline">
-                        {{ $card['name'] ?? 'Unknown' }}
-                    </a>
-                </td>
+            @php
+            $rarities = collect($cards)
+            ->pluck('rarity')
+            ->filter()
+            ->unique()
+            ->sort()
+            ->values();
+            @endphp
 
-                {{-- TYPE --}}
-                <td class="p-2 border">
-                    {{ $card['type_line'] ?? ($card['card_faces'][0]['type_line'] ?? 'Unknown') }}
-                </td>
+            @foreach($rarities as $r)
+            <option value="{{ strtolower($r) }}">{{ ucfirst($r) }}</option>
+            @endforeach
+        </select>
+    </div>
+</div>
 
-                {{-- RARITY --}}
-                <td class="p-2 border capitalize">
-                    {{ $card['rarity'] ?? 'Unknown' }}
-                </td>
+{{-- Cards Grid --}}
+<div class="mt-6 max-h-[600px] overflow-y-auto">
+    @if(!empty($cards) && count($cards))
+    <div id="cards-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        @foreach($cards as $card)
+        @php
+        $img = $card['image_uris']['small'] ?? ($card['card_faces'][0]['image_uris']['small'] ?? '');
+        $name = $card['name'] ?? 'Unknown';
+        $type = $card['type_line'] ?? ($card['card_faces'][0]['type_line'] ?? '-');
+        $rarity = $card['rarity'] ?? '-';
+        $mana = $card['mana_cost'] ?? ($card['card_faces'][0]['mana_cost'] ?? '-');
+        @endphp
 
-                {{-- MANA COST --}}
-                <td class="p-2 border">
-                    {{ $card['mana_cost'] ?? ($card['card_faces'][0]['mana_cost'] ?? '-') }}
-                </td>
+        <div class="card-item bg-slate-800 rounded-lg border border-slate-700 p-3 hover:shadow-lg transition"
+            data-name="{{ strtolower($name) }}"
+            data-rarity="{{ strtolower($rarity) }}">
 
-            </tr>
-            @empty
-            <tr>
-                <td class="p-2 border text-center" colspan="5">No cards found in this set.</td>
-            </tr>
-            @endforelse
-        </tbody>
-    </table>
+            <div class="h-44 w-full overflow-hidden rounded mb-3">
+                @if($img)
+                <img src="{{ $img }}" alt="{{ $name }}" class="w-full h-full object-cover">
+                @else
+                <div class="w-full h-full bg-gradient-to-br from-slate-600 to-slate-800 flex items-center justify-center text-slate-400">
+                    No Image
+                </div>
+                @endif
+            </div>
+
+            <div>
+                <a href="{{ url('/magic/card/' . $card['id']) }}" class="text-white font-semibold block truncate">{{ $name }}</a>
+                <p class="text-slate-400 text-sm mt-1">{{ $type }}</p>
+                <div class="mt-2 flex items-center justify-between text-sm text-slate-300">
+                    <span class="capitalize">{{ $rarity }}</span>
+                    <span>{{ $mana }}</span>
+                </div>
+            </div>
+        </div>
+
+        @endforeach
+    </div>
+    @else
+    <div class="py-6 text-center text-slate-400">No cards found in this set.</div>
+    @endif
 </div>
