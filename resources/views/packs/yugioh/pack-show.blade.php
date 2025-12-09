@@ -1,6 +1,6 @@
  {{-- Pack Info --}}
  <div class="py-6 flex flex-col md:flex-row items-start md:items-center gap-6">
-     <img src="{{ $pack->set_image }}" alt="{{ $pack->set_name }}" class="w-48 h-auto border rounded shadow">
+     <img src="{{ $pack->set_image ?? '' }}" alt="{{ $pack->set_name ?? 'Card set image' }}" class="w-48 h-auto border rounded shadow object-cover" loading="lazy" />
      <div>
          <h1 class="text-3xl font-bold mb-2">{{ $pack->set_name }}</h1>
          <p class="mb-1">Code: {{ $pack->set_code }}</p>

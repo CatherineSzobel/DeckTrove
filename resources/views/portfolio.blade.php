@@ -1,4 +1,4 @@
-<x-layout :js="['resources/js/portfolio.js', 'resources/js/carousel.js']" :css="['resources/css/portfolio.css']">
+<x-layout :js="['resources/js/portfolio.js', 'resources/js/carousel.js']" :css="['resources/css/portfolio.scss']">
 
     <!-- About Me -->
     <div class="aboutme grid grid-cols-1 md:grid-cols-2 gap-4 items-center mx-auto mt-8">

@@ -7,7 +7,7 @@ export default defineConfig({
         laravel({
             input: [
                 'resources/css/app.css',
-                'resources/css/layout.css',
+                'resources/css/layout.scss',
                 'resources/css/deckbuilder.css',
                 'resources/js/app.js',
                 'resources/js/layout.js',
@@ -16,6 +16,7 @@ export default defineConfig({
                 'resources/js/deck-builder.js',
                 'resources/js/tabs.js',
                 'resources/js/portfolio.js',
+                'resources/js/portfolio.scss',
                 'resources/js/home.css',
                 'resources/js/card.js',
             ],

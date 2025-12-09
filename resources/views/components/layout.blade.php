@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     @php
     $defaultAssets = [
-    'resources/css/layout.css',
+    'resources/css/layout.scss',
     'resources/js/layout.js'
     ];
 

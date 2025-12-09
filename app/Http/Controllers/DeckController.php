@@ -169,6 +169,9 @@ class DeckController extends Controller
         if (!$cardsData || !is_array($cardsData)) {
             return back()->withErrors(['cards' => 'Invalid deck data']);
         }
+        if(Auth::guest()){
+            return back()->withErrors(['cards' => 'You must be logged in to save a deck.']);
+        }
 
         // Create the deck entry
         $deck = Deck::create([

@@ -6,6 +6,11 @@
 
         <!-- LEFT: Card Search -->
         <div class="col-span-1 md:col-span-2">
+            @if ($errors->any())
+            <p class="flex justify-center text-center p-2 font-bold text-red-500">{{ $errors->first() }}</p>
+            @endif
+
+
             <div class="p-3 bg-white rounded shadow">
                 <input type="text" id="deckTitleInput" placeholder="Enter deck title..." class="w-full p-2 border rounded" value="{{ request('deck_title') }}">
                 <input type="text" id="deckDescInput" placeholder="Enter deck description..." class="w-full p-2 border rounded mt-2" value="{{ request('deck_description') }}">
