@@ -219,19 +219,26 @@ class DeckController extends Controller
     {
         $deck = Deck::with('cards')->findOrFail($id);
 
-        // Fetch full API data for each card based on external_id
-        $cards = $deck->cards->map(function ($card) {
-            $response = Http::get("https://db.ygoprodeck.com/api/v7/cardinfo.php", [
-                'id' => $card->external_id
-            ]);
+        // Load local JSON once
+        $jsonPath = public_path('json/yugioh-cards.json');
+        if (!file_exists($jsonPath)) abort(404, 'Cards file not found');
+        $json = file_get_contents($jsonPath);
+        $allCards = collect(json_decode($json, true)['data'] ?? []);
 
-            if ($response->ok() && isset($response->json()['data'][0])) {
-                return $response->json()['data'][0]; // return API card data
-            }
+        // Expand deck cards according to pivot count using JSON data
+        $expandedCards = $deck->cards->flatMap(function ($card) use ($allCards) {
+            $deckCard = $card->pivot ?? null;
+            $count = $deckCard->count ?? 1;
 
-            return null;
-        })->filter();
+            // Find card in JSON by external_id
+            $cardData = $allCards->firstWhere('id', $card->external_id);
 
-        return view('decks.deck', compact('deck', 'cards'));
+            return $cardData ? array_fill(0, $count, $cardData) : [];
+        });
+
+        return view('decks.deck', [
+            'deck' => $deck,
+            'cards' => $expandedCards
+        ]);
     }
 }

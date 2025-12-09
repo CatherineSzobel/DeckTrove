@@ -63,9 +63,12 @@
 
                             <div class="mt-4 flex items-center justify-between">
                                 <div class="text-xs text-slate-400">
-                                    <span class="font-semibold text-amber-400">{{ $deck->cards->count() }}</span>
+                                    <span class="font-semibold text-amber-400">
+                                        {{ $deck->cards->sum('pivot.count') }}
+                                    </span>
                                     <span class="ml-1">cards</span>
                                 </div>
+
 
                                 <div class="flex items-center gap-2">
                                     <a href="{{ route('decks.show', $deck->id) }}" class="text-sm bg-slate-700 hover:bg-slate-600 text-white px-3 py-1 rounded-md">View</a>

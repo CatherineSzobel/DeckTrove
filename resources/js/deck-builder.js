@@ -563,7 +563,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 cardWrapper.querySelector("p")?.textContent ?? "Unknown";
 
             // Pass the moving card for proper global count
-            if (!validateCardPlacement(
+            if (
+                !validateCardPlacement(
                     ruleSet,
                     zone,
                     cardId,
@@ -692,7 +693,39 @@ function updateCounts() {
     enableSaveButton();
 }
 
-document.getElementById("saveForm").addEventListener("submit", function (e) {
+const saveForm = document.getElementById("saveForm");
+const mainDeck = document.getElementById("mainDeck");
+
+const modal = document.getElementById("deckWarningModal");
+const cancelBtn = document.getElementById("cancelSaveBtn");
+const confirmBtn = document.getElementById("confirmSaveBtn");
+
+saveForm.addEventListener("submit", function (e) {
+    const mainDeckCount = mainDeck.children.length;
+
+    if (mainDeckCount < 40) {
+        e.preventDefault(); // Stop the form from submitting
+        modal.classList.remove("hidden"); // Show modal
+        return false;
+    }
+
+    saveDeckData(); // gather hidden inputs as before
+});
+
+// Cancel button just closes modal
+cancelBtn.addEventListener("click", () => {
+    modal.classList.add("hidden");
+});
+
+// Confirm button submits the form
+confirmBtn.addEventListener("click", () => {
+    modal.classList.add("hidden");
+    saveDeckData(); // gather hidden inputs again
+    saveForm.submit(); // force submit
+});
+
+// Function to gather deck data into hidden inputs
+function saveDeckData() {
     const zones = ["mainDeck", "extraDeck", "sideDeck"];
     const state = {};
 
@@ -711,10 +744,8 @@ document.getElementById("saveForm").addEventListener("submit", function (e) {
     });
 
     document.getElementById("cardData").value = JSON.stringify(state);
-
     document.getElementById("deckTitle").value =
         document.getElementById("deckTitleInput").value;
-
     document.getElementById("deckDescription").value =
         document.getElementById("deckDescInput").value;
-});
+}
