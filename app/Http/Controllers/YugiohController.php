@@ -147,36 +147,6 @@ class YugiohController extends Controller
             abort(404, 'Card not found.');
         }
 
-        // Find other cards from the same set to show thumbnails
-        $setCards = collect();
-        $setCode = data_get($card, 'card_sets.0.set_code') ?: data_get($card, 'set');
-        if ($setCode && file_exists($this->jsonPath)) {
-            $jsonAll = json_decode(file_get_contents($this->jsonPath), true);
-            $allCards = $jsonAll['data'] ?? [];
-
-            $setCards = collect($allCards)
-                ->filter(function ($c) use ($setCode) {
-                    // check card_sets if present
-                    if (!empty($c['card_sets'])) {
-                        foreach ($c['card_sets'] as $s) {
-                            $sCode = $s['set_code'] ?? '';
-                            // compare prefix before dash
-                            $pack = explode('-', $sCode)[0] ?? $sCode;
-                            if ($pack && strpos($pack, explode('-', $setCode)[0]) !== false) return true;
-                        }
-                    }
-                    // fallback: check top-level set
-                    if (!empty($c['set']) && $c['set'] === $setCode) return true;
-                    return false;
-                })
-                ->reject(function ($c) use ($card) {
-                    return (isset($c['id']) && data_get($card, 'id') && $c['id'] == data_get($card, 'id'));
-                })
-                ->values()
-                ->shuffle()
-                ->take(12);
-        }
-
         //find other cards from same series
         $archetypeCards = collect($json['data'])->filter(function ($c) use ($card) {
             return (isset($c['archetype']) && data_get($card, 'archetype') && $c['archetype'] == data_get($card, 'archetype'));
@@ -185,7 +155,6 @@ class YugiohController extends Controller
         return view('cards.card', [
             'card' => $card,
             'series' => 'yugioh',
-            'setCards' => $setCards,
             'archetypeCards' => $archetypeCards
         ]);
     }

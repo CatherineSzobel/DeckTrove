@@ -33,6 +33,11 @@ Route::get('/decks', function () {
 })->name('decks');
 Route::get('/decks/{id}', [DeckController::class, 'show'])->name('decks.show');
 
+//@TODO
+Route::get('/decks/{id}/edit', [DeckController::class, 'edit'])->name('decks.edit');
+Route::put('/decks/{id}', [DeckController::class, 'update'])->name('decks.update');
+Route::delete('/decks/{id}', [DeckController::class, 'destroy'])->name('decks.destroy');
+
 
 // Auth
 Route::get('/register', [RegisterUserController::class, 'create'])->name('register')->middleware('guest');
