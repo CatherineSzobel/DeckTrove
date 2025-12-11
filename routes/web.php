@@ -34,9 +34,11 @@ Route::get('/decks', function () {
 Route::get('/decks/{id}', [DeckController::class, 'show'])->name('decks.show');
 
 //@TODO
-Route::get('/decks/{id}/edit', [DeckController::class, 'edit'])->name('decks.edit');
-Route::put('/decks/{id}', [DeckController::class, 'update'])->name('decks.update');
-Route::delete('/decks/{id}', [DeckController::class, 'destroy'])->name('decks.destroy');
+Route::get('/decks/{deck}/edit', [DeckController::class, 'edit'])->name('decks.edit');
+Route::patch('/decks/{deck}', [DeckController::class, 'update'])->name('decks.update');
+Route::delete('/decks/{deck}', [DeckController::class, 'destroy'])
+    ->name('decks.destroy');
+
 
 
 // Auth
@@ -81,4 +83,3 @@ Route::prefix('yugioh')->group(function () {
         ->name('yugioh.deck.builder.save')
         ->defaults('game', 'yugioh');
 });
-
