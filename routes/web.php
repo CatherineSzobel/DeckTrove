@@ -39,6 +39,10 @@ Route::patch('/decks/{deck}', [DeckController::class, 'update'])->name('decks.up
 Route::delete('/decks/{deck}', [DeckController::class, 'destroy'])
     ->name('decks.destroy');
 
+// Public decks
+Route::get('/public-deck', [DeckController::class, 'index'])->name('public-deck');
+Route::get('/public-deck/filter', [DeckController::class, 'filter'])->name('public-deck.filter');
+
 
 
 // Auth
@@ -56,9 +60,6 @@ Route::prefix('magic')->group(function () {
     Route::get('/packs', [MagicPackController::class, 'index'])->name('magic.packs.index');
     Route::get('/pack/{pack}', [MagicPackController::class, 'show'])->name('magic.packs.show');
 
-    // Public decks
-    Route::get('/public-deck', fn() => view('decks.public-deck'));
-
     // Deck builder routes
     Route::get('/deck-builder', [DeckController::class, 'builder'])
         ->name('magic.deck.builder');
@@ -73,9 +74,6 @@ Route::prefix('yugioh')->group(function () {
     Route::get('/card/{card}', [YugiohController::class, 'show'])->name('yugioh.cards.show');
     Route::get('/packs', [YugiohPackController::class, 'index'])->name('yugioh.packs.index');
     Route::get('/pack/{pack}', [YugiohPackController::class, 'show'])->name('yugioh.packs.show');
-
-    // Public decks
-    Route::get('/public-deck', fn() => view('decks.public-deck'));
 
     Route::get('/deck-builder', [DeckController::class, 'builder'])
         ->name('yugioh.deck.builder');

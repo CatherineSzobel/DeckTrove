@@ -132,6 +132,9 @@
                             <a href="{{ route('yugioh.deck.builder') }}" class="block bg-amber-500 hover:bg-amber-600 text-slate-900 rounded px-4 py-2 transition text-center font-semibold">
                                 Build Deck
                             </a>
+                            <a href="{{ route('yugioh.deck.builder') }}" class="block bg-amber-500 hover:bg-amber-600 text-slate-900 rounded px-4 py-2 transition text-center font-semibold">
+                                Public Deck
+                            </a>
                         </div>
                     </div>
                 </div>

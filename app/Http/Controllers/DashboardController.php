@@ -17,7 +17,6 @@ class DashboardController extends Controller
 
         // Authenticated user
         $user = Auth::user();
-        $game = 'yugioh';
         $totalDecks = 0;
         $recentDecks = collect();
         $yugiohDecks = 0;
