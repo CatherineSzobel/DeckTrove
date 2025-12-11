@@ -12,9 +12,32 @@ use Illuminate\Support\Facades\Auth;
 
 class DeckController extends Controller
 {
-    /**
-     * Entry point for the deck builder
-     */
+    public function index()
+    {
+        // Load all public decks initially
+        $decks = Deck::with('user')->where('is_public', true)->get();
+        return view('decks.public-deck', compact('decks'));
+    }
+
+    // AJAX filter method
+    public function filter(Request $request)
+    {
+        $game = $request->query('game', 'all');
+
+        $query = Deck::with('user')->where('is_public', true);
+
+        if ($game !== 'all') {
+            $query->where('game', $game);
+        }
+
+        $decks = $query->get();
+
+        // Return HTML for the deck cards
+        $html = view('decks.partials.deck-cards', compact('decks'))->render();
+
+        return response()->json(['html' => $html]);
+    }
+
     public function builder(Request $request)
     {
         if ($request->routeIs('yugioh.deck.builder')) {
@@ -199,8 +222,6 @@ class DeckController extends Controller
                     ],
                     [
                         'name' => $first['name'] ?? 'Unknown Card',
-                        'type' => $first['type'] ?? null,
-                        'subtype' => null,
                         'image_url' => $first['image_uris']['normal'] ?? null,
                     ]
                 );

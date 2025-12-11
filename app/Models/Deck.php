@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\User;
 
 class Deck extends Model
 {
@@ -13,5 +14,11 @@ class Deck extends Model
         return $this->belongsToMany(Card::class, 'deck_cards')
             ->withPivot('count', 'zone')
             ->withTimestamps();
+    }
+
+    // Add this relationship
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }
