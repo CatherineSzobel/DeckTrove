@@ -18,9 +18,6 @@ return new class extends Migration
         $table->string('external_id')->index(); // YGOPro ID, Scryfall ID, etc.
 
         $table->string('name');
-        $table->string('type')->nullable();
-        $table->string('subtype')->nullable();
-        
         $table->text('image_url')->nullable();
         
         $table->timestamps();

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Deck;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Http;
 
 class DashboardController extends Controller
 {
@@ -16,10 +17,9 @@ class DashboardController extends Controller
 
         // Authenticated user
         $user = Auth::user();
-
+        $game = 'yugioh';
         $totalDecks = 0;
         $recentDecks = collect();
-        $totalCards = 0;
         $yugiohDecks = 0;
         $magicDecks = 0;
 
@@ -29,29 +29,36 @@ class DashboardController extends Controller
             $totalDecks = $decks->count();
             $recentDecks = $decks->take(3);
 
-            $yugiohDecks = $decks->where('series', 'yugioh')->count();
-            $magicDecks = $decks->where('series', 'magic')->count();
-
-            // Count total cards in all decks
-            foreach ($decks as $deck) {
-                $totalCards += $deck->cards->count();
-            }
+            $yugiohDecks = $decks->where('game', 'yugioh')->count();
+            $magicDecks = $decks->where('game', 'magic')->count();
         }
 
         // Get 10 random Yu-Gi-Oh cards
         $randomCards = $this->getRandomCards(10);
-        //dd($randomCards);
         return view('dashboard', [
             'totalDecks' => $totalDecks,
             'recentDecks' => $recentDecks,
-            'totalCards' => $totalCards,
             'yugiohDecks' => $yugiohDecks,
             'magicDecks' => $magicDecks,
             'randomCards' => $randomCards,
         ]);
     }
+    private function getRandomCards($count)
+    {
+        // 70% Yu-Gi-Oh, 30% Magic
+        $weight = 0.7;
+        $ygoCount   = (int) round($count * $weight);
+        $magicCount = $count - $ygoCount;
 
-    private function getRandomCards($count = 10)
+        $ygoCards   = $this->getRandomYugiohCards($ygoCount);
+        $magicCards = $this->getRandomMagicCards($magicCount);
+
+        return $ygoCards
+            ->merge($magicCards)
+            ->shuffle()
+            ->values();
+    }
+    private function getRandomYugiohCards($count)
     {
         $jsonPath = public_path('json/yugioh-cards.json');
 
@@ -66,21 +73,46 @@ class DashboardController extends Controller
             return collect();
         }
 
-        // Get random indices
         $randomIndices = array_rand($allCards, min($count, count($allCards)));
 
-        // Ensure we always have an array
         if (!is_array($randomIndices)) {
             $randomIndices = [$randomIndices];
         }
 
-        $randomCards = [];
-        foreach ($randomIndices as $index) {
-            if (isset($allCards[$index])) {
-                $randomCards[] = $allCards[$index];
+        $randomCards = array_values(
+            array_filter(
+                array_map(
+                    fn($index) => $allCards[$index] ?? null, $randomIndices)));
+
+
+        return collect($randomCards);
+    }
+    private function getRandomMagicCards($count)
+    {
+        $cards = [];
+
+        for ($i = 0; $i < $count; $i++) {
+            try {
+                $response = Http::get('https://api.scryfall.com/cards/random');
+
+                // Ensure the request was successful
+                if ($response->successful()) {
+                    $cards[] = $response->json();
+                } else {
+                    // Handle non-200 responses gracefully
+                    $cards[] = [
+                        'error' => 'Failed to fetch card',
+                        'status' => $response->status()
+                    ];
+                }
+            } catch (\Exception $e) {
+                // Handle network or SSL errors
+                $cards[] = [
+                    'error' => $e->getMessage(),
+                ];
             }
         }
 
-        return collect($randomCards);
+        return $cards;
     }
 }

@@ -18,13 +18,17 @@ const gameRules = {
             if (countCardCopies(deckZone, cardId, null) >= 3) return false;
 
             // Extra Deck restrictions
-            if (deckZone.id === "extraDeck" &&
-                !extraTypes.some(type => cardType.includes(type)))
+            if (
+                deckZone.id === "extraDeck" &&
+                !extraTypes.some((type) => cardType.includes(type))
+            )
                 return false;
 
             // Main Deck cannot hold extra deck monsters
-            if (deckZone.id === "mainDeck" &&
-                extraTypes.some(type => cardType.includes(type)))
+            if (
+                deckZone.id === "mainDeck" &&
+                extraTypes.some((type) => cardType.includes(type))
+            )
                 return false;
 
             return true;
@@ -212,8 +216,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // ---------------- RESET ----------------
     document.getElementById("resetButton").addEventListener("click", () => {
-        document.querySelectorAll(".dropzone")
-            .forEach(zone => (zone.innerHTML = ""));
+        document
+            .querySelectorAll(".dropzone")
+            .forEach((zone) => (zone.innerHTML = ""));
 
         updateCounts();
         updateSearchPoolButtons();
@@ -237,7 +242,8 @@ document.addEventListener("DOMContentLoaded", () => {
             sideDeck.children.length;
 
         if (deckLimits.mainDeck) highlightDeck(mainDeck, deckLimits.mainDeck);
-        if (deckLimits.extraDeck) highlightDeck(extraDeck, deckLimits.extraDeck);
+        if (deckLimits.extraDeck)
+            highlightDeck(extraDeck, deckLimits.extraDeck);
         if (deckLimits.sideDeck) highlightDeck(sideDeck, deckLimits.sideDeck);
 
         saveDeckState();
@@ -247,7 +253,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const activeDeck = activeDeckContainer?.querySelector(".dropzone");
         if (!activeDeck) return;
 
-        document.querySelectorAll(".search-pool .card-wrapper").forEach(wrapper => {
+        document
+            .querySelectorAll(".search-pool .card-wrapper")
+            .forEach((wrapper) => {
                 const cardId = wrapper.dataset.cardId;
                 const cardType =
                     wrapper.querySelector("p")?.textContent ?? "Unknown";
@@ -509,12 +517,14 @@ document.addEventListener("DOMContentLoaded", () => {
         const fromDeck = wrapper.closest(".dropzone");
 
         // Determine which deck zone to validate against
-        let deckZoneToValidate = activeDeckContainer?.querySelector(".dropzone");
+        let deckZoneToValidate =
+            activeDeckContainer?.querySelector(".dropzone");
 
         // Special case: extra deck cards can always be dragged to extraDeck
-        if (game === "yugioh" &&
-            ruleSet.extraTypes.some(t => cardType.includes(t)))
-        {
+        if (
+            game === "yugioh" &&
+            ruleSet.extraTypes.some((t) => cardType.includes(t))
+        ) {
             deckZoneToValidate = document.getElementById("extraDeck");
         }
 
@@ -588,6 +598,7 @@ document.addEventListener("DOMContentLoaded", () => {
             updateSearchPoolButtons();
             await saveDeckState();
         });
+      
     });
 
     // ---------------- SEARCH ----------------
