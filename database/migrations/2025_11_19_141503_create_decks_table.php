@@ -21,6 +21,10 @@ return new class extends Migration
         $table->string('name');
         $table->text('description')->nullable();
 
+        $table->boolean('is_public')->default(false);
+
+        $table->string('image')->nullable();
+
         $table->timestamps();
         });
     }

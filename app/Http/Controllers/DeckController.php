@@ -169,7 +169,7 @@ class DeckController extends Controller
         if (!$cardsData || !is_array($cardsData)) {
             return back()->withErrors(['cards' => 'Invalid deck data']);
         }
-        if(Auth::guest()){
+        if (Auth::guest()) {
             return back()->withErrors(['cards' => 'You must be logged in to save a deck.']);
         }
 
@@ -243,5 +243,55 @@ class DeckController extends Controller
             'deck' => $deck,
             'cards' => $expandedCards
         ]);
+    }
+    public function edit(Deck $deck)
+    {
+        $jsonPath = public_path('json/yugioh-cards.json');
+        $json = file_get_contents($jsonPath);
+        $allCards = collect(json_decode($json, true)['data'] ?? []);
+        $expandedCards = $deck->cards->flatMap(function ($card) use ($allCards) {
+            $deckCard = $card->pivot ?? null;
+            $count = $deckCard->count ?? 1;
+
+            // Find card in JSON by external_id
+            $cardData = $allCards->firstWhere('id', $card->external_id);
+
+            return $cardData ? array_fill(0, $count, $cardData) : [];
+        });
+
+        //Gate::authorize('update-job', $job);
+        return view('decks.edit', ['deck' => $deck, 'cards' => $expandedCards]);
+    }
+
+    public function update(Deck $deck)
+    {
+        // validate
+        request()->validate([
+            'title' => ['nullable', 'min:3'],
+            'description' => ['nullable', 'min:3'],
+            'cards' => ['nullable', 'array'],
+        ]);
+
+        // authorize
+
+        // update the cards
+        $deck->update([
+            'name' => request('title'),
+            'description' => request('description'),
+            'cards' => [
+                'main' => request('cards.main') ?? [],
+                'extra' => request('cards.extra') ?? [],
+                'side' => request('cards.side') ?? [],
+            ]
+        ]);
+
+        // redirect
+        return redirect('/decks/' . $deck->id);
+    }
+    public function destroy(Deck $deck)
+    {
+        $deck->delete();
+
+        return redirect('/decks');
     }
 }

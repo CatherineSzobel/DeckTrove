@@ -1,3 +1,7 @@
+@php
+
+@endphp
+
 <x-layout :js="['resources/js/mydecks.js']">
     <div class="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-6">
         <div class="max-w-7xl mx-auto">
@@ -10,23 +14,18 @@
                         <div class="flex items-center justify-between mb-6">
                             <div>
                                 <h2 class="text-2xl font-bold text-white">Your Decks</h2>
-                                <p class="text-slate-400 mt-1">Total Decks: <span class="text-amber-400 font-semibold">
-                                {{ isset($totalDecks) ? $totalDecks : 0 }}
-                                </span></p>
+                                <a href="{{ route('decks') }}" class="rounded-lg px-4 py-2 inline-block mt-2 text-sm text-white bg-blue-500 hover:bg-blue-600 transition">Go to your decks</a>
                             </div>
 
                             <!-- TCG Dropdown -->
-                            @auth
                             <select id="tcg-filter" class="bg-slate-700 text-white rounded px-4 py-2 border border-slate-600 hover:border-amber-400 transition">
                                 <option value="all">All TCGs</option>
                                 <option value="yugioh">Yu-Gi-Oh!</option>
                                 <option value="magic">Magic: The Gathering</option>
                             </select>
-                            @endauth
                         </div>
 
                         <!-- Decks Grid -->
-                        @auth
                         @if($recentDecks->count() > 0)
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             @foreach($recentDecks as $deck)
@@ -55,8 +54,7 @@
                                 Create Deck
                             </a>
                         </div>
-                        @endauth
-                        @endauth
+                        @endif
                     </div>
 
                     <!-- Card Carousel Section -->
@@ -65,15 +63,26 @@
                         <div class="overflow-hidden">
                             <div class="marquee flex gap-4 py-4">
                                 @if (isset($randomCards) && count($randomCards) > 0)
-                                 @foreach($randomCards as $card)
+                                @foreach($randomCards as $card)
                                 @php
-                                    $series = data_get($card, 'series') ?: (isset($card['card_images']) ? 'yugioh' : 'magic');
-                                    $indexLink = url('/' . $series . '/card/' . $card['id']);
+                                $series = data_get($card, 'game') ?: (isset($card['card_images']) ? 'yugioh' : 'magic');
+                                $imgUrl = null;
+
+                                if (isset($card['card_images'][0]['image_url_small'])) {
+                                // Yu-Gi-Oh
+                                $imgUrl = $card['card_images'][0]['image_url_small'];
+                                $series = 'yugioh';
+                                } elseif (isset($card['image_uris']['small'])) {
+                                // Magic
+                                $imgUrl = $card['image_uris']['small'];
+                                $series = 'magic';
+                                }
+                                $indexLink = url('/' . $series . '/card/' . $card['id']);
                                 @endphp
                                 <a href="{{ $indexLink }}" class="flex-shrink-0">
                                     <div class="h-48 w-32 rounded-lg overflow-hidden shadow-lg hover:shadow-2xl transition transform hover:scale-110 cursor-pointer">
-                                        @if(isset($card['card_images'][0]['image_url']))
-                                        <img src="{{ $card['card_images'][0]['image_url_small'] }}" alt="{{ $card['name'] ?? 'Card' }}" class="w-full h-full object-cover">
+                                        @if($imgUrl)
+                                        <img src="{{ $imgUrl }}" alt="{{ $card['name'] ?? 'Card' }}" class="w-full h-full object-cover">
                                         @else
                                         <div class="w-full h-full bg-gradient-to-br from-slate-600 to-slate-800 flex items-center justify-center text-slate-400">
                                             <span class="text-2xl">🎴</span>
@@ -83,7 +92,7 @@
                                 </a>
                                 @endforeach
                                 @endif
-                               
+
                             </div>
                         </div>
                     </div>
@@ -96,8 +105,8 @@
                         <h3 class="text-lg font-bold text-white mb-4">Quick Stats</h3>
                         <div class="space-y-3">
                             <div class="bg-slate-700 rounded p-3">
-                                <p class="text-slate-400 text-sm">Total Cards</p>
-                                <p class="text-amber-400 font-bold text-2xl">{{ isset($totalCards) ? $totalCards : 0 }}</p>
+                                <p class="text-slate-400 text-sm">Total decks</p>
+                                <p class="text-amber-400 font-bold text-2xl">{{ isset($totalDecks) ? $totalDecks : 0 }}</p>
                             </div>
                             <div class="bg-slate-700 rounded p-3">
                                 <p class="text-slate-400 text-sm">Yu-Gi-Oh! Decks</p>
