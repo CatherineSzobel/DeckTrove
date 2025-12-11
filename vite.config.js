@@ -17,7 +17,7 @@ export default defineConfig({
                 'resources/js/tabs.js',
                 'resources/js/portfolio.js',
                 'resources/js/portfolio.scss',
-                'resources/js/home.css',
+                'resources/js/home.scss',
                 'resources/js/card.js',
             ],
             refresh: true,
