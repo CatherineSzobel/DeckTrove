@@ -1,27 +1,6 @@
 const dashboardLinks = document.querySelectorAll(".dashboard-link");
 const seriesList = ["yugioh", "magic", "pokemon"]; // Add more if needed
 
-document.addEventListener("DOMContentLoaded", () => {
-    // Setup series selector, dashboard links, and logo clicks
-    seriesSelectorSetup();
-
-    // Showcase toggle (if you have a showcase section)
-    const showcaseButton = document.getElementById("showcase_button");
-    if (showcaseButton) {
-        const minHeight = "h-8";
-        const maxHeight = "h-45";
-        showcaseButton.addEventListener("click", (e) => {
-            e.preventDefault();
-            const showcase = document.getElementById("showcase");
-            if (showcase) {
-                showcase.classList.toggle(minHeight);
-                showcase.classList.toggle(maxHeight);
-            }
-            const showcaseDetails = document.getElementById("showcaseDetails");
-            if (showcaseDetails) showcaseDetails.classList.toggle("hidden");
-        });
-    }
-});
 function seriesSelectorSetup() {
     const selectors = document.querySelectorAll(".series-selector");
 
@@ -75,14 +54,14 @@ function seriesSelectorSetup() {
     dashboardLogos.forEach((img) => {
         img.addEventListener("click", () => {
             const series = img.dataset.series;
-            if (!series) return;
+        if (!series) return;
 
-            localStorage.setItem("selectedSeries", series);
-            updateLinks(series);
+        localStorage.setItem("selectedSeries", series);
+        updateLinks(series);
 
             const currentPath = cleanPath(window.location.pathname);
-            window.location.href = `/${series}/cards`;
-        });
+        window.location.href = `/${series}/cards`;
+    });
     });
 
     // Update links on initial load
@@ -129,5 +108,33 @@ function initUserAvatarDropdown() {
 
 // Initialize on DOM load
 document.addEventListener("DOMContentLoaded", () => {
+
+    seriesSelectorSetup();
     initUserAvatarDropdown();
+    const showcaseButton = document.getElementById("showcase_button");
+    const showcaseDetails = document.getElementById("showcaseDetails");
+
+    if (showcaseButton && showcaseDetails) {
+        // Prepare for smooth height transition
+        showcaseDetails.style.maxHeight = "0px";
+        showcaseDetails.style.overflow = "hidden";
+        showcaseDetails.style.transition =
+            "max-height 0.5s ease, opacity 0.5s ease";
+        showcaseDetails.style.opacity = 0;
+
+        showcaseButton.addEventListener("click", (e) => {
+            e.preventDefault();
+
+            if (showcaseDetails.style.maxHeight === "0px") {
+                // Expand dynamically based on content
+                showcaseDetails.style.maxHeight =
+                    showcaseDetails.scrollHeight + "px";
+                showcaseDetails.style.opacity = 1;
+            } else {
+                // Collapse
+                showcaseDetails.style.maxHeight = "0px";
+                showcaseDetails.style.opacity = 0;
+            }
+        });
+    }
 });
