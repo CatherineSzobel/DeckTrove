@@ -53,6 +53,18 @@
                             <div class="absolute left-3 top-3">
                                 <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-black/50 text-white">{{ ucfirst($deck->series ?? 'unknown') }}</span>
                             </div>
+                            <div class="absolute right-3 top-3">
+                                <form action="{{ route('decks.destroy', $deck->id) }}" method="POST" class="inline">
+                                    @csrf
+                                    @method('DELETE')
+
+                                    <button type="submit" class="text-red-500 font-bold"
+                                        onclick="return confirm('Delete this deck?')">
+                                        X
+                                    </button>
+                                </form>
+
+                            </div>
                         </div>
 
                         <div class="p-4">
@@ -72,9 +84,7 @@
 
                                 <div class="flex items-center gap-2">
                                     <a href="{{ route('decks.show', $deck->id) }}" class="text-sm bg-slate-700 hover:bg-slate-600 text-white px-3 py-1 rounded-md">View</a>
-                                    @can('update', $deck)
                                     <a href="{{ route('decks.edit', $deck->id) }}" class="text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md">Edit</a>
-                                    @endcan
                                 </div>
                             </div>
 
