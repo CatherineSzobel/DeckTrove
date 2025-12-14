@@ -147,39 +147,39 @@ function stripButtons(cardWrapper) {
 }
 
 // =================== DECK STORAGE ===================
-const DeckStorage = {
-    save(game, state) {
-        switch (game) {
-            case "yugioh":
-                localStorage.setItem(
-                    `deckState_${game}`,
-                    JSON.stringify(state)
-                );
-            case "magic":
-                break;
-            default:
-                console.warn(`DeckStorage: Unsupported game "${game}"`);
-                return;
-        }
-    },
-    load(game) {
-        const raw = localStorage.getItem(`deckState_${game}`);
-        if (!raw) return null;
-        try {
-            switch (game) {
-                case "yugioh":
-                    return JSON.parse(raw);
-                case "magic":
-                    break;
-                default:
-                    console.warn(`DeckStorage: Unsupported game "${game}"`);
-                    return null;
-            }
-        } catch {
-            return null;
-        }
-    },
-};
+// const DeckStorage = {
+//     save(game, state) {
+//         switch (game) {
+//             case "yugioh":
+//                 localStorage.setItem(
+//                     `deckState_${game}`,
+//                     JSON.stringify(state)
+//                 );
+//             case "magic":
+//                 break;
+//             default:
+//                 console.warn(`DeckStorage: Unsupported game "${game}"`);
+//                 return;
+//         }
+//     },
+//     load(game) {
+//         const raw = localStorage.getItem(`deckState_${game}`);
+//         if (!raw) return null;
+//         try {
+//             switch (game) {
+//                 case "yugioh":
+//                     return JSON.parse(raw);
+//                 case "magic":
+//                     break;
+//                 default:
+//                     console.warn(`DeckStorage: Unsupported game "${game}"`);
+//                     return null;
+//             }
+//         } catch {
+//             return null;
+//         }
+//     },
+// };
 
 // =================== MAIN SCRIPT ===================
 document.addEventListener("DOMContentLoaded", () => {
@@ -235,18 +235,18 @@ document.addEventListener("DOMContentLoaded", () => {
         const sideDeck = document.getElementById("sideDeck");
 
         document.getElementById("mainCount").textContent =
-            mainDeck.children.length;
+            mainDeck.children.length + "/" + deckLimits.mainDeck.max;
         document.getElementById("extraCount").textContent =
-            extraDeck.children.length;
+            extraDeck.children.length + "/" + deckLimits.extraDeck.max;
         document.getElementById("sideCount").textContent =
-            sideDeck.children.length;
+            sideDeck.children.length + "/" + deckLimits.sideDeck.max;
 
         if (deckLimits.mainDeck) highlightDeck(mainDeck, deckLimits.mainDeck);
         if (deckLimits.extraDeck)
             highlightDeck(extraDeck, deckLimits.extraDeck);
         if (deckLimits.sideDeck) highlightDeck(sideDeck, deckLimits.sideDeck);
 
-        saveDeckState();
+      //  saveDeckState();
     }
 
     function updateSearchPoolButtons() {
@@ -279,159 +279,159 @@ document.addEventListener("DOMContentLoaded", () => {
             });
     }
 
-    // ---------------- SAVE DECK STATE ----------------
-    async function saveDeckState() {
-        const state = {};
-        Object.keys(deckLimits).forEach((deckId) => {
-            const deck = document.getElementById(deckId);
-            state[deckId] = deck
-                ? Array.from(deck.children).map((c) => ({
-                      id: c.dataset.cardId,
-                      name: c.querySelector("h3")?.textContent ?? "Unknown",
-                      type: c.querySelector("p")?.textContent ?? "Unknown",
-                      image: c.querySelector("img")?.src ?? null,
-                      desc: c.querySelector("div > p")?.textContent ?? null,
-                  }))
-                : [];
-        });
-        DeckStorage.save(game, state);
-    }
+    // // ---------------- SAVE DECK STATE ----------------
+    // async function saveDeckState() {
+    //     const state = {};
+    //     Object.keys(deckLimits).forEach((deckId) => {
+    //         const deck = document.getElementById(deckId);
+    //         state[deckId] = deck
+    //             ? Array.from(deck.children).map((c) => ({
+    //                   id: c.dataset.cardId,
+    //                   name: c.querySelector("h3")?.textContent ?? "Unknown",
+    //                   type: c.querySelector("p")?.textContent ?? "Unknown",
+    //                   image: c.querySelector("img")?.src ?? null,
+    //                   desc: c.querySelector("div > p")?.textContent ?? null,
+    //               }))
+    //             : [];
+    //     });
+    //     DeckStorage.save(game, state);
+    // }
 
     // ---------------- RESTORE DECK STATE ----------------
-    function restoreDeckState() {
-        const state = DeckStorage.load(game);
-        if (!state) return;
+    // function restoreDeckState() {
+    //      const state = DeckStorage.load(game);
+    //      if (!state) return;
 
-        Object.keys(state).forEach((deckId) => {
-            const deckZone = document.getElementById(deckId);
-            if (!deckZone) return;
+    //     Object.keys(state).forEach((deckId) => {
+    //         const deckZone = document.getElementById(deckId);
+    //         if (!deckZone) return;
 
-            state[deckId].forEach((cardData) => {
-                // Try to find the card in search pool first
-                let card = document.querySelector(
-                    `.search-pool .card-wrapper[data-card-id='${cardData.id}']`
-                );
+    //         state[deckId].forEach((cardData) => {
+    //             // Try to find the card in search pool first
+    //             let card = document.querySelector(
+    //                 `.search-pool .card-wrapper[data-card-id='${cardData.id}']`
+    //             );
 
-                // If not found, create a new card element using the deck layout (no plus/minus)
-                if (!card) {
-                    card = document.createElement("div");
-                    card.classList.add(
-                        "relative",
-                        "w-32",
-                        "h-44",
-                        "mb-4",
-                        "mx-auto",
-                        "group",
-                        "card-wrapper",
-                        "cursor-pointer"
-                    );
-                    card.dataset.cardId = cardData.id;
+    //             // If not found, create a new card element using the deck layout (no plus/minus)
+    //             if (!card) {
+    //                 card = document.createElement("div");
+    //                 card.classList.add(
+    //                     "relative",
+    //                     "w-32",
+    //                     "h-44",
+    //                     "mb-4",
+    //                     "mx-auto",
+    //                     "group",
+    //                     "card-wrapper",
+    //                     "cursor-pointer"
+    //                 );
+    //                 card.dataset.cardId = cardData.id;
 
-                    // Card Image
-                    const img = document.createElement("img");
-                    img.src = cardData.image ?? ""; // you may need to store image URL in saved state
-                    img.alt = cardData.name;
-                    img.classList.add(
-                        "w-full",
-                        "h-full",
-                        "object-cover",
-                        "rounded",
-                        "card"
-                    );
-                    card.appendChild(img);
+    //                 // Card Image
+    //                 const img = document.createElement("img");
+    //                 img.src = cardData.image ?? ""; // you may need to store image URL in saved state
+    //                 img.alt = cardData.name;
+    //                 img.classList.add(
+    //                     "w-full",
+    //                     "h-full",
+    //                     "object-cover",
+    //                     "rounded",
+    //                     "card"
+    //                 );
+    //                 card.appendChild(img);
 
-                    // Hover overlay
-                    const overlay = document.createElement("div");
-                    overlay.classList.add(
-                        "absolute",
-                        "inset-0",
-                        "bg-black",
-                        "bg-opacity-70",
-                        "text-white",
-                        "opacity-0",
-                        "group-hover:opacity-100",
-                        "transition-opacity",
-                        "rounded",
-                        "p-2",
-                        "flex",
-                        "flex-col",
-                        "justify-center",
-                        "items-center",
-                        "text-center",
-                        "pointer-events-auto"
-                    );
+    //                 // Hover overlay
+    //                 const overlay = document.createElement("div");
+    //                 overlay.classList.add(
+    //                     "absolute",
+    //                     "inset-0",
+    //                     "bg-black",
+    //                     "bg-opacity-70",
+    //                     "text-white",
+    //                     "opacity-0",
+    //                     "group-hover:opacity-100",
+    //                     "transition-opacity",
+    //                     "rounded",
+    //                     "p-2",
+    //                     "flex",
+    //                     "flex-col",
+    //                     "justify-center",
+    //                     "items-center",
+    //                     "text-center",
+    //                     "pointer-events-auto"
+    //                 );
 
-                    const link = document.createElement("a");
-                    link.href = cardData.url ?? "#";
-                    link.classList.add(
-                        "drag-link",
-                        "pointer-events-auto",
-                        "text-white"
-                    );
-                    link.draggable = true;
-                    link.dataset.cardId = cardData.id;
-                    link.dataset.cardName = cardData.name;
-                    link.dataset.cardImage = cardData.image ?? "";
-                    link.dataset.cardType = cardData.type ?? "";
-                    link.dataset.cardRace = cardData.race ?? "";
-                    link.dataset.cardDesc = cardData.desc ?? "";
+    //                 const link = document.createElement("a");
+    //                 link.href = cardData.url ?? "#";
+    //                 link.classList.add(
+    //                     "drag-link",
+    //                     "pointer-events-auto",
+    //                     "text-white"
+    //                 );
+    //                 link.draggable = true;
+    //                 link.dataset.cardId = cardData.id;
+    //                 link.dataset.cardName = cardData.name;
+    //                 link.dataset.cardImage = cardData.image ?? "";
+    //                 link.dataset.cardType = cardData.type ?? "";
+    //                 link.dataset.cardRace = cardData.race ?? "";
+    //                 link.dataset.cardDesc = cardData.desc ?? "";
 
-                    const title = document.createElement("h3");
-                    title.classList.add("font-bold", "text-xs");
-                    title.textContent = cardData.name;
-                    link.appendChild(title);
+    //                 const title = document.createElement("h3");
+    //                 title.classList.add("font-bold", "text-xs");
+    //                 title.textContent = cardData.name;
+    //                 link.appendChild(title);
 
-                    overlay.appendChild(link);
+    //                 overlay.appendChild(link);
 
-                    const typeText = document.createElement("p");
-                    typeText.classList.add(
-                        "text-[10px]",
-                        "mt-1",
-                        "pointer-events-none"
-                    );
-                    typeText.textContent = cardData.type ?? "Unknown";
-                    overlay.appendChild(typeText);
+    //                 const typeText = document.createElement("p");
+    //                 typeText.classList.add(
+    //                     "text-[10px]",
+    //                     "mt-1",
+    //                     "pointer-events-none"
+    //                 );
+    //                 typeText.textContent = cardData.type ?? "Unknown";
+    //                 overlay.appendChild(typeText);
 
-                    card.appendChild(overlay);
+    //                 card.appendChild(overlay);
 
-                    // Optional: description box
-                    const descBox = document.createElement("div");
-                    descBox.classList.add(
-                        "absolute",
-                        "top-0",
-                        "left-full",
-                        "ml-2",
-                        "w-48",
-                        "bg-black",
-                        "bg-opacity-80",
-                        "text-white",
-                        "text-xs",
-                        "p-2",
-                        "rounded",
-                        "opacity-0",
-                        "group-hover:opacity-100",
-                        "transition-opacity",
-                        "z-10",
-                        "pointer-events-none"
-                    );
-                    const descText = document.createElement("p");
-                    descText.textContent =
-                        cardData.desc ?? "No description available";
-                    descBox.appendChild(descText);
+    //                 // Optional: description box
+    //                 const descBox = document.createElement("div");
+    //                 descBox.classList.add(
+    //                     "absolute",
+    //                     "top-0",
+    //                     "left-full",
+    //                     "ml-2",
+    //                     "w-48",
+    //                     "bg-black",
+    //                     "bg-opacity-80",
+    //                     "text-white",
+    //                     "text-xs",
+    //                     "p-2",
+    //                     "rounded",
+    //                     "opacity-0",
+    //                     "group-hover:opacity-100",
+    //                     "transition-opacity",
+    //                     "z-10",
+    //                     "pointer-events-none"
+    //                 );
+    //                 const descText = document.createElement("p");
+    //                 descText.textContent =
+    //                     cardData.desc ?? "No description available";
+    //                 descBox.appendChild(descText);
 
-                    card.appendChild(descBox);
-                }
+    //                 card.appendChild(descBox);
+    //             }
 
-                const clone = card.cloneNode(true);
-                stripButtons(clone);
-                clone.id = "card_" + Math.random().toString(36).slice(2);
-                deckZone.appendChild(clone);
-            });
-        });
+    //             const clone = card.cloneNode(true);
+    //             stripButtons(clone);
+    //             clone.id = "card_" + Math.random().toString(36).slice(2);
+    //             deckZone.appendChild(clone);
+    //         });
+    //     });
 
-        updateCounts();
-        updateSearchPoolButtons();
-    }
+    //     updateCounts();
+    //     updateSearchPoolButtons();
+    // }
 
     // ---------------- DECK SELECTION ----------------
     document.querySelectorAll(".deckContainer").forEach((deck) => {
@@ -487,7 +487,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             updateCounts();
             updateSearchPoolButtons();
-            await saveDeckState();
+          //  await saveDeckState();
         }
 
         if (minus) {
@@ -498,7 +498,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 activeDeck.removeChild(target);
                 updateCounts();
                 updateSearchPoolButtons();
-                await saveDeckState();
+              //  await saveDeckState();
             }
         }
     });
@@ -596,9 +596,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
             updateCounts();
             updateSearchPoolButtons();
-            await saveDeckState();
+           // await saveDeckState();
         });
-      
     });
 
     // ---------------- SEARCH ----------------
@@ -664,7 +663,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // ---------------- INITIALIZE ----------------
-    restoreDeckState();
+    //restoreDeckState();
     updateCounts();
     updateSearchPoolButtons();
 });
@@ -700,7 +699,7 @@ function updateCounts() {
     if (deckLimits.extraDeck) highlightDeck(extraDeck, deckLimits.extraDeck);
     if (deckLimits.sideDeck) highlightDeck(sideDeck, deckLimits.sideDeck);
 
-    saveDeckState();
+   // saveDeckState();
     enableSaveButton();
 }
 
@@ -759,4 +758,13 @@ function saveDeckData() {
         document.getElementById("deckTitleInput").value;
     document.getElementById("deckDescription").value =
         document.getElementById("deckDescInput").value;
+    const mainDeckCount = mainDeck.children.length;
+
+    if (mainDeckCount < 40) {
+        document.getElementById("isPublic").value =
+            document.getElementById("isPublicInput").unchecked;
+    } else {
+        document.getElementById("isPublic").value =
+            document.getElementById("isPublicInput").checked;
+    }
 }
