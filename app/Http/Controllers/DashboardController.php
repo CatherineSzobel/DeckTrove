@@ -12,7 +12,8 @@ class DashboardController extends Controller
         if (!Auth::check()) return redirect()->route('login');
 
         $user = Auth::user();
-        $stats = $service->getDeckStats($user->id);
+        $tcg = request('tcg', 'all');
+        $stats = $service->getDeckStats($user->id, $tcg);
         $randomCards = $service->getRandomCards(10);
 
         return view('dashboard', [
@@ -21,6 +22,7 @@ class DashboardController extends Controller
             'yugiohDecks' => $stats['yugioh'],
             'magicDecks' => $stats['magic'],
             'randomCards' => $randomCards,
+            'selectedTcg' => $tcg,
         ]);
     }
 }

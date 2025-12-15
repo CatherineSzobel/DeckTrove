@@ -51,7 +51,7 @@
                             <div class="w-full h-full flex items-center justify-center text-slate-500 text-4xl">🎴</div>
                             @endif
                             <div class="absolute left-3 top-3">
-                                <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-black/50 text-white">{{ ucfirst($deck->series ?? 'unknown') }}</span>
+                                <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-black/50 text-white">{{ ucfirst($deck->game ?? 'unknown') }}</span>
                             </div>
                             <div class="absolute right-3 top-3">
                                 <form action="{{ route('decks.destroy', $deck->id) }}" method="POST" class="inline">

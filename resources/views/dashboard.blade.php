@@ -1,4 +1,3 @@
-
 <x-layout :js="['resources/js/mydecks.js']">
     <div class="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-6">
         <div class="max-w-7xl mx-auto">
@@ -15,11 +14,13 @@
                             </div>
 
                             <!-- TCG Dropdown -->
-                            <select id="tcg-filter" class="bg-slate-700 text-white rounded px-4 py-2 border border-slate-600 hover:border-amber-400 transition">
-                                <option value="all">All TCGs</option>
-                                <option value="yugioh">Yu-Gi-Oh!</option>
-                                <option value="magic">Magic: The Gathering</option>
-                            </select>
+                            <form method="GET" action="{{ route('dashboard') }}">
+                                <select name="tcg" onchange="this.form.submit()" class="bg-slate-700 text-white rounded px-4 py-2 border border-slate-600 hover:border-amber-400 transition">
+                                    <option value="all" {{ $selectedTcg === 'all' ? 'selected' : '' }}>All TCGs</option>
+                                    <option value="yugioh" {{ $selectedTcg === 'yugioh' ? 'selected' : '' }}>Yu-Gi-Oh!</option>
+                                    <option value="magic" {{ $selectedTcg === 'magic' ? 'selected' : '' }}>Magic: The Gathering</option>
+                                </select>
+                            </form>
                         </div>
 
                         <!-- Decks Grid -->
@@ -38,7 +39,7 @@
                                         @endif
                                     </div>
                                     <h3 class="text-white font-semibold truncate group-hover:text-amber-400 transition">{{ $deck->name }}</h3>
-                                    <p class="text-slate-400 text-sm mt-1">{{ ucfirst($deck->series) }}</p>
+                                    <p class="text-slate-400 text-sm mt-1">{{ ucfirst($deck->game) }}</p>
                                     <p class="text-slate-500 text-xs mt-2">{{ $deck->cards->count() }} cards</p>
                                 </div>
                             </a>

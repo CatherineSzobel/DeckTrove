@@ -12,17 +12,26 @@ class DashboardService
     /**
      * Get user deck statistics
      */
-    public function getDeckStats(int $userId): array
+    public function getDeckStats($userId, $tcg = 'all')
     {
-        $decks = Deck::where('user_id', $userId)->get();
+        $query = Deck::where('user_id', $userId);
+
+        if ($tcg !== 'all') {
+            $query->where('game', $tcg); // 'yugioh' or 'magic'
+        }
+
+        $recent = $query->orderBy('created_at', 'desc')->take(6)->get();
+
+        $allDecks = Deck::where('user_id', $userId)->get();
 
         return [
-            'total' => $decks->count(),
-            'recent' => $decks->take(3),
-            'yugioh' => $decks->where('game', 'yugioh')->count(),
-            'magic' => $decks->where('game', 'magic')->count(),
+            'total' => $allDecks->count(),
+            'recent' => $recent,
+            'yugioh' => $allDecks->where('game', 'yugioh')->count(),
+            'magic' => $allDecks->where('game', 'magic')->count(),
         ];
     }
+
 
     /**
      * Get random cards (70% YGO, 30% Magic)
