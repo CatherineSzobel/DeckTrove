@@ -33,3 +33,12 @@
     background-color: rgba(239, 68, 68, 0.1);
     transition: all 0.2s ease;
 }
+
+.deck-active {
+    background-color: #fff7f7;
+}
+
+.deck-active h2 {
+    color: #2629dc;
+}
+

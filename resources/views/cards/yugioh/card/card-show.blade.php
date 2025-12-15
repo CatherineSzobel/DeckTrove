@@ -10,7 +10,7 @@
 
         @if($img)
         <img src="{{ $img }}"
-            alt="{{ $card->name }}"
+            alt="{{ $card['name'] }}"
             class="w-full max-w-md rounded-lg shadow-lg bg-black object-contain">
         @else
         <div class="w-full max-w-xs h-56 rounded-lg bg-gray-800 flex items-center justify-center">
@@ -23,65 +23,64 @@
     <div class="md:flex-1">
 
         {{-- Card Name --}}
-        <h1 class="text-2xl font-bold mb-2 text-black">{{ $card->name }}</h1>
+        <h1 class="text-2xl font-bold mb-2 text-black">{{ $card['name'] }}</h1>
 
         {{-- Type / Race / Archetype --}}
         <div class="text-sm text-slate-700 mb-3">
             @php
             $types = [];
-            if (!empty($card->typeline)) {
-            if (is_array($card->typeline)) $types = $card->typeline;
-            elseif (is_string($card->typeline)) $types = explode('/', $card->typeline);
+            if (!empty($card['typeline'])) {
+            if (is_array($card['typeline'])) $types = $card['typeline'];
+            elseif (is_string($card['typeline'])) $types = explode('/', $card['typeline']);
             }
             $types = array_filter(array_map('trim', array_slice($types, 1)));
             @endphp
 
-            <span>Type: <strong class="text-black">{{ !empty($types) ? implode('/', $types) : ($card->type ?? 'Unknown') }}</strong></span>
+            <span>Type: <strong class="text-black">{{ !empty($types) ? implode('/', $types) : ($card['type'] ?? 'Unknown') }}</strong></span>
             <span class="mx-2">•</span>
-            <span>Race: <strong class="text-black">{{ $card->race ?? 'Unknown' }}</strong></span>
+            <span>Race: <strong class="text-black">{{ $card['race'] ?? 'Unknown' }}</strong></span>
             <span class="mx-2">•</span>
-            <span>Archetype: <strong class="text-black">{{ $card->archetype ?? 'Unknown' }}</strong></span>
+            <span>Archetype: <strong class="text-black">{{ $card['archetype'] ?? 'Unknown' }}</strong></span>
         </div>
 
         {{-- Stats --}}
         <div class="flex flex-wrap gap-3 mb-4">
-            @if(!empty($card->atk))
-            <div class="bg-slate-700 text-slate-200 px-3 py-1 rounded">ATK: {{ $card->atk ?? '-' }}</div>
-            @if(empty($card->def))
-            <div class="bg-slate-700 text-slate-200 px-3 py-1 rounded">Link: {{ $card->linkval ?? 'Unknown' }}</div>
+            @if(!empty($card['atk']))
+            <div class="bg-slate-700 text-slate-200 px-3 py-1 rounded">ATK: {{ $card['atk'] ?? '-' }}</div>
+            @if(empty($card['def']))
+            <div class="bg-slate-700 text-slate-200 px-3 py-1 rounded">Link: {{ $card['linkval'] ?? 'Unknown' }}</div>
             @else
-            <div class="bg-slate-700 text-slate-200 px-3 py-1 rounded">DEF: {{ $card->def ?? '-' }}</div>
-            <div class="bg-slate-700 text-slate-200 px-3 py-1 rounded">Level: {{ $card->level ?? 'Unknown' }}</div>
+            <div class="bg-slate-700 text-slate-200 px-3 py-1 rounded">DEF: {{ $card['def'] ?? '-' }}</div>
+            <div class="bg-slate-700 text-slate-200 px-3 py-1 rounded">Level: {{ $card['level'] ?? 'Unknown' }}</div>
             @endif
-            <div class="bg-slate-700 text-slate-200 px-3 py-1 rounded">Attribute: {{ $card->attribute ?? 'Unknown' }}</div>
-            @else
-            <div class="bg-slate-700 text-slate-200 px-3 py-1 rounded">Price: ${{ $card->card_prices[0]->cardmarket_price ?? 'Unknown' }}</div>
+            <div class="bg-slate-700 text-slate-200 px-3 py-1 rounded">Attribute: {{ $card['attribute'] ?? 'Unknown' }}</div>
             @endif
+            <div class="bg-slate-700 text-slate-200 px-3 py-1 rounded">Price: ${{ $card['card_prices'][0]['cardmarket_price'] ?? 'Unknown' }}</div>
         </div>
 
         {{-- Description --}}
         <div class="prose prose-invert text-black mb-4">
-            <p>{{ $card->desc ?? 'No description available' }}</p>
+            <p>{{ $card['desc'] ?? 'No description available' }}</p>
         </div>
 
         {{-- Prints --}}
         <div class="mb-4">
             <h3 class="text-lg font-semibold mb-2 text-black">Prints</h3>
-            <x-print-list :sets="$card->card_sets" id="prints-{{ $card->id }}" />
+            <x-print-list :sets="$card['card_sets']" id="prints-{{ $card['id'] }}" />
         </div>
 
         {{-- More from this archetype --}}
-        @if(!empty($archetypeCards) && $archetypeCards->count())
+        @if(!empty($archetypeCards) && count($archetypeCards))
         <div class="mt-6  border-slate-700 p-6 ">
             <h3 class="text-lg text-black font-semibold mb-3">More from this Archetype</h3>
             <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
-                @foreach($archetypeCards as $s)
+                @foreach($archetypeCards as $card)
                 @php
-                $img = data_get($s, 'card_images.0.image_url_small')
-                ?: data_get($s,'image_uris.normal')
-                ?: data_get($s,'image');
-                $link = isset($s['id']) ? url('yugioh/card/'.$s['id']) : '#';
-                $name = data_get($s,'name') ?: data_get($s,'card_name') ?: 'Card';
+                $img = data_get($card, 'card_images.0.image_url_small')
+                ?: data_get($card,'image_uris.normal')
+                ?: data_get($card,'image');
+                $link = isset($card['id']) ? url('yugioh/card/'.$card['id']) : '#';
+                $name = data_get($card,'name') ?: data_get($card,'card_name') ?: 'Card';
                 @endphp
                 <a href="{{ $link }}" class="w-full hover:scale-105 transform transition" aria-label="{{ $name }}">
                     <img src="{{ $img }}" loading="lazy" alt="{{ $name }}" class="w-full h-auto rounded shadow bg-black object-cover">

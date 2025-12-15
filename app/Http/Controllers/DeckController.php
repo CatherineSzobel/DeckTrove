@@ -202,6 +202,7 @@ class DeckController extends Controller
             'game' => $request->game,
             'name' => $request->deck_title ?? 'New Deck',
             'description' => $request->deck_description,
+            'image' => $request->image
         ]);
 
         // Loop through each zone (main, extra, side)

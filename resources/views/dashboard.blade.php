@@ -1,6 +1,3 @@
-@php
-
-@endphp
 
 <x-layout :js="['resources/js/mydecks.js']">
     <div class="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-6">
@@ -32,8 +29,8 @@
                             <a href="{{ route('decks.show', $deck->id) }}" class="group">
                                 <div class="bg-slate-700 rounded-lg p-4 border border-slate-600 hover:border-amber-400 transition transform hover:scale-105">
                                     <div class="bg-gradient-to-br from-slate-600 to-slate-800 rounded h-32 flex items-center justify-center mb-3 overflow-hidden">
-                                        @if($deck->image_url)
-                                        <img src="{{ $deck->image_url }}" alt="{{ $deck->name }}" class="w-full h-full object-cover">
+                                        @if($deck->image)
+                                        <img src="{{ $deck->image }}" alt="{{ $deck->name }}" class="w-full h-full object-cover">
                                         @else
                                         <div class="text-slate-400 text-center">
                                             <span class="text-3xl">🎴</span>
@@ -69,17 +66,19 @@
                                 $imgUrl = null;
 
                                 if (isset($card['card_images'][0]['image_url_small'])) {
-                                // Yu-Gi-Oh
                                 $imgUrl = $card['card_images'][0]['image_url_small'];
                                 $series = 'yugioh';
                                 } elseif (isset($card['image_uris']['small'])) {
-                                // Magic
                                 $imgUrl = $card['image_uris']['small'];
                                 $series = 'magic';
                                 }
+
                                 $indexLink = url('/' . $series . '/card/' . $card['id']);
                                 @endphp
-                                <a href="{{ $indexLink }}" class="flex-shrink-0">
+
+                                <a href="{{ $indexLink }}"
+                                    class="flex-shrink-0 card-link"
+                                    onclick="this.classList.add('opacity-50'); this.style.pointerEvents='none';">
                                     <div class="h-48 w-32 rounded-lg overflow-hidden shadow-lg hover:shadow-2xl transition transform hover:scale-110 cursor-pointer">
                                         @if($imgUrl)
                                         <img src="{{ $imgUrl }}" alt="{{ $card['name'] ?? 'Card' }}" class="w-full h-full object-cover">
@@ -91,6 +90,7 @@
                                     </div>
                                 </a>
                                 @endforeach
+
                                 @endif
 
                             </div>
@@ -129,11 +129,11 @@
                             <a href="{{ route('magic.cards.index') }}" class="block bg-slate-700 hover:bg-purple-600 text-white rounded px-4 py-2 transition text-center font-semibold">
                                 Magic Cards
                             </a>
-                            <a href="{{ route('yugioh.deck.builder') }}" class="block bg-amber-500 hover:bg-amber-600 text-slate-900 rounded px-4 py-2 transition text-center font-semibold">
-                                Build Deck
+                            <a href="{{ route('public-deck') }}" class="block bg-slate-700 hover:bg-red-600 text-slate-900 text-white rounded px-4 py-2 transition text-center font-semibold">
+                                Public Deck
                             </a>
                             <a href="{{ route('yugioh.deck.builder') }}" class="block bg-amber-500 hover:bg-amber-600 text-slate-900 rounded px-4 py-2 transition text-center font-semibold">
-                                Public Deck
+                                Build Deck
                             </a>
                         </div>
                     </div>

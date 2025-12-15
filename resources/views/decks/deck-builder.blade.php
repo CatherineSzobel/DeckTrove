@@ -11,10 +11,22 @@
             @endif
 
 
-            <div class="p-3 bg-white rounded shadow">
+            <div class="p-3 bg-white rounded shadow" id="deckCoverContainer">
                 <input type="text" id="deckTitleInput" placeholder="Enter deck title..." class="w-full p-2 border rounded" value="{{ request('deck_title') }}">
                 <input type="text" id="deckDescInput" placeholder="Enter deck description..." class="w-full p-2 border rounded mt-2" value="{{ request('deck_description') }}">
-                <button id="resetButton">Reset</button>
+
+                <!-- Drag & Drop Cover Area -->
+                <div id="coverDropArea" class="mt-2 p-4 border-2 border-dashed border-gray-400 rounded text-center text-gray-600">
+                    Drag a card here to set as deck cover
+                </div>
+                <img id="coverPreview" src="" alt="Deck Cover Preview" class="mt-2 w-32 mx-auto hidden rounded shadow">
+
+                <div class="flex items-center justify-between m-2">
+                    <button id="resetButton">Reset</button>
+                    <h2 class="font-bold text-lg mb-2 bg-white">
+                        <input type="checkbox" id="isPublic" {{ request('is_public') ? 'checked' : '' }}> Public
+                    </h2>
+                </div>
             </div>
 
             <!-- Main Deck -->
@@ -34,6 +46,7 @@
                 </h2>
                 <div id="extraDeck" class="dropzone min-h-[150px] grid grid-cols-5 gap-2 max-h-[800px] "></div>
             </div>
+            @endif
 
             <!-- Side Deck -->
             <div class="p-3 bg-white rounded shadow deckContainer">
@@ -42,7 +55,6 @@
                 </h2>
                 <div id="sideDeck" class="dropzone min-h-[150px] grid grid-cols-5 gap-2 max-h-[800px]"></div>
             </div>
-            @endif
         </div>
 
         <!-- RIGHT: Deck Zones -->
@@ -86,6 +98,8 @@
                 <input type="hidden" name="game" value="{{ $game }}">
                 <input type="hidden" name="deck_title" id="deckTitle" value="{{ request('deck_title') }}">
                 <input type="hidden" name="deck_description" id="deckDescription" value="{{ request('deck_description') }}">
+                <input type="hidden" name="is_public" id="isPublicInput" value="0">
+                <input type="hidden" name="image" id="deckImage" value="">
 
                 <button class="mt-4 bg-blue-600 text-white p-3 rounded hover:bg-blue-700 transition-colors w-full">
                     Save Deck

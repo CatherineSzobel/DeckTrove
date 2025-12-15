@@ -145,8 +145,10 @@
             {{ $slot }}
         </div>
     </main>
-
+    @unless($hideNav)
+    <!-- FOOTER -->
     <x-footer />
+    @endunless
 </body>
 
 </html>

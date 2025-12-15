@@ -45,8 +45,8 @@
                     @foreach ($decks as $deck)
                     <div class="deck-card bg-slate-800 border border-slate-700 rounded-lg overflow-hidden shadow-sm transition hover:shadow-lg" data-series="{{ strtolower($deck->series ?? '') }}">
                         <div class="relative h-40 bg-gradient-to-br from-slate-700 to-slate-900 overflow-hidden">
-                            @if($deck->image_url)
-                            <img src="{{ $deck->image_url }}" alt="{{ $deck->name }}" class="w-full h-full object-cover">
+                            @if($deck->image)
+                            <img src="{{ $deck->image }}" alt="{{ $deck->name }}" class="w-full h-full object-cover">
                             @else
                             <div class="w-full h-full flex items-center justify-center text-slate-500 text-4xl">🎴</div>
                             @endif
@@ -71,8 +71,8 @@
                             <a href="{{ route('decks.show', $deck->id) }}" class="block">
                                 <h3 class="text-lg font-semibold text-white truncate">{{ $deck->name }}</h3>
                             </a>
-                            <p class="text-sm text-slate-400 mt-2 line-clamp-3">{{ $deck->description }}</p>
-
+                            <p class="text-sm text-slate-400 mt-2 line-clamp-3">{{ $deck->description ?? 'No description' }}</p>
+                            <span class="text-sm text-slate-400 mt-2 line-clamp-3">{{ $deck->is_public ? 'Public' : 'Private' }}</span>
                             <div class="mt-4 flex items-center justify-between">
                                 <div class="text-xs text-slate-400">
                                     <span class="font-semibold text-amber-400">
@@ -112,11 +112,11 @@
                         </div>
                         <div class="flex items-center justify-between bg-slate-700 p-3 rounded">
                             <div class="text-sm text-slate-300">Yu-Gi-Oh! decks</div>
-                            <div class="font-semibold text-blue-400">{{ $decks->where('series', 'yugioh')->count() }}</div>
+                            <div class="font-semibold text-blue-400">{{ $decks->where('game', 'yugioh')->count() }}</div>
                         </div>
                         <div class="flex items-center justify-between bg-slate-700 p-3 rounded">
                             <div class="text-sm text-slate-300">Magic decks</div>
-                            <div class="font-semibold text-purple-400">{{ $decks->where('series', 'magic')->count() }}</div>
+                            <div class="font-semibold text-purple-400">{{ $decks->where('game', 'magic')->count() }}</div>
                         </div>
                     </div>
                 </div>

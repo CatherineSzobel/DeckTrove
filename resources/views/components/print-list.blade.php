@@ -4,12 +4,12 @@
 // Normalize + dedupe print sets
 $uniqueSets = collect($sets)
 ->map(function($set) {
-$raw = $set->set_code ?? '';
+$raw = $set['set_code'] ?? '';
 $pack = explode('-', $raw)[0] ?? $raw;
 
-return (object)[
+return [
 'pack_code' => $pack,
-'set_name' => $set->set_name ?? 'Unknown',
+'set_name' => $set['set_name'] ?? 'Unknown',
 ];
 })
 ->unique('pack_code')
@@ -33,9 +33,9 @@ default => '/yugioh/pack/',
     <ul class="list-inside list-disc text-blue-400 font-bold">
         @foreach($uniqueSets->take(4) as $set)
         <li>
-            <a href="{{ url($baseUrl . urlencode($set->pack_code)) }}"
+            <a href="{{ url($baseUrl . urlencode($set['pack_code'])) }}"
                 class="hover:text-blue-800">
-                {{ $set->set_name }}
+                {{ $set['set_name'] }}
             </a>
         </li>
         @endforeach
@@ -46,9 +46,9 @@ default => '/yugioh/pack/',
     <ul id="{{ $id }}" class="hidden list-inside list-disc text-blue-400 font-bold mt-2">
         @foreach($uniqueSets->slice(4) as $set)
         <li>
-            <a href="{{ url($baseUrl . urlencode($set->pack_code)) }}"
+            <a href="{{ url($baseUrl . urlencode($set['pack_code'])) }}"
                 class="hover:text-blue-800">
-                {{ $set->set_name }}
+                {{ $set['set_name'] }}
             </a>
         </li>
         @endforeach

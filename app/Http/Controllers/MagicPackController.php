@@ -3,40 +3,22 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
+use App\Services\MagicPackService;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class MagicPackController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, MagicPackService $packService)
     {
         $series = 'magic';
         $page = $request->get('page', 1);
         $search = $request->get('search', '');
 
-        // Cache sets for 1 hour
-        $sets = cache()->remember('magic-sets', 3600, function () {
-            $response = Http::get('https://api.scryfall.com/sets');
+        $sets = $packService->getSets();
+        $sets = $packService->searchSets($search, $sets);
 
-            if ($response->failed()) {
-                abort(500, 'Failed to fetch sets from Scryfall');
-            }
-
-            return $response->json()['data'] ?? [];
-        });
-
-        // Filter by search if provided
-        if ($search) {
-            $sets = array_values(array_filter($sets, function ($set) use ($search) {
-                return stripos($set['name'], $search) !== false ||
-                    stripos($set['code'], $search) !== false;
-            }));
-        }
-
-        // Custom pagination
         $perPage = 30;
         $offset = ($page - 1) * $perPage;
-
         $paged = array_slice($sets, $offset, $perPage);
 
         $paginator = new LengthAwarePaginator(
@@ -50,28 +32,13 @@ class MagicPackController extends Controller
             ]
         );
 
-        return view('packs.packs', [
-            'packs' => $paginator,
-            'series' => $series
-        ]);
+        return view('packs.packs', ['packs' => $paginator, 'series' => $series]);
     }
 
-    public function show($code)
+    public function show($code, MagicPackService $packService)
     {
-        $response = Http::get("https://api.scryfall.com/sets/{$code}");
-
-        if ($response->failed()) {
-            abort(404, 'Set not found');
-        }
-
-        $set = $response->json();
-
-        // Fetch cards from the set
-        $cardsResponse = Http::get('https://api.scryfall.com/cards/search', [
-            'q' => 'set:' . strtolower($code)
-        ]);
-
-        $cards = $cardsResponse->json()['data'] ?? [];
+        $set = $packService->getSet($code);
+        $cards = $packService->getSetCards($code);
 
         return view('packs.pack', [
             'set' => $set,

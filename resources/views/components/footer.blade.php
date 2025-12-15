@@ -38,7 +38,7 @@
                 <p class="font-medium text-gray-900">Community</p>
                 <ul class="mt-6 space-y-4 text-sm">
                     <li><a href="{{ route('public-deck') }}" class="text-gray-700 transition hover:opacity-75">Public Decks</a></li>
-                    <li><a href="#" class="text-gray-700 transition hover:opacity-75">Create a Deck</a></li>
+                    <li><a href="{{ route('yugioh.deck.builder') }}" class="text-gray-700 transition hover:opacity-75">Create a Deck</a></li>
                 </ul>
             </div>
 
