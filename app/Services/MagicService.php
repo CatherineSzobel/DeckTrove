@@ -11,12 +11,23 @@ class MagicService
     private string $apiPath = 'https://api.scryfall.com/cards/search';
     private int $cacheTTL = 600; // default cache TTL in seconds
 
+
+    private function scryfall()
+    {
+        return Http::timeout(15)
+            ->acceptJson()
+            ->withHeaders([
+                'User-Agent' => 'YourAppName/1.0 (contact@yourapp.com)',
+            ]);
+    }
+
     /**
      * Fetch a card by its Scryfall ID.
      */
     public function fetchCardById(string $id): array
     {
-        $response = Http::timeout(5)->get("https://api.scryfall.com/cards/{$id}");
+        $response = $this->scryfall()
+            ->get("https://api.scryfall.com/cards/{$id}");
 
         if ($response->failed() || ($response->json('object') ?? '') === 'error') {
             abort(404, 'Card not found');
@@ -31,11 +42,16 @@ class MagicService
     public function fetchCardPrints(array $card): Collection
     {
         $uri = $card['prints_search_uri'] ?? null;
-        if (!$uri) return collect();
+        if (!$uri) 
+            return collect();
 
-        $response = Http::timeout(5)->get($uri);
-        return $response->ok() ? collect($response->json('data', [])) : collect();
+        $response = $this->scryfall()->get($uri);
+
+        return $response->ok()
+            ? collect($response->json('data', []))
+            : collect();
     }
+
 
     /**
      * Fetch other cards from the same set, excluding the current card.
@@ -43,21 +59,26 @@ class MagicService
     public function fetchRelatedSetCards(array $card, int $limit = 6): Collection
     {
         $setCode = $card['set'] ?? null;
-        if (!$setCode) return collect();
+        if (!$setCode)
+            return collect();
 
         $cacheKey = "scryfall_set_{$setCode}_cards";
 
         $setCards = Cache::remember($cacheKey, $this->cacheTTL, function () use ($setCode) {
-            $resp = Http::timeout(5)->get($this->apiPath, [
+            $response = $this->scryfall()->get($this->apiPath, [
                 'q' => "set:{$setCode} game:paper",
-                'order' => 'name'
+                'order' => 'name',
             ]);
 
-            return $resp->ok() ? $resp->json('data', []) : [];
+            return $response->ok()
+                ? $response->json('data', [])
+                : [];
         });
 
         return collect($setCards)
-            ->reject(fn($c) => ($c['oracle_id'] ?? null) === ($card['oracle_id'] ?? null))
+            ->reject(
+                fn($c) => ($c['oracle_id'] ?? null) === ($card['oracle_id'] ?? null)
+            )
             ->shuffle()
             ->take($limit);
     }
@@ -80,19 +101,35 @@ class MagicService
     public function fetchCards(array $params): array
     {
         $searchKey = $params['search'] ? md5($params['search']) : '';
-        $cacheKey = "magic-cards-page-{$params['page']}-view-{$params['view']}" . ($searchKey ? "-search-{$searchKey}" : '');
+        $cacheKey = "magic-cards-page-{$params['page']}-view-{$params['view']}"
+            . ($searchKey ? "-search-{$searchKey}" : '');
 
         return Cache::remember($cacheKey, $this->cacheTTL, function () use ($params) {
-            $queryParams = [
+            $response = $this->scryfall()->get($this->apiPath, [
                 'order' => 'name',
                 'page' => $params['page'],
-                'q' => $params['search'] ? $params['search'] . ' game:paper' : 'game:paper',
-            ];
+                'q' => $params['search']
+                    ? trim($params['search']) . ' game:paper'
+                    : 'game:paper',
+            ]);
 
-            $response = Http::timeout(5)->get($this->apiPath, $queryParams);
+            // Zero results (normal case)
+            if ($response->status() === 404) {
+                return [
+                    'data' => [],
+                    'has_more' => false,
+                    'total_cards' => 0,
+                ];
+            }
 
+            // Real failure (API side)
             if ($response->failed()) {
-                abort(500, 'Failed to fetch cards from API');
+                logger()->error('Scryfall API failure', [
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                ]);
+
+                abort(502, 'Scryfall API unavailable');
             }
 
             return $response->json();

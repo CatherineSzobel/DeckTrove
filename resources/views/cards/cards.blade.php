@@ -101,7 +101,27 @@ $filterOptions = $filterOptions ?? []; // From controller
 
         <!-- Dynamic Cards Container -->
         <div id="card-container">
-            @include("cards.{$series}.view.cards-{$currentView}", ['cards' => $cards])
+            <!-- Dynamic Cards Container -->
+            <div id="card-container">
+                @if($cards->isEmpty())
+                <div class="flex flex-col items-center justify-center py-20 text-center">
+                    <h2 class="text-2xl font-semibold text-gray-700 mb-2">
+                        Card cannot be found
+                    </h2>
+
+                    <p class="text-gray-500 mb-6">
+                        Try adjusting your search or clearing filters.
+                    </p>
+
+                    <a href="{{ request()->fullUrlWithQuery(['search' => null, 'page' => 1]) }}"
+                        class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                        Clear Search
+                    </a>
+                </div>
+                @else
+                @include("cards.{$series}.view.cards-{$currentView}", ['cards' => $cards])
+                @endif
+            </div>
         </div>
 
         <!-- Pagination -->

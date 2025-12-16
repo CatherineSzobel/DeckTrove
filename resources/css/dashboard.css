@@ -1,4 +1,12 @@
+.marquee-container {
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+}
+
 .marquee {
+    display: flex;
+    width: max-content;
     animation: scroll-left 30s linear infinite;
 }
 
@@ -7,10 +15,10 @@
 }
 
 @keyframes scroll-left {
-    0% {
-        transform: translateX(100%);
+    from {
+        transform: translateX(0);
     }
-    100% {
-        transform: translateX(-100%);
+    to {
+        transform: translateX(-50%);
     }
 }
