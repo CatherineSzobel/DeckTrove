@@ -29,7 +29,7 @@
     <link rel="shortcut icon" href="{{ Vite::asset('resources/img/decktrove-logo.png') }}" />
 </head>
 
-<body class="h-full">
+<body class="h-full {{ $class }}">
 
     @unless($hideNav)
     <!-- HEADER / SHOWCASE -->

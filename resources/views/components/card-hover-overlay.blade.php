@@ -1,14 +1,18 @@
-@props(['name' => 'Card Name', 'underTitle' => 'unknown', 'url' => '#'])
+<div class="absolute inset-0
+            bg-gradient-to-t from-black/70 via-black/40 to-transparent
+            text-white
+            opacity-0 group-hover:opacity-100
+            transition-all duration-200
+            p-3
+            flex flex-col justify-end text-left
+            z-30
+            pointer-events-none">
 
-<div class="absolute inset-0 bg-black bg-opacity-70 text-white opacity-0
-            group-hover:opacity-100 transition-opacity rounded p-2 flex flex-col
-            justify-center items-center text-center z-30 pointer-events-none">
+    <h3 class="font-semibold text-sm leading-tight">
+        {{ $name }}
+    </h3>
 
-    <a href="{{ $url }}" target="_blank">
-        <h3 class="font-bold text-xs">{{ $name }}</h3>
-    </a>
-
-    <p class="text-[10px] mt-1">
+    <p class="text-xs text-gray-200">
         {{ $underTitle }}
     </p>
 
