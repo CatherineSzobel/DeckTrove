@@ -42,7 +42,7 @@ class MagicService
     public function fetchCardPrints(array $card): Collection
     {
         $uri = $card['prints_search_uri'] ?? null;
-        if (!$uri) 
+        if (!$uri)
             return collect();
 
         $response = $this->scryfall()->get($uri);
@@ -51,7 +51,6 @@ class MagicService
             ? collect($response->json('data', []))
             : collect();
     }
-
 
     /**
      * Fetch other cards from the same set, excluding the current card.
@@ -100,20 +99,51 @@ class MagicService
      */
     public function fetchCards(array $params): array
     {
-        $searchKey = $params['search'] ? md5($params['search']) : '';
-        $cacheKey = "magic-cards-page-{$params['page']}-view-{$params['view']}"
-            . ($searchKey ? "-search-{$searchKey}" : '');
+        $searchTerms = [];
 
-        return Cache::remember($cacheKey, $this->cacheTTL, function () use ($params) {
+        // Base search: paper cards only
+        $searchTerms[] = 'game:paper';
+
+        // Text search
+        if (!empty($params['search'])) {
+            $searchTerms[] = trim($params['search']);
+        }
+
+        // Filter by type
+        if (!empty($params['type'])) {
+            $searchTerms[] = "type:{$params['type']}";
+        }
+
+        // Filter by color
+        if (!empty($params['color'])) {
+            // Accept multiple colors as array or single string
+            $colors = is_array($params['color']) ? implode('', $params['color']) : $params['color'];
+            $searchTerms[] = "color:{$colors}";
+        }
+
+        // Filter by rarity
+        if (!empty($params['rarity'])) {
+            $searchTerms[] = "rarity:{$params['rarity']}";
+        }
+
+        // Filter by set (use Scryfall set code)
+        if (!empty($params['set_name'])) {
+            $searchTerms[] = "set:{$params['set_name']}";
+        }
+
+        // Combine all search terms
+        $query = implode(' ', $searchTerms);
+
+        // Generate cache key
+        $cacheKey = 'magic-cards-' . md5($query . ($params['page'] ?? 1) . ($params['view'] ?? 'full'));
+
+        return Cache::remember($cacheKey, $this->cacheTTL, function () use ($query, $params) {
             $response = $this->scryfall()->get($this->apiPath, [
+                'q' => $query,
                 'order' => 'name',
-                'page' => $params['page'],
-                'q' => $params['search']
-                    ? trim($params['search']) . ' game:paper'
-                    : 'game:paper',
+                'page' => $params['page'] ?? 1,
             ]);
 
-            // Zero results (normal case)
             if ($response->status() === 404) {
                 return [
                     'data' => [],
@@ -122,17 +152,60 @@ class MagicService
                 ];
             }
 
-            // Real failure (API side)
             if ($response->failed()) {
                 logger()->error('Scryfall API failure', [
                     'status' => $response->status(),
                     'body' => $response->body(),
                 ]);
-
                 abort(502, 'Scryfall API unavailable');
             }
 
             return $response->json();
+        });
+    }
+
+
+    public function getFilterOptions(): array
+    {
+        return Cache::remember('magic-filter-options', 3600, function () {
+
+            // 1. Card types (API-backed)
+            $types = [];
+            $typesResponse = $this->scryfall()->get('https://api.scryfall.com/catalog/card-types');
+            if ($typesResponse->ok()) {
+                $types = $typesResponse->json('data', []);
+                sort($types);
+            }
+
+            // 2. Colors (STATIC)
+            $colors = ['W', 'U', 'B', 'R', 'G', 'C'];
+
+            // 3. Rarities (STATIC)
+            $rarities = [
+                'Common',
+                'Uncommon',
+                'Rare',
+                'Mythic',
+                'Special',
+                'Bonus',
+            ];
+
+            // 4. Sets (API-backed)
+            $sets = [];
+            $setsResponse = $this->scryfall()->get('https://api.scryfall.com/sets');
+            if ($setsResponse->ok()) {
+                foreach ($setsResponse->json('data', []) as $s) {
+                    $sets[$s['code']] = $s['name'];
+                }
+                ksort($sets);
+            }
+
+            return [
+                'type' => $types,
+                'color' => $colors,
+                'rarity' => $rarities,
+                'set_name' => $sets,
+            ];
         });
     }
 }

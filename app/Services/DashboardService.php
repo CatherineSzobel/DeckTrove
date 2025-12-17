@@ -9,15 +9,26 @@ use Illuminate\Support\Collection;
 
 class DashboardService
 {
+    public function getRecentDecks($userId, $tcg = 'all')
+    {
+        $decks = Deck::where('user_id', $userId)
+            ->orderBy('created_at', 'desc')
+            ->take(3)
+            ->get();
+        if ($tcg === 'all') {
+            return $decks;
+        }
+        return $decks->where('game', $tcg);
+    }
     /**
      * Get user deck statistics
      */
-    public function getDeckStats($userId, $tcg = 'all')
+    public function getDeckAmountCount($userId, $tcg = 'all')
     {
         $query = Deck::where('user_id', $userId);
 
         if ($tcg !== 'all') {
-            $query->where('game', $tcg); // 'yugioh' or 'magic'
+            $query->where('game', $tcg);
         }
 
         $recent = $query->orderBy('created_at', 'desc')->take(6)->get();

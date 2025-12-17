@@ -243,23 +243,68 @@ class DeckController extends Controller
     public function show($id)
     {
         $deck = Deck::with('cards')->findOrFail($id);
+        //get game name from deck
+        $game = $deck->game;
+        switch ($game) {
+            case 'yugioh':
+                // Load local JSON once
+                $jsonPath = public_path('json/yugioh-cards.json');
+                if (!file_exists($jsonPath)) abort(404, 'Cards file not found');
+                $json = file_get_contents($jsonPath);
+                $allCards = collect(json_decode($json, true)['data'] ?? []);
 
-        // Load local JSON once
-        $jsonPath = public_path('json/yugioh-cards.json');
-        if (!file_exists($jsonPath)) abort(404, 'Cards file not found');
-        $json = file_get_contents($jsonPath);
-        $allCards = collect(json_decode($json, true)['data'] ?? []);
+                // Expand deck cards according to pivot count using JSON data
+                $expandedCards = $deck->cards->flatMap(function ($card) use ($allCards) {
+                    $deckCard = $card->pivot ?? null;
+                    $count = $deckCard->count ?? 1;
 
-        // Expand deck cards according to pivot count using JSON data
-        $expandedCards = $deck->cards->flatMap(function ($card) use ($allCards) {
-            $deckCard = $card->pivot ?? null;
-            $count = $deckCard->count ?? 1;
+                    // Find card in JSON by external_id
+                    $cardData = $allCards->firstWhere('id', $card->external_id);
 
-            // Find card in JSON by external_id
-            $cardData = $allCards->firstWhere('id', $card->external_id);
+                    return $cardData ? array_fill(0, $count, $cardData) : [];
+                });
+                break;
+            case 'magic':
+                $expandedCards = collect();
 
-            return $cardData ? array_fill(0, $count, $cardData) : [];
-        });
+                $cardsById = cache()->remember(
+                    "magic-deck-{$deck->id}",
+                    3600,
+                    function () use ($deck) {
+
+                        $identifiers = $deck->cards->map(fn($card) => [
+                            'id' => $card->external_id,
+                        ])->values()->all();
+
+                        $response = Http::post(
+                            'https://api.scryfall.com/cards/collection',
+                            ['identifiers' => $identifiers]
+                        );
+
+                        if ($response->failed()) {
+                            throw new \Exception('Failed to fetch Magic cards');
+                        }
+
+                        return collect($response->json('data'))->keyBy('id');
+                    }
+                );
+
+                foreach ($deck->cards as $card) {
+                    $count = $card->pivot->count ?? 1;
+                    $cardData = $cardsById->get($card->external_id);
+
+                    if ($cardData) {
+                        $expandedCards = $expandedCards->merge(
+                            array_fill(0, $count, $cardData)
+                        );
+                    }
+                }
+
+                break;
+
+            default:
+                abort(404, 'Game not found');
+        }
 
         return view('decks.deck', [
             'deck' => $deck,

@@ -112,34 +112,44 @@ $filterOptions = $filterOptions ?? []; // Initialize with an empty array
 
 
         <!-- Dynamic Cards Container -->
-        <div id="card-container" class="relative mt-6 px-6 py-16 rounded-lg
-            bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50
-            shadow-inner">
+        <div id="card-container"
+            class="relative mt-6 bg-gradient-to-b from-gray-200 via-gray-100 to-gray-50 p-6 rounded-xl">
+
             @if($cards->isEmpty())
-            <div class="flex flex-col items-center justify-center py-20 text-center">
-                <h2 class="text-2xl font-semibold text-gray-700 mb-2">
-                    Card cannot be found
+            <div class="flex flex-col items-center justify-center
+                    rounded-2xl bg-white
+                    py-24 text-center shadow-sm">
+
+                <h2 class="text-2xl font-semibold text-gray-800 mb-2">
+                    No cards found
                 </h2>
 
-                <p class="text-gray-500 mb-6">
-                    Try adjusting your search or clearing filters.
+                <p class="text-gray-500 mb-6 max-w-md">
+                    Try adjusting your search or clearing filters to see more results.
                 </p>
 
                 <a href="{{ request()->fullUrlWithQuery(['search' => null, 'page' => 1]) }}"
-                    class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
-                    Clear Search
+                    class="inline-flex items-center gap-2
+                      px-5 py-2.5
+                      rounded-lg bg-blue-600 text-white
+                      hover:bg-blue-700 transition">
+                    Clear search
                 </a>
             </div>
             @else
+            <div class="max-w-7xl mx-auto">
             @include("cards.{$series}.view.cards-{$currentView}", ['cards' => $cards])
+            </div>
             @endif
         </div>
 
-        <!-- Pagination -->
-        <div class="mt-6">
-            {{ $cards->appends(request()->query())->links() }}
+        @if($cards->hasPages())
+        <div class="mt-16 flex justify-center">
+            <div class="rounded-2xl bg-white shadow-sm
+                px-10 py-8">
+                {{ $cards->links() }}
+            </div>
         </div>
+        @endif
     </div>
-
-
 </x-layout>
