@@ -1,11 +1,19 @@
 const dashboardLinks = document.querySelectorAll(".dashboard-link");
 const seriesList = ["yugioh", "magic", "pokemon"]; // Add more if needed
 
+async function urlExists(url) {
+    try {
+        const response = await fetch(url, { method: "HEAD" });
+        return response.ok;
+    } catch (err) {
+        console.error("Error checking URL:", err);
+        return false;
+    }
+}
+
 function seriesSelectorSetup() {
     const selectors = document.querySelectorAll(".series-selector");
-
     const dashboardLogos = document.querySelectorAll(".dashboard-logo");
-
     let selectedSeries = localStorage.getItem("selectedSeries");
 
     // Redirect to homepage if no series selected and not on homepage
@@ -14,11 +22,9 @@ function seriesSelectorSetup() {
         return;
     }
 
-    // Set all selectors to saved series
-    selectors.forEach((selector) => {
+    selectors.forEach(async (selector) => {
         if (selectedSeries) selector.value = selectedSeries;
 
-        // Update dropdown button text if present
         const buttonText = selector
             .closest(".group")
             ?.querySelector(".viewtype_text");
@@ -28,13 +34,30 @@ function seriesSelectorSetup() {
                 selectedSeries.slice(1);
         }
 
-        // Add change listener to each selector
-        selector.addEventListener("change", () => {
+        // Disable invalid options
+        for (const option of selector.options) {
+            const url = `/${option.value}/cards`;
+            const exists = await urlExists(url);
+            option.disabled = !exists;
+            if (!exists && option.value === selector.value) {
+                // If the current selected series doesn't exist, show a warning
+                if (buttonText) buttonText.textContent = "Unavailable";
+            }
+        }
+
+        selector.addEventListener("change", async () => {
             const series = selector.value;
             if (!series) {
                 localStorage.removeItem("selectedSeries");
                 window.location.href = "/";
                 return;
+            }
+
+            const url = `/${series}/cards`;
+            const exists = await urlExists(url);
+            if (!exists) {
+                alert("This series page does not exist."); // Optional user feedback
+                return; // Do not redirect
             }
 
             localStorage.setItem("selectedSeries", series);
@@ -45,28 +68,26 @@ function seriesSelectorSetup() {
                     series.charAt(0).toUpperCase() + series.slice(1);
             }
 
-            const currentPath = cleanPath(window.location.pathname);
-            window.location.href = `/${series}/cards`;
+            window.location.href = url;
         });
     });
 
-    // Logo click handling
     dashboardLogos.forEach((img) => {
-        img.addEventListener("click", () => {
+        img.addEventListener("click", async () => {
             const series = img.dataset.series;
-        if (!series) return;
+            if (!series) return;
 
-        localStorage.setItem("selectedSeries", series);
-        updateLinks(series);
-
-            const currentPath = cleanPath(window.location.pathname);
-        window.location.href = `/${series}/cards`;
+            const url = `/${series}/cards`;
+          
+            localStorage.setItem("selectedSeries", series);
+            updateLinks(series);
+            window.location.href = url;
+        });
     });
-    });
 
-    // Update links on initial load
     if (selectedSeries) updateLinks(selectedSeries);
 }
+
 // Utility to clean URLs from existing series prefix
 function cleanPath(path) {
     const pattern = new RegExp(`^/(${seriesList.join("|")})(/|$)`);
@@ -108,7 +129,6 @@ function initUserAvatarDropdown() {
 
 // Initialize on DOM load
 document.addEventListener("DOMContentLoaded", () => {
-
     seriesSelectorSetup();
     initUserAvatarDropdown();
     const showcaseButton = document.getElementById("showcase_button");
