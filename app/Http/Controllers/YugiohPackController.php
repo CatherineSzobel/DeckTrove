@@ -9,12 +9,14 @@ class YugiohPackController extends Controller
 {
     public function index(Request $request, YugiohPackService $service)
     {
+        $currentView = request('view', 'full');
         $series = 'yugioh';
         $paginated = $service->paginatePacks($request);
 
         return view('packs.packs', [
             'packs' => $paginated,
-            'series' => $series
+            'series' => $series,
+            'currentView' => $currentView
         ]);
     }
 

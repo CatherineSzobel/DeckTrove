@@ -74,41 +74,10 @@ $filterOptions = $filterOptions ?? []; // Initialize with an empty array
             </div>
         </x-database-header>
 
-        <!-- Filter Section with populated options -->
-        @switch($series)
-        @case('yugioh')
         <x-filter-section
             :series="$series"
-            :options="[
-                            $filterOptions['type'] ?? [],
-                            $filterOptions['attribute'] ?? [],
-                            $filterOptions['race'] ?? [],
-                            $filterOptions['archetype'] ?? []
-                        ]">
+            :options="$options">
         </x-filter-section>
-        @break
-        @case('magic')
-        <x-filter-section
-            :series="$series"
-            :options="[
-                            $filterOptions['type'] ?? [],
-                            $filterOptions['color'] ?? [],
-                            $filterOptions['rarity'] ?? [],
-                            $filterOptions['set_name'] ?? []
-                        ]">
-        </x-filter-section>
-        @break
-        @default
-        <x-filter-section
-            :series="$series"
-            :options="[
-                            $filterOptions['type'] ?? [],
-                            $filterOptions['attribute'] ?? [],
-                            $filterOptions['race'] ?? [],
-                            $filterOptions['archetype'] ?? []
-                        ]">
-        </x-filter-section>
-        @endswitch
 
 
         <!-- Dynamic Cards Container -->
@@ -138,7 +107,7 @@ $filterOptions = $filterOptions ?? []; // Initialize with an empty array
             </div>
             @else
             <div class="max-w-7xl mx-auto">
-            @include("cards.{$series}.view.cards-{$currentView}", ['cards' => $cards])
+                @include("cards.{$series}.view.cards-{$currentView}", ['cards' => $cards])
             </div>
             @endif
         </div>

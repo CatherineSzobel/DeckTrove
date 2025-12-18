@@ -7,27 +7,36 @@ use App\Services\YugiohService;
 
 class YugiohController extends Controller
 {
-    public function index(Request $request, YugiohService $service)
+    protected $yugiohService;
+    public function __construct(YugiohService $yugiohService) {
+        $this->yugiohService = $yugiohService;
+    }
+    public function index(Request $request)
     {
         $series = 'yugioh';
         $view = $request->get('view', 'full');
 
-        $cards = $service->loadCards();
-        $filtered = $service->applyFilters($cards, $request);
-        $paginated = $service->paginate($filtered, $request, $view);
-        $filterOptions = $service->generateFilterOptions($cards);
+        $cards = $this->yugiohService->loadCards();
+        $filtered = $this->yugiohService->applyFilters($cards, $request);
+        $paginated = $this->yugiohService->paginate($filtered, $request, $view);
+        $filterOptions = $this->yugiohService->generateFilterOptions($cards);
 
         return view('cards.cards', [
             'cards' => $paginated,
             'series' => $series,
-            'filterOptions' => $filterOptions
+            'options' => [
+                $filterOptions['type'] ?? [],
+                $filterOptions['attribute'] ?? [],
+                $filterOptions['race'] ?? [],
+                $filterOptions['archetype'] ?? [],
+            ],
         ]);
     }
 
-    public function show(int $id, YugiohService $service)
+    public function show(int $id)
     {
-        $card = $service->findCard($id);
-        $related = $service->findRelatedCards($card);
+        $card = $this->yugiohService->findCard($id);
+        $related = $this->yugiohService->findRelatedCards($card);
 
         return view('cards.card', [
             'card' => $card,

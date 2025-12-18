@@ -1,54 +1,78 @@
 @props([
-    'series' => '',
-    'options' => [[], [], [], []],
-    'layout' => 'w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500'
+'series' => '',
+'options' => [[], [], [], []],
+'layout' => 'w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500'
 ])
-
 @php
-    $filterConfig = match($series) {
-        'yugioh' => [
-            'ids' => ['filter-type', 'filter-attribute', 'filter-race', 'filter-archetype'],
-            'labels' => ['Select Type', 'Select Attribute', 'Select Race', 'Select Archetype'],
-            'keys' => ['type', 'attribute', 'race', 'archetype']
-        ],
-        'magic' => [
-            'ids' => ['filter-type', 'filter-color', 'filter-rarity', 'filter-set_name'],
-            'labels' => ['Select Type', 'Select Color', 'Select Rarity', 'Select Set'],
-            'keys' => ['type', 'color', 'rarity', 'set_name']
-        ],
-        default => [
-            'ids' => ['filter-type', 'filter-attribute', 'filter-race', 'filter-archetype'],
-            'labels' => ['Select Type', 'Select Attribute', 'Select Race', 'Select Archetype'],
-            'keys' => ['type', 'attribute', 'race', 'archetype']
-        ]
-    };
+$filterConfig = match($series) {
+'yugioh' => [
+['id'=>'filter-type', 'label'=>'Type', 'key'=>'type', 'type'=>'select'],
+['id'=>'filter-attribute', 'label'=>'Attribute', 'key'=>'attribute', 'type'=>'select'],
+['id'=>'filter-race', 'label'=>'Race', 'key'=>'race', 'type'=>'select'],
+['id'=>'filter-archetype', 'label'=>'Archetype', 'key'=>'archetype', 'type'=>'select'],
+],
+'magic' => [
+['id'=>'filter-type', 'label'=>'Type', 'key'=>'type', 'type'=>'select'],
+['id'=>'filter-color', 'label'=>'Color', 'key'=>'color', 'type'=>'color'],
+['id'=>'filter-rarity', 'label'=>'Rarity', 'key'=>'rarity', 'type'=>'select'],
+['id'=>'filter-set_name', 'label'=>'Set', 'key'=>'set_name', 'type'=>'keyvalue'],
+],
+default => [
+['id'=>'filter-type', 'label'=>'Type', 'key'=>'type', 'type'=>'select'],
+['id'=>'filter-attribute', 'label'=>'Attribute', 'key'=>'attribute', 'type'=>'select'],
+['id'=>'filter-race', 'label'=>'Race', 'key'=>'race', 'type'=>'select'],
+['id'=>'filter-archetype', 'label'=>'Archetype', 'key'=>'archetype', 'type'=>'select'],
+]
+};
 @endphp
-
-<section
-    id="filterDetails"
-    class="hidden w-full flex flex-col items-center justify-center gap-4 mt-4 transition-all duration-300">
+<section id="filterDetails" class="hidden w-full flex flex-col items-center gap-4 mt-4 transition-all duration-300">
     <div id="filter-container" class="flex flex-wrap gap-4 my-4">
-        <div id="active-filters" class="flex gap-2 flex-wrap mb-4"></div>
-        
-        @foreach($filterConfig['ids'] as $index => $id)
-            <div class="flex flex-col">
-                <label for="{{ $id }}" class="text-sm font-medium text-gray-700 mb-1">
-                    {{ $filterConfig['labels'][$index] }}
-                </label>
-                <select 
-                    id="{{ $id }}"
-                    name="{{ $filterConfig['keys'][$index] }}"
-                    class="{{ $layout }} filter-select"
-                    data-filter-key="{{ $filterConfig['keys'][$index] }}">
-                    <option value="">All {{ $filterConfig['labels'][$index] }}</option>
-                    @foreach($options[$index] ?? [] as $option)
-                        <option value="{{ $option }}" 
-                            {{ request($filterConfig['keys'][$index]) == $option ? 'selected' : '' }}>
-                            {{ $option }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
+        @foreach($filterConfig as $index => $filter)
+        <div class="flex flex-col">
+            <label for="{{ $filter['id'] }}" class="text-sm font-medium text-gray-700 mb-1">
+                {{ $filter['label'] }}
+            </label>
+
+            @php $optionsList = $options[$index] ?? []; @endphp
+
+            @switch($filter['type'])
+            @case('color')
+            <select id="{{ $filter['id'] }}" name="{{ $filter['key'] }}" class="{{ $layout }} filter-select">
+                <option value="">All Colors</option>
+                @foreach($optionsList as $color)
+                @php
+                $colorMap = ['W'=>'White','U'=>'Blue','B'=>'Black','R'=>'Red','G'=>'Green'];
+                $label = $colorMap[$color] ?? $color;
+                @endphp
+                <option value="{{ $color }}" {{ request($filter['key']) === $color ? 'selected' : '' }}>
+                    {{ $label }}
+                </option>
+                @endforeach
+            </select>
+            @break
+
+            @case('keyvalue')
+            <select id="{{ $filter['id'] }}" name="{{ $filter['key'] }}" class="{{ $layout }} filter-select">
+                <option value="">All {{ $filter['label'] }}</option>
+                @foreach($optionsList as $value => $label)
+                <option value="{{ $value }}" {{ request($filter['key']) === $value ? 'selected' : '' }}>
+                    {{ $label }}
+                </option>
+                @endforeach
+            </select>
+            @break
+
+            @default
+            <select id="{{ $filter['id'] }}" name="{{ $filter['key'] }}" class="{{ $layout }} filter-select">
+                <option value="">All {{ $filter['label'] }}</option>
+                @foreach($optionsList as $option)
+                <option value="{{ $option }}" {{ request($filter['key']) == $option ? 'selected' : '' }}>
+                    {{ $option }}
+                </option>
+                @endforeach
+            </select>
+            @endswitch
+        </div>
         @endforeach
     </div>
 </section>
