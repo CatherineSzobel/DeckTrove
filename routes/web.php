@@ -11,8 +11,9 @@ use App\Http\Controllers\DeckController;
 use App\Models\Deck;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\IndexController;
 
-Route::get('/', fn() => view('index'))->name('home');
+Route::get('/', [IndexController::class, 'index'])->name('index');
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware('auth');
 // Public Pages
 Route::get('/portfolio', fn() => view('portfolio'))->name('portfolio');
