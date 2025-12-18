@@ -10,6 +10,7 @@ class MagicPackController extends Controller
 {
     public function index(Request $request, MagicPackService $packService)
     {
+        $currentView = request('view', 'full');
         $series = 'magic';
         $page = $request->get('page', 1);
         $search = $request->get('search', '');
@@ -32,7 +33,7 @@ class MagicPackController extends Controller
             ]
         );
 
-        return view('packs.packs', ['packs' => $paginator, 'series' => $series]);
+        return view('packs.packs', ['packs' => $paginator, 'series' => $series, 'currentView' => $currentView]);
     }
 
     public function show($code, MagicPackService $packService)

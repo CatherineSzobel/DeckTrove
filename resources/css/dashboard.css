@@ -7,18 +7,4 @@
 .marquee {
     display: flex;
     width: max-content;
-    animation: scroll-left 30s linear infinite;
-}
-
-.marquee:hover {
-    animation-play-state: paused;
-}
-
-@keyframes scroll-left {
-    from {
-        transform: translateX(0);
-    }
-    to {
-        transform: translateX(-50%);
-    }
 }

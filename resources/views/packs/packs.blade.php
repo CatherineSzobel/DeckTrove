@@ -1,8 +1,3 @@
-@php
-$series = $series ?? 'yugioh';
-$currentView = request('view', 'full');
-@endphp
-
 <x-layout>
     <div class="container mx-auto px-4" data-series="{{ $series }}">
         <x-database-header title="Packs">
@@ -35,9 +30,14 @@ $currentView = request('view', 'full');
 
 
         <!-- Pagination -->
-        <div class="mt-6">
-            {{ $packs->appends(request()->query())->links() }}
+        @if($packs->hasPages())
+        <div class="mt-16 flex justify-center">
+            <div class="rounded-2xl bg-white shadow-sm
+                px-10 py-8">
+                {{ $packs->links() }}
+            </div>
         </div>
+        @endif
     </div>
 
 </x-layout>

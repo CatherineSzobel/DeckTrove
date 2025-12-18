@@ -32,10 +32,9 @@ class DeckController extends Controller
 
         $decks = $query->get();
 
-        // Return HTML for the deck cards
-        $html = view('decks.partials.deck-cards', compact('decks'))->render();
-
-        return response()->json(['html' => $html]);
+        return response()->json([
+            'html' => view('decks.partials.deck-cards', compact('decks'))->render()
+        ]);
     }
 
     public function builder(Request $request)

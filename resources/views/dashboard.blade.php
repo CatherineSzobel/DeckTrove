@@ -43,7 +43,7 @@
                                 <div class="bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50 hover:border-amber-400/50 transition-all duration-300 transform hover:scale-105 hover:shadow-xl hover:shadow-amber-500/10">
                                     <div class="bg-gradient-to-br from-slate-700 to-slate-900 rounded-lg h-40 flex items-center justify-center mb-3 overflow-hidden relative">
                                         @if($deck->image)
-                                        <img src="{{ $deck->image }}" alt="{{ $deck->name }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300">
+                                        <img src="{{ $deck->image }}" alt="{{ $deck->name }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" loading="eager">
                                         @else
                                         <div class="text-slate-500 group-hover:text-amber-400 transition-colors">
                                             <span class="text-5xl">No Image</span>
@@ -178,22 +178,14 @@
                             <h3 class="text-xl font-bold text-white">Quick Links</h3>
                         </div>
                         <div class="flex flex-col gap-3">
-                            <a href="{{ route('yugioh.cards.index') }}"
-                                class="group flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-semibold shadow-lg hover:shadow-blue-500/50 transition-transform transform hover:scale-105">
-                                Yu-Gi-Oh! Cards
-                            </a>
-                            <a href="{{ route('magic.cards.index') }}"
-                                class="group flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white font-semibold shadow-lg hover:shadow-purple-500/50 transition-transform transform hover:scale-105">
-                                Magic Cards
-                            </a>
-                            <a href="{{ route('public-deck') }}"
-                                class="group flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-semibold shadow-lg hover:shadow-red-500/50 transition-transform transform hover:scale-105">
-                                Public Decks
-                            </a>
-                            <a href="{{ route('magic.deck.builder') }}"
-                                class="group flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-900 font-semibold shadow-lg hover:shadow-amber-500/50 transition-transform transform hover:scale-105">
-                                Build New Deck
-                            </a>
+                            <x-dashboard-quick-link class="gap-2"
+                                :routes="['#', 'magic.cards.index', 'public-deck', 'magic.deck.builder']" :titles="['Yu-Gi-Oh! Cards', 'Magic Cards', 'Public Decks', 'Deck Builder']"
+                                :colors="[
+    'bg-slate-800 border border-slate-700 hover:border-purple-500',
+    'bg-slate-800 border border-slate-700 hover:border-purple-500',
+    'bg-slate-800 border border-slate-700 hover:border-red-500',
+    'bg-slate-800 border border-slate-700 hover:border-amber-500'
+]" />
                         </div>
                     </div>
 

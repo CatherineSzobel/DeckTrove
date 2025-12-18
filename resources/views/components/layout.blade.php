@@ -90,7 +90,7 @@
                         <div class="flex items-baseline space-x-4">
 
                             @if (!request()->routeIs('register','login','profile','decks','public-deck') && !request()->is('*/card/*') && !request()->is('*/pack/*'))
-                            <x-select-dropdown :class="'series-selector'" :options="['yugioh' => 'Yu-Gi-Oh!', 'magic' => 'Magic: The Gathering']" />
+                            <x-select-dropdown :class="'series-selector'" :options="['magic' => 'Magic: The Gathering','yugioh' => 'Yu-Gi-Oh!', 'pokemon' => 'Pokémon', 'digimon' => 'Digimon']" />
                             @endif
 
                             @auth

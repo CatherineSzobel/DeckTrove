@@ -10,6 +10,11 @@ class MagicController extends Controller
 {
 
     protected MagicService $magic;
+
+    public function __construct(MagicService $magic)
+    {
+        $this->magic = $magic;
+    }
     public function index(Request $request, MagicService $magic)
     {
         $page = $request->get('page', 1);
@@ -22,7 +27,7 @@ class MagicController extends Controller
             'view' => $view,
         ]));
 
-        $filterOptions = $magic->getFilterOptions(); // <- dynamically fetched
+        $filterOptions = $magic->getFilterOptions(); 
         $cards = array_slice($apiResponse['data'] ?? [], 0, $magic->itemsPerPage($view));
         $paginated = new LengthAwarePaginator(
             $cards,
@@ -42,13 +47,6 @@ class MagicController extends Controller
                 $filterOptions['set_name'] ?? [],
             ],
         ]);
-    }
-
-
-
-    public function __construct(MagicService $magic)
-    {
-        $this->magic = $magic;
     }
 
     /**

@@ -2,12 +2,9 @@
     @foreach($cards as $card)
     <div class="rounded-xl bg-white shadow hover:shadow-lg transition-transform transform hover:scale-105 flex flex-col h-full overflow-hidden">
         <a href="{{ url('/magic/card/' . $card['id']) }}" class="relative group">
-            <img src="{{ $card['image_uris']['normal'] ?? $card['card_faces'][0]['image_uris']['normal'] ?? 'https://via.placeholder.com/200x280?text=No+Image' }}"
-                 alt="{{ $card['name'] }}"
-                 class="w-full h-64 object-cover rounded-t-lg transition-transform duration-300 group-hover:scale-105">
-            
-            <!-- Optional hover overlay -->
-            <div class="absolute inset-0 bg-black bg-opacity-20 opacity-0 group-hover:opacity-100 transition-opacity rounded-t-lg"></div>
+            <img src="{{ $card['image_uris']['normal'] ?? $card['card_faces'][0]['image_uris']['normal'] ?? 'https://via.placeholder.com/200x280?text=No+Image' }}" alt="{{ $card['name'] }}"
+                class="w-full h-64 object-cover rounded-t-lg transition-transform duration-300 group-hover:scale-105 object-top">
+
         </a>
 
         <div class="p-4 flex flex-col flex-1">
