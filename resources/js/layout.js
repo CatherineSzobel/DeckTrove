@@ -1,100 +1,91 @@
 const dashboardLinks = document.querySelectorAll(".dashboard-link");
-const seriesList = ["yugioh", "magic", "pokemon"]; // Add more if needed
+const SERIES_CONFIG = {
+    magic: { label: "Magic: The Gathering", base: "/magic" },
+    //yugioh:  { label: "Yu-Gi-Oh!", base: "/yugioh" },
+    //pokemon: { label: "Pokémon", base: "/pokemon" },
+    // digimon: { label: "Digimon", base: "/digimon" } // add when ready
+};
 
-async function urlExists(url) {
-    try {
-        const response = await fetch(url, { method: "HEAD" });
-        return response.ok;
-    } catch (err) {
-        console.error("Error checking URL:", err);
-        return false;
-    }
-}
+const SERIES_KEYS = Object.keys(SERIES_CONFIG);
 
+/* ---------------------------
+   Series Selector
+---------------------------- */
 function seriesSelectorSetup() {
     const selectors = document.querySelectorAll(".series-selector");
     const dashboardLogos = document.querySelectorAll(".dashboard-logo");
     let selectedSeries = localStorage.getItem("selectedSeries");
 
-    // Redirect to homepage if no series selected and not on homepage
+    // Redirect to homepage if invalid series
+    if (selectedSeries && !SERIES_CONFIG[selectedSeries]) {
+        localStorage.removeItem("selectedSeries");
+        selectedSeries = null;
+    }
+
     if (!selectedSeries && window.location.pathname !== "/") {
         window.location.href = "/";
         return;
     }
 
-    selectors.forEach(async (selector) => {
-        if (selectedSeries) selector.value = selectedSeries;
-
-        const buttonText = selector
-            .closest(".group")
-            ?.querySelector(".viewtype_text");
-        if (buttonText && selectedSeries) {
-            buttonText.textContent =
-                selectedSeries.charAt(0).toUpperCase() +
-                selectedSeries.slice(1);
-        }
-
+    for (const selector of selectors) {
         // Disable invalid options
         for (const option of selector.options) {
-            const url = `/${option.value}/cards`;
-            const exists = await urlExists(url);
-            option.disabled = !exists;
-            if (!exists && option.value === selector.value) {
-                // If the current selected series doesn't exist, show a warning
-                if (buttonText) buttonText.textContent = "Unavailable";
-            }
+            option.disabled = !SERIES_CONFIG[option.value];
         }
 
-        selector.addEventListener("change", async () => {
+        if (selectedSeries) {
+            selector.value = selectedSeries;
+            updateButtonText(selector, selectedSeries);
+        }
+
+        selector.addEventListener("change", () => {
             const series = selector.value;
-            if (!series) {
-                localStorage.removeItem("selectedSeries");
-                window.location.href = "/";
-                return;
-            }
 
-            const url = `/${series}/cards`;
-            const exists = await urlExists(url);
-            if (!exists) {
-                alert("This series page does not exist."); // Optional user feedback
-                return; // Do not redirect
-            }
+            if (!SERIES_CONFIG[series]) return;
 
             localStorage.setItem("selectedSeries", series);
             updateLinks(series);
-
-            if (buttonText) {
-                buttonText.textContent =
-                    series.charAt(0).toUpperCase() + series.slice(1);
-            }
-
-            window.location.href = url;
+            window.location.href = `/${series}/cards`;
         });
-    });
+    }
 
-    dashboardLogos.forEach((img) => {
-        img.addEventListener("click", async () => {
+    // Dashboard logo clicks
+    for (const img of dashboardLogos) {
+        img.addEventListener("click", () => {
             const series = img.dataset.series;
-            if (!series) return;
+            if (!SERIES_CONFIG[series]) return;
 
-            const url = `/${series}/cards`;
-          
             localStorage.setItem("selectedSeries", series);
             updateLinks(series);
-            window.location.href = url;
+            window.location.href = `/${series}/cards`;
         });
-    });
+    }
 
-    if (selectedSeries) updateLinks(selectedSeries);
+    if (selectedSeries) {
+        updateLinks(selectedSeries);
+    }
 }
 
-// Utility to clean URLs from existing series prefix
+/* ---------------------------
+   Helpers
+---------------------------- */
+function updateButtonText(selector, series) {
+    const buttonText = selector
+        .closest(".group")
+        ?.querySelector(".viewtype_text");
+
+    if (buttonText) {
+        buttonText.textContent = SERIES_CONFIG[series].label;
+    }
+}
+
+// Remove existing series prefix from URLs
 function cleanPath(path) {
-    const pattern = new RegExp(`^/(${seriesList.join("|")})(/|$)`);
+    const pattern = new RegExp(`^/(${SERIES_KEYS.join("|")})(/|$)`);
     return path.replace(pattern, "/");
 }
 
-// Update all dashboard/nav links with selected series
+// Update nav/dashboard links
 function updateLinks(series) {
     dashboardLinks.forEach((link) => {
         const href = link.getAttribute("href");
@@ -103,9 +94,14 @@ function updateLinks(series) {
         const cleanHref = cleanPath(href);
         const newHref =
             cleanHref === "/" ? `/${series}/cards` : `/${series}${cleanHref}`;
+
         link.setAttribute("href", newHref);
     });
 }
+
+/* ---------------------------
+   User Avatar Dropdown
+---------------------------- */
 function initUserAvatarDropdown() {
     const container = document.getElementById("userDropdown-container");
     const btn = document.getElementById("userDropdown-btn");
@@ -113,13 +109,11 @@ function initUserAvatarDropdown() {
 
     if (!container || !btn || !menu) return;
 
-    // Toggle menu on click
     btn.addEventListener("click", (e) => {
         e.preventDefault();
         menu.classList.toggle("hidden");
     });
 
-    // Close menu if click outside
     document.addEventListener("click", (e) => {
         if (!container.contains(e.target)) {
             menu.classList.add("hidden");
@@ -127,34 +121,39 @@ function initUserAvatarDropdown() {
     });
 }
 
-// Initialize on DOM load
+function initShowcaseToggle() {
+    const button = document.getElementById("showcase_button");
+    const details = document.getElementById("showcaseDetails");
+
+    if (!button || !details) return;
+
+    let isOpen = false;
+
+    details.style.overflow = "hidden";
+    details.style.transition = "max-height 0.5s ease, opacity 0.5s ease";
+    details.style.maxHeight = "0px";
+    details.style.opacity = 0;
+
+    button.addEventListener("click", (e) => {
+        e.preventDefault();
+
+        isOpen = !isOpen;
+
+        if (isOpen) {
+            details.style.maxHeight = details.scrollHeight + "px";
+            details.style.opacity = 1;
+        } else {
+            details.style.maxHeight = "0px";
+            details.style.opacity = 0;
+        }
+    });
+}
+
+/* ---------------------------
+   Init
+---------------------------- */
 document.addEventListener("DOMContentLoaded", () => {
     seriesSelectorSetup();
     initUserAvatarDropdown();
-    const showcaseButton = document.getElementById("showcase_button");
-    const showcaseDetails = document.getElementById("showcaseDetails");
-
-    if (showcaseButton && showcaseDetails) {
-        // Prepare for smooth height transition
-        showcaseDetails.style.maxHeight = "0px";
-        showcaseDetails.style.overflow = "hidden";
-        showcaseDetails.style.transition =
-            "max-height 0.5s ease, opacity 0.5s ease";
-        showcaseDetails.style.opacity = 0;
-
-        showcaseButton.addEventListener("click", (e) => {
-            e.preventDefault();
-
-            if (showcaseDetails.style.maxHeight === "0px") {
-                // Expand dynamically based on content
-                showcaseDetails.style.maxHeight =
-                    showcaseDetails.scrollHeight + "px";
-                showcaseDetails.style.opacity = 1;
-            } else {
-                // Collapse
-                showcaseDetails.style.maxHeight = "0px";
-                showcaseDetails.style.opacity = 0;
-            }
-        });
-    }
+    initShowcaseToggle();
 });

@@ -17,6 +17,7 @@
     @php
     $defaultAssets = [
     'resources/css/app.css',
+    'resources/js/app.js',
     'resources/css/layout.scss',
     'resources/js/layout.js'
     ];
@@ -42,7 +43,8 @@
                     </p>
                 </a>
 
-                <section id="showcaseDetails" class="max-h-0 overflow-hidden w-full flex flex-col items-center gap-4 mt-4 transition-all duration-500 ease-in-out">
+                <section id="showcaseDetails"
+                    class="max-h-0 overflow-hidden w-full ... transition-all duration-500 ease-in-out">
                     <div class="h-1 w-24 bg-gray-300 relative">
                         <div id="showcaseProgress" class="h-1 bg-blue-500 transition-all duration-500 ease-in-out"></div>
                     </div>

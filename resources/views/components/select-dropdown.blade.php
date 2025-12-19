@@ -3,24 +3,24 @@
 'options' => [],
 'class' => '',
 'id' => '',
-'layout' => 'mt-2 px-2 py-1 rounded border text-xs text-gray-400'
+'layout' => 'mt-2 px-2 py-1 rounded border text-xs text-gray-400',
+'activeList' => [true, true, false, false]
 ])
 
 <select class="{{ $class }} {{ $layout }}" id="{{ $id }}">
-
-    <?php if ($optgroup === 'NONE') : ?>
+    @if ($optgroup !== 'NONE')
+    <optgroup label="{{ $optgroup }}">
+        @endif
 
         @foreach ($options as $value => $label)
-        <option value="{{ $value }}">{{ $label }}</option>
+        <option
+            value="{{ $value }}"
+            @disabled($activeList[$value] ?? false)>
+            {{ $label }}
+        </option>
         @endforeach
 
-    <?php else : ?>
-
-        <optgroup label="{{ $optgroup }}">
-            @foreach ($options as $value => $label)
-            <option value="{{ $value }}">{{ $label }}</option>
-            @endforeach
-            
-        </optgroup>
-    <?php endif; ?>
+        @if ($optgroup !== 'NONE')
+    </optgroup>
+    @endif
 </select>
