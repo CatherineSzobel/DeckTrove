@@ -41,3 +41,6 @@
     color: #2629dc;
 }
 
+.dropzone .drag-link {
+    pointer-events: none;
+}

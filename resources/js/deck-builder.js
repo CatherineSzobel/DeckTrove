@@ -490,6 +490,28 @@ function handleAddingPlusMinusFunction(cardContainer) {
         }
     });
 }
+function enableClickToRemoveFromDeck() {
+    document.addEventListener("click", (e) => {
+
+        // Ignore button clicks
+        if (
+            e.target.closest(".plus-btn") ||
+            e.target.closest(".minus-btn") ||
+            e.target.closest("a")
+        ) return;
+
+        const card = e.target.closest(".card-wrapper");
+        if (!card) return;
+
+        const deckZone = card.closest(".dropzone");
+        if (!deckZone) return;
+
+        deckZone.removeChild(card);
+        updateCounts();
+        updateSearchPoolButtons();
+    });
+}
+
 
 // =================== DRAG & DROP ===================
 function handleDragAndDrop() {
@@ -779,6 +801,8 @@ document.addEventListener("DOMContentLoaded", () => {
     highlightActiveDeck();
     handleAddingPlusMinusFunction(cardContainer);
     handleDragAndDrop();
+    enableClickToRemoveFromDeck();
+
 
     const defaultDeck = document.querySelector(".deckContainer");
     if (defaultDeck) setActiveDeck(defaultDeck);
