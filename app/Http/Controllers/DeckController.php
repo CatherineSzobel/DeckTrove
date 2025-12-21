@@ -24,13 +24,13 @@ class DeckController extends Controller
     {
         $game = $request->query('game', 'all');
 
-        $query = Deck::with('user')->where('is_public', true);
 
-        if ($game !== 'all') {
-            $query->where('game', $game);
-        }
-
-        $decks = $query->get();
+        $decks = Deck::with('user')
+            ->where('is_public', true)
+            ->when($game && $game !== 'all', function ($query) use ($game) {
+                $query->where('game', $game);
+            })
+            ->get();
 
         return response()->json([
             'html' => view('decks.partials.deck-cards', compact('decks'))->render()

@@ -15,24 +15,24 @@ class MagicController extends Controller
     {
         $this->magic = $magic;
     }
-    public function index(Request $request, MagicService $magic)
+    public function index(Request $request)
     {
         $page = $request->get('page', 1);
         $view = $request->get('view', 'full');
 
         $filters = $request->only(['search', 'type', 'color', 'rarity', 'set_name']);
 
-        $apiResponse = $magic->fetchCards(array_merge($filters, [
+        $apiResponse = $this->magic->fetchCards(array_merge($filters, [
             'page' => $page,
             'view' => $view,
         ]));
 
-        $filterOptions = $magic->getFilterOptions(); 
-        $cards = array_slice($apiResponse['data'] ?? [], 0, $magic->itemsPerPage($view));
+        $filterOptions = $this->magic->getFilterOptions(); 
+        $cards = array_slice($apiResponse['data'] ?? [], 0, $this->magic->itemsPerPage($view));
         $paginated = new LengthAwarePaginator(
             $cards,
             $apiResponse['total_cards'] ?? 10000,
-            $magic->itemsPerPage($view),
+            $this->magic->itemsPerPage($view),
             $page,
             ['path' => $request->url(), 'query' => $request->query()]
         );

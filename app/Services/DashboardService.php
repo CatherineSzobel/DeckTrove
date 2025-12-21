@@ -3,78 +3,48 @@
 namespace App\Services;
 
 use App\Models\Deck;
-use Illuminate\Support\Facades\File;
+use App\Models\User;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Collection;
 
 class DashboardService
 {
-    public function getRecentDecks($userId, $tcg = 'all')
+
+    public function getRecentDecks(User $user, string $tcg = 'all', int $limit = 3): Collection
     {
-        $decks = Deck::where('user_id', $userId)
-            ->orderBy('created_at', 'desc')
-            ->take(3)
+        return Deck::where('user_id', $user->id)
+            ->when($tcg !== 'all', fn($q) => $q->where('game', $tcg))
+            ->latest()
+            ->take($limit)
             ->get();
-        if ($tcg === 'all') {
-            return $decks;
-        }
-        return $decks->where('game', $tcg);
     }
     /**
      * Get user deck statistics
      */
-    public function getDeckAmountCount($userId, $tcg = 'all')
+    public function countDecksByTcg(User $user): array
     {
-        $query = Deck::where('user_id', $userId);
-
-        if ($tcg !== 'all') {
-            $query->where('game', $tcg);
-        }
-
-        $recent = $query->orderBy('created_at', 'desc')->take(6)->get();
-
-        $allDecks = Deck::where('user_id', $userId)->get();
+        $counts = Deck::where('user_id', $user->id)
+            ->selectRaw('game, COUNT(*) as count')
+            ->groupBy('game')
+            ->pluck('count', 'game');
 
         return [
-            'total' => $allDecks->count(),
-            'recent' => $recent,
-            'yugioh' => $allDecks->where('game', 'yugioh')->count(),
-            'magic' => $allDecks->where('game', 'magic')->count(),
+            'total'   => $counts->sum(),
+            'yugioh'  => $counts['yugioh'] ?? 0,
+            'magic'   => $counts['magic'] ?? 0,
+            'pokemon' => $counts['pokemon'] ?? 0,
+            'digimon' => $counts['digimon'] ?? 0,
         ];
     }
 
-
     /**
-     * Get random cards (70% YGO, 30% Magic)
+     * @TODO refactor into a cardservice so for the future if there are more tcg series
      */
     public function getRandomCards(int $count): Collection
     {
-        $weight = 0.7;
-        $ygoCount = (int) round($count * $weight);
-        $magicCount = $count - $ygoCount;
-
-        return $this->getRandomYugiohCards($ygoCount)
-            ->merge($this->getRandomMagicCards($magicCount))
+        return $this->getRandomMagicCards($count)
             ->shuffle()
             ->values();
-    }
-
-    /**
-     * Random Yu-Gi-Oh cards from JSON
-     */
-    private function getRandomYugiohCards(int $count): Collection
-    {
-        $jsonPath = public_path('json/yugioh-cards.json');
-        if (!File::exists($jsonPath)) return collect();
-
-        $allCards = json_decode(File::get($jsonPath), true)['data'] ?? [];
-        if (empty($allCards)) return collect();
-
-        $randomIndices = array_rand($allCards, min($count, count($allCards)));
-        if (!is_array($randomIndices)) $randomIndices = [$randomIndices];
-
-        $cards = array_map(fn($i) => $allCards[$i] ?? null, $randomIndices);
-        return collect(array_filter($cards));
     }
 
     /**

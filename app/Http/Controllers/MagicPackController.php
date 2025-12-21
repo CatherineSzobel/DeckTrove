@@ -8,15 +8,23 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class MagicPackController extends Controller
 {
-    public function index(Request $request, MagicPackService $packService)
-    {
-        $currentView = request('view', 'full');
-        $series = 'magic';
-        $page = $request->get('page', 1);
-        $search = $request->get('search', '');
+    protected MagicPackService $packService;
 
-        $sets = $packService->getSets();
-        $sets = $packService->searchSets($search, $sets);
+    public function __construct(MagicPackService $packService)
+    {
+        $this->packService = $packService;
+    }
+
+
+    public function index(Request $request)
+    {
+        $currentView = $request->input('view', 'full');
+        $series = 'magic';
+        $page = (int) $request->input('page', 1);
+        $search = $request->input('search', '');
+
+        $sets = $this->packService->getSets();
+        $sets = $this->packService->searchSets($search, $sets);
 
         $perPage = 30;
         $offset = ($page - 1) * $perPage;
@@ -33,13 +41,17 @@ class MagicPackController extends Controller
             ]
         );
 
-        return view('packs.packs', ['packs' => $paginator, 'series' => $series, 'currentView' => $currentView]);
+        return view('packs.packs', 
+        ['packs' => $paginator, 
+        'series' => $series, 
+        'currentView' => $currentView]);
     }
 
-    public function show($code, MagicPackService $packService)
+    public function show(string $code)
     {
-        $set = $packService->getSet($code);
-        $cards = $packService->getSetCards($code);
+
+        $set = $this->packService->getSet($code);
+        $cards = $this->packService->getSetCards($code);
 
         return view('packs.pack', [
             'set' => $set,

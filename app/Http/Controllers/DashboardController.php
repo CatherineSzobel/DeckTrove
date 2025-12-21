@@ -4,16 +4,21 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Auth;
 use App\Services\DashboardService;
+use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    public function index(DashboardService $service)
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+    public function index(Request $request, DashboardService $service)
     {
         if (!Auth::check()) return redirect()->route('login');
 
         $user = Auth::user();
-        $tcg = request('tcg', 'all');
-        $stats = $service->getDeckAmountCount($user->id, $tcg);
+        $tcg = $request->query('tcg', 'all');
+        $stats = $service->countDecksByTcg($user, $tcg);
         $randomCards = $service->getRandomCards(5);
         $tcgs = [
             ['name' => 'Total', 'count' => $stats['total'] ?? 0, 'color' => 'amber-400'],
@@ -24,7 +29,7 @@ class DashboardController extends Controller
         ];
         return view('dashboard', [
             'totalDecks' => $stats['total'],
-            'recentDecks' => $service->getRecentDecks($user->id, $tcg),
+            'recentDecks' => $service->getRecentDecks($user, $tcg),
             'yugiohDecks' => $stats['yugioh'],
             'magicDecks' => $stats['magic'],
             'randomCards' => $randomCards,
