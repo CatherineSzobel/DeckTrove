@@ -1,4 +1,4 @@
-<x-layout>
+<x-layout :js="['resources/js/account.js']">
     <div class="max-w-sm mx-auto mt-12">
 
         {{-- Card --}}
@@ -22,11 +22,17 @@
                 {{-- Avatar (centered, clickable for preview) --}}
                 <div class="absolute left-1/2 -bottom-14 transform -translate-x-1/2 w-28 h-28 rounded-full bg-white border-4 border-gray-200 dark:border-gray-700 shadow-md overflow-hidden flex items-center justify-center">
                     <label for="avatar" class="w-full h-full cursor-pointer">
-                        @if($user->avatar && file_exists(public_path($user->avatar)))
-                        <img id="avatarPreview" src="{{ asset($user->avatar) }}" alt="Avatar" class="w-full h-full object-cover">
-                        @else
-                        <img id="avatarPreview" src="{{ asset('default-avatar.png') }}" alt="Avatar" class="w-full h-full object-cover">
-                        @endif
+                        @php
+                        $avatarPath = $user && $user->avatar
+                        ? asset('storage/' . $user->avatar)
+                        : asset('default-avatar.png');
+                        @endphp
+
+                        <img
+                            id="avatarPreview"
+                            src="{{ asset('storage/' . $user->avatar) }}"
+                            alt="Avatar"
+                            class="w-full h-full object-cover" />
                     </label>
                 </div>
             </div>
@@ -59,7 +65,7 @@
                 </div>
 
                 {{-- Avatar Input --}}
-                <input type="file" name="avatar" id="avatar" class="hidden" accept="image/*">
+                <input type="file" name="avatar" id="avatar">
 
                 {{-- Submit --}}
                 <button type="submit"
@@ -70,25 +76,4 @@
         </div>
     </div>
 
-    {{-- Live preview script --}}
-    <script>
-        const avatarInput = document.getElementById('avatar');
-        const avatarPreview = document.getElementById('avatarPreview');
-
-        avatarInput.addEventListener('change', function() {
-            const file = this.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = e => {
-                    avatarPreview.src = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-
-        // Make the avatar label clickable
-        document.querySelector('.avatar-wrapper label').addEventListener('click', () => {
-            avatarInput.click();
-        });
-    </script>
 </x-layout>

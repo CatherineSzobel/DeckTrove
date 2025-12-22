@@ -20,8 +20,11 @@ Route::get('/', [IndexController::class, 'index'])->name('index');
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware('auth');
 // Public Pages
 Route::get('/portfolio', fn() => view('portfolio'))->name('portfolio');
-Route::get('/profile', fn() => view('account.profile'))->name('profile');
-route::get('/user/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
+    Route::get('/user/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/user/edit', [ProfileController::class, 'update'])->name('profile.update'); // <-- add this
+});
 Route::middleware('auth')->put('/profile', [ProfileController::class, 'update'])->name('profile.update');
 Route::get('/decks', function () {
 

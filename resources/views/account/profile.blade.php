@@ -21,12 +21,12 @@
 
                 {{-- Avatar (centered overlapping) --}}
                 <div class="absolute left-1/2 -bottom-14 transform -translate-x-1/2 w-28 h-28 rounded-full bg-white border-4 border-gray-200 dark:border-gray-700 shadow-md flex items-center justify-center overflow-hidden">
-                    @if(auth()->user()->avatar && file_exists(public_path(auth()->user()->avatar)))
-                        <img src="{{ asset(auth()->user()->avatar) }}" alt="Avatar" class="w-full h-full object-cover">
+                    @if(auth()->user()->avatar)
+                    <img src="{{ asset('storage/' . auth()->user()->avatar) }}" alt="Avatar" class="w-full h-full object-cover">
                     @else
-                        <svg viewBox="0 0 128 128" class="w-24 h-24 text-gray-400">
-                            <path fill="currentColor" d="M64 8a56 56 0 1 0 56 56 56 56 0 0 0-56-56zm0 104a24 24 0 1 1 24-24 24 24 0 0 1-24 24z"></path>
-                        </svg>
+                    <svg viewBox="0 0 128 128" class="w-24 h-24 text-gray-400">
+                        <path fill="currentColor" d="M64 8a56 56 0 1 0 56 56 56 56 0 0 0-56-56zm0 104a24 24 0 1 1 24-24 24 24 0 0 1-24 24z"></path>
+                    </svg>
                     @endif
                 </div>
             </div>
