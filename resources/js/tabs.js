@@ -17,7 +17,8 @@ export function initTabs(container) {
     panels[0].classList.remove("hidden");
 
     tabs.forEach((tab) => {
-        tab.addEventListener("click", () => {
+        tab.addEventListener("click", (e) => {
+            e.preventDefault();
             // Deactivate all tabs
             tabs.forEach((t) => {
                 t.classList.remove(...active);
