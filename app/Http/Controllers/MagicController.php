@@ -27,7 +27,7 @@ class MagicController extends Controller
             'view' => $view,
         ]));
 
-        $filterOptions = $this->magic->getFilterOptions(); 
+        $filterOptions = $this->magic->getFilterOptions();
         $cards = array_slice($apiResponse['data'] ?? [], 0, $this->magic->itemsPerPage($view));
         $paginated = new LengthAwarePaginator(
             $cards,
@@ -37,6 +37,20 @@ class MagicController extends Controller
             ['path' => $request->url(), 'query' => $request->query()]
         );
 
+        if ($request->ajax()) {
+            return response()->json([
+                'html' => view('cards.partials.cards-inner', [
+                    'cards' => $paginated,
+                    'series' => 'magic',
+                    'currentView' => $view,
+                ])->render(),
+                'count' => $paginated->total() ? "Showing {$paginated->firstItem()}-{$paginated->lastItem()} of {$paginated->total()} cards" : "No cards found",
+            ]);
+        }
+
+
+
+        // Full page for normal requests
         return view('cards.cards', [
             'cards' => $paginated,
             'series' => 'magic',

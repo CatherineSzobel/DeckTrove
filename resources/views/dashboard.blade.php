@@ -1,5 +1,5 @@
 <x-layout :js="['resources/js/moving-carousel.js']" :css="['resources/css/dashboard.css']">
-    <div class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-4 md:p-8">
+    <div class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-4 md:p-8 rounded-lg">
         <div class="max-w-7xl mx-auto">
 
             <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -104,53 +104,16 @@
                         </div>
                         <div class="overflow-hidden relative rounded-xl">
                             <div class="marquee">
-                                @if (isset($randomCards) && count($randomCards) > 0)
                                 <div class="flex gap-4 py-4">
-                                    <!-- First set -->
                                     @foreach($randomCards as $card)
                                     @php
-                                    $series = data_get($card, 'game') ?: (isset($card['card_images']) ? 'yugioh' : 'magic');
-                                    $imgUrl = null;
-                                    if (isset($card['card_images'][0]['image_url_small'])) {
-                                    $imgUrl = $card['card_images'][0]['image_url_small'];
-                                    $series = 'yugioh';
-                                    } elseif (isset($card['image_uris']['small'])) {
-                                    $imgUrl = $card['image_uris']['small'];
-                                    $series = 'magic';
-                                    }
-                                    $indexLink = url('/' . $series . '/card/' . $card['id']);
+                                    $imgUrl = data_get($card, 'image_uris.small');
+                                    $indexLink = url('/magic/card/' . ($card['id'] ?? ''));
                                     @endphp
                                     <a href="{{ $indexLink }}" class="flex-shrink-0 card-link group">
                                         <div class="h-56 w-40 rounded-xl overflow-hidden shadow-xl hover:shadow-2xl hover:shadow-purple-500/30 transition-all transform hover:scale-110 hover:-rotate-2 cursor-pointer border-2 border-slate-700 hover:border-purple-500">
                                             @if($imgUrl)
-                                            <img src="{{ $imgUrl }}" alt="{{ $card['name'] ?? 'Card' }}" class="w-full h-full object-cover">
-                                            @else
-                                            <div class="w-full h-full bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 flex items-center justify-center text-slate-500 group-hover:text-purple-400 transition-colors">
-                                                <span class="text-4xl">No image</span>
-                                            </div>
-                                            @endif
-                                        </div>
-                                    </a>
-                                    @endforeach
-
-                                    <!-- Duplicate set -->
-                                    @foreach($randomCards as $card)
-                                    @php
-                                    $series = data_get($card, 'game') ?: (isset($card['card_images']) ? 'yugioh' : 'magic');
-                                    $imgUrl = null;
-                                    if (isset($card['card_images'][0]['image_url_small'])) {
-                                    $imgUrl = $card['card_images'][0]['image_url_small'];
-                                    $series = 'yugioh';
-                                    } elseif (isset($card['image_uris']['small'])) {
-                                    $imgUrl = $card['image_uris']['small'];
-                                    $series = 'magic';
-                                    }
-                                    $indexLink = url('/' . $series . '/card/' . $card['id']);
-                                    @endphp
-                                    <a href="{{ $indexLink }}" class="flex-shrink-0 card-link group">
-                                        <div class="h-56 w-40 rounded-xl overflow-hidden shadow-xl hover:shadow-2xl hover:shadow-purple-500/30 transition-all transform hover:scale-110 hover:-rotate-2 cursor-pointer border-2 border-slate-700 hover:border-purple-500">
-                                            @if($imgUrl)
-                                            <img src="{{ $imgUrl }}" alt="{{ $card['name'] ?? 'Card' }}" class="w-full h-full object-cover">
+                                            <img src="{{ $imgUrl }}" alt="{{ $card['name'] ?? 'Card' }}" class="w-full h-full object-cover" loading="lazy">
                                             @else
                                             <div class="w-full h-full bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 flex items-center justify-center text-slate-500 group-hover:text-purple-400 transition-colors">
                                                 <span class="text-4xl">No image</span>
@@ -160,7 +123,6 @@
                                     </a>
                                     @endforeach
                                 </div>
-                                @endif
                             </div>
                         </div>
                     </div>
@@ -168,9 +130,6 @@
 
                 <!-- Sidebar (Right - 1 column) -->
                 <div class="lg:col-span-1 flex flex-col gap-6 lg:h-full">
-
-
-
                     <!-- Quick Links -->
                     <div class="bg-slate-900/90 backdrop-blur-md rounded-2xl shadow-lg border border-slate-700/50 p-6 hover:border-purple-500/40 transition-all flex flex-col">
                         <div class="flex items-center gap-3 mb-6">

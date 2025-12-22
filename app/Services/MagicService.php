@@ -89,7 +89,8 @@ class MagicService
 
     public function fetchCards(array $params): array
     {
-        $query = collect([
+        // Build Scryfall query
+        $queryParts = collect([
             'game:paper',
             $this->search($params),
             $this->type($params),
@@ -100,21 +101,50 @@ class MagicService
 
         $cacheKey = $this->cacheKey($params);
 
-        return Cache::remember($cacheKey, $this->cacheTTL, function () use ($query, $params) {
-            $page = min(max((int) ($params['page'] ?? 1), 1), 100);
+        return Cache::remember($cacheKey, $this->cacheTTL, function () use ($queryParts, $params) {
+            // Ensure page is at least 1
+            $page = max((int)($params['page'] ?? 1), 1);
 
             $response = $this->scryfall()->get($this->apiPath, [
-                'q' => $query,
+                'q' => $queryParts,
                 'order' => 'name',
                 'page' => $page,
             ]);
 
-            if ($response->status() === 404) return ['data' => [], 'has_more' => false, 'total_cards' => 0];
-            if ($response->failed()) {
-                logger()->error('Scryfall API failure', ['status' => $response->status(), 'body' => $response->body()]);
+            // If 404 → treat as no results
+            if ($response->status() === 404) {
+                return [
+                    'data' => [],
+                    'has_more' => false,
+                    'total_cards' => 0,
+                ];
+            }
+
+            // If other 4xx → likely bad filter/query → return empty results
+            if ($response->clientError()) {
+                logger()->warning('Scryfall client error', [
+                    'status' => $response->status(),
+                    'query' => $queryParts,
+                    'params' => $params,
+                ]);
+                return [
+                    'data' => [],
+                    'has_more' => false,
+                    'total_cards' => 0,
+                ];
+            }
+
+            // 5xx → API/server unavailable → abort
+            if ($response->serverError()) {
+                logger()->error('Scryfall API server error', [
+                    'status' => $response->status(),
+                    'query' => $queryParts,
+                    'params' => $params,
+                ]);
                 abort(502, 'Scryfall API unavailable');
             }
 
+            // Otherwise return successful response
             return $response->json();
         });
     }
