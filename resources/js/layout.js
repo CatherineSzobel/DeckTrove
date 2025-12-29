@@ -27,11 +27,10 @@ function seriesSelectorSetup() {
         return;
     }
 
-    for (const selector of selectors) {
-        // Disable invalid options
-        for (const option of selector.options) {
+    selectors.forEach((selector) => {
+        Array.from(selector.options).forEach((option) => {
             option.disabled = !SERIES_CONFIG[option.value];
-        }
+        });
 
         if (selectedSeries) {
             selector.value = selectedSeries;
@@ -47,10 +46,10 @@ function seriesSelectorSetup() {
             updateLinks(series);
             window.location.href = `/${series}/cards`;
         });
-    }
+    });
 
     // Dashboard logo clicks
-    for (const img of dashboardLogos) {
+    dashboardLogos.forEach((img) => {
         img.addEventListener("click", () => {
             const series = img.dataset.series;
             if (!SERIES_CONFIG[series]) return;
@@ -59,11 +58,9 @@ function seriesSelectorSetup() {
             updateLinks(series);
             window.location.href = `/${series}/cards`;
         });
-    }
+    });
 
-    if (selectedSeries) {
-        updateLinks(selectedSeries);
-    }
+    if (selectedSeries) updateLinks(selectedSeries);
 }
 
 /* ---------------------------
@@ -73,10 +70,7 @@ function updateButtonText(selector, series) {
     const buttonText = selector
         .closest(".group")
         ?.querySelector(".viewtype_text");
-
-    if (buttonText) {
-        buttonText.textContent = SERIES_CONFIG[series].label;
-    }
+    if (buttonText) buttonText.textContent = SERIES_CONFIG[series].label;
 }
 
 // Remove existing series prefix from URLs
@@ -85,7 +79,6 @@ function cleanPath(path) {
     return path.replace(pattern, "/");
 }
 
-// Update nav/dashboard links
 function updateLinks(series) {
     dashboardLinks.forEach((link) => {
         const href = link.getAttribute("href");
@@ -94,7 +87,6 @@ function updateLinks(series) {
         const cleanHref = cleanPath(href);
         const newHref =
             cleanHref === "/" ? `/${series}/cards` : `/${series}${cleanHref}`;
-
         link.setAttribute("href", newHref);
     });
 }
@@ -109,22 +101,22 @@ function initUserAvatarDropdown() {
 
     if (!container || !btn || !menu) return;
 
-    btn.addEventListener("click", (e) => {
-        e.preventDefault();
+    btn.addEventListener("click", (event) => {
+        event.preventDefault();
         menu.classList.toggle("hidden");
     });
 
-    document.addEventListener("click", (e) => {
-        if (!container.contains(e.target)) {
-            menu.classList.add("hidden");
-        }
+    document.addEventListener("click", (event) => {
+        if (!container.contains(event.target)) menu.classList.add("hidden");
     });
 }
 
+/* ---------------------------
+   Showcase Toggle
+---------------------------- */
 function initShowcaseToggle() {
     const button = document.getElementById("showcase_button");
     const details = document.getElementById("showcaseDetails");
-
     if (!button || !details) return;
 
     let isOpen = false;
@@ -134,9 +126,8 @@ function initShowcaseToggle() {
     details.style.maxHeight = "0px";
     details.style.opacity = 0;
 
-    button.addEventListener("click", (e) => {
-        e.preventDefault();
-
+    button.addEventListener("click", (event) => {
+        event.preventDefault();
         isOpen = !isOpen;
 
         if (isOpen) {
