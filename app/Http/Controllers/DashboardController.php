@@ -18,7 +18,7 @@ class DashboardController extends Controller
 
         $user = Auth::user();
         $tcg = $request->query('tcg', 'all');
-        $stats = $service->countDecksByTcg($user, $tcg);
+        $stats = $service->countDecksByTcg($user);
         $randomCards = $service->getRandomCards(5);
         $tcgs = [
             ['name' => 'Total', 'count' => $stats['total'] ?? 0, 'color' => 'amber-400'],

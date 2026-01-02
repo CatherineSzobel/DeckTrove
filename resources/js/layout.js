@@ -1,7 +1,7 @@
 const dashboardLinks = document.querySelectorAll(".dashboard-link");
 const SERIES_CONFIG = {
     magic: { label: "Magic: The Gathering", base: "/magic" },
-    //yugioh:  { label: "Yu-Gi-Oh!", base: "/yugioh" },
+    yugioh:  { label: "Yu-Gi-Oh!", base: "/yugioh" },
     //pokemon: { label: "Pokémon", base: "/pokemon" },
     // digimon: { label: "Digimon", base: "/digimon" } // add when ready
 };

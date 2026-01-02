@@ -1,6 +1,5 @@
-import { initTabs } from "./tabs.js"; // correct relative path
+import { initTabs } from "./tabs.js";
 
-// ------- Print List Toggle -------
 function togglePrintList(id) {
     const list = document.getElementById(id);
     if (!list) return;
@@ -15,12 +14,9 @@ function togglePrintList(id) {
         : "Show Less";
 }
 
-// ------- Init -------
 document.addEventListener("DOMContentLoaded", () => {
-    // Init Tabs
     document.querySelectorAll(".tab-container").forEach(initTabs);
 
-    // Init Print Toggle Buttons
     document.querySelectorAll("[data-toggle-target]").forEach((btn) => {
         btn.addEventListener("click", () => {
             togglePrintList(btn.dataset.toggleTarget);

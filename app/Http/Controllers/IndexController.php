@@ -2,9 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Support\Facades\Auth;
-use App\Services\DashboardService;
-
 class IndexController extends Controller
 {
 
