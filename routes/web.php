@@ -38,7 +38,7 @@ Route::get('/decks', function () {
     // Fetch decks belonging to this user
     $decks = Deck::where('user_id', $user->id)->get();
 
-    return view('account.mydecks', compact('decks'));
+    return view('decks.mydecks', compact('decks'));
 })->name('decks');
 Route::get('/decks/{id}', [DeckController::class, 'show'])->name('decks.show');
 

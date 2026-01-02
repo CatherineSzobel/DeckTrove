@@ -69,8 +69,6 @@
                 </p>
                 @endif
 
-
-
                 <div class="p-3 bg-white rounded shadow" id="deckCoverContainer">
                     <input id="deckTitleInput" class="input" placeholder="Enter deck title..." value="{{ request('deck_title') }}">
                     <input id="deckDescInput" class="input mt-2" placeholder="Enter deck description..." value="{{ request('deck_description') }}">
@@ -100,7 +98,7 @@
                     <h2 class="font-bold text-lg mb-2 bg-white">
                         Main Deck (<span id="mainCount">0</span>)
                     </h2>
-                    <div id="mainDeck" class="dropzone min-h-[150px] grid grid-cols-5 gap-2 max-h-[800px]"></div>
+                    <div id="main" class="dropzone min-h-[150px] grid grid-cols-5 gap-2 max-h-[800px]"></div>
                 </div>
 
 
@@ -110,7 +108,7 @@
                     <h2 class="font-bold text-lg mb-2 bg-white">
                         Extra Deck (<span id="extraCount">0</span>)
                     </h2>
-                    <div id="extraDeck" class="dropzone min-h-[150px] grid grid-cols-5 gap-2 max-h-[800px] "></div>
+                    <div id="extra" class="dropzone min-h-[150px] grid grid-cols-5 gap-2 max-h-[800px] "></div>
                 </div>
                 @endif
 
@@ -119,7 +117,7 @@
                     <h2 class="font-bold text-lg mb-2 bg-white">
                         Side Deck (<span id="sideCount">0</span>)
                     </h2>
-                    <div id="sideDeck" class="dropzone min-h-[150px] grid grid-cols-5 gap-2 max-h-[800px]"></div>
+                    <div id="side" class="dropzone min-h-[150px] grid grid-cols-5 gap-2 max-h-[800px]"></div>
                 </div>
             </div>
 
@@ -164,12 +162,13 @@
                     class="w-full md:w-[400px] lg:w-[600px]">
                     @csrf
 
-                    <input type="hidden" name="cards" id="cardData">
+                    <input type="hidden" name="cards" id="cards">
                     <input type="hidden" name="game" value="{{ $game }}">
                     <input type="hidden" name="deck_title" id="deckTitle">
                     <input type="hidden" name="deck_description" id="deckDescription">
-                    <input type="hidden" name="is_public" id="isPublicInput" value="0">
+                    <input type="hidden" name="isPublic" id="isPublic" value="0">
                     <input type="hidden" name="image" id="deckImage">
+
 
                     <button class="mt-4 w-full bg-blue-600 text-white p-3 rounded hover:bg-blue-700">
                         Save Deck

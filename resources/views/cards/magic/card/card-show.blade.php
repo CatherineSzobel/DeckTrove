@@ -1,7 +1,7 @@
 <div class="flex flex-col md:flex-row md:items-start gap-6 md:gap-8 text-black">
 
     <!-- LEFT: Card Image -->
-    <div class="md:w-1/2 flex-shrink-0 flex items-center justify-center">
+    <div class="md:w-1/2 flex-shrink-0 flex items-center justify-center md:flex-1 flex-col">
         @php
             // Normalize card data for view
             $cardName = $card['name'] ?? $card['card_name'] ?? 'Unknown Card';
@@ -14,13 +14,19 @@
         @if($cardImage)
             <img src="{{ $cardImage }}"
                  alt="{{ $cardName }}"
-                 class="w-full max-w-md rounded-lg shadow-lg bg-black object-contain"
+                 class="w-84 max-w-md rounded-lg shadow-lg bg-black object-contain"
                >
         @else
             <div class="w-full max-w-xs h-56 rounded-lg bg-gray-800 flex items-center justify-center">
                 <span class="text-slate-400">No image available</span>
             </div>
         @endif
+
+        <button id="toggleImageButton" 
+                class="mt-4 px-4 py-2 bg-slate-700 text-white rounded hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onclick="toggleCardImageSize()">
+            Transform
+        </button>
     </div>
 
     <!-- RIGHT: Info Panel -->

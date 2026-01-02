@@ -41,7 +41,7 @@ default => [
                 <option value="">All Colors</option>
                 @foreach($optionsList as $color)
                 @php
-                $colorMap = ['W'=>'White','U'=>'Blue','B'=>'Black','R'=>'Red','G'=>'Green'];
+                $colorMap = ['W'=>'White','U'=>'Blue','B'=>'Black','R'=>'Red','G'=>'Green', 'C'=>'Colorless'];
                 $label = $colorMap[$color] ?? $color;
                 @endphp
                 <option value="{{ $color }}" {{ request($filter['key']) === $color ? 'selected' : '' }}>
