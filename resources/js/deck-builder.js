@@ -4,37 +4,35 @@ import {
     decrementCardCount,
     getCardDataFromWrapper,
     createDeckCard,
-    flashInvalid,
-    sanitizeHTML,
     enableSaveButton,
     isCardInDeck,
     setCoverImage,
     resetDecks,
-    updateSearchPoolButtons,
     highlightActiveDeck,
     updateCounts,
-    validateCardPlacement,
-    setActiveDeck
+    setActiveDeck,
+    resetCoverImage
 } from './deckbuilder/helpers.js';
 
-// =================== GLOBAL VARIABLES ===================
-const DECK_IDS = { main: "mainDeck", extra: "extraDeck", side: "sideDeck" };
-window.DeckBuilder = { state: { activeDeckContainer: null, zones: [], ruleSet: null, deckLimits: null, game: null } };
+import {
+    flashInvalid,
+    sanitizeHTML,
+    validateCardPlacement,
+    updateSearchPoolButtons
+} from './deckbuilder/validation.js';
+
+import {
+    DECK_IDS,
+    DeckBuilder,
+    gameRules
+} from './deckbuilder/constants.js';
+
+const main = document.getElementById(DECK_IDS.main);
+const extra = document.getElementById(DECK_IDS.extra);
+const side = document.getElementById(DECK_IDS.side);
+const decks = [main, extra, side];
+
 const resetButton = document.getElementById("resetButton");
-
-
-// =================== GAME RULES ENGINE ===================
-const gameRules = {
-    yugioh: { deckLimits: { mainDeck: { min: 40, max: 60 }, extraDeck: { min: 0, max: 15 }, sideDeck: { min: 0, max: 15 } }, extraTypes: ["Fusion", "Synchro", "Xyz", "Link"] },
-    magic: { deckLimits: { mainDeck: { min: 60, max: 60 }, sideDeck: { min: 0, max: 15 } }, extraTypes: [] }
-};
-
-// =================== DOM ELEMENTS ===================
-const mainDeck = document.getElementById(DECK_IDS.main);
-const extraDeck = document.getElementById(DECK_IDS.extra);
-const sideDeck = document.getElementById(DECK_IDS.side);
-
-const decks = [mainDeck, extraDeck, sideDeck];
 const coverDropArea = document.getElementById("coverDropArea");
 const coverPreview = document.getElementById("coverPreview");
 const deckImageInput = document.getElementById("deckImage");
@@ -43,12 +41,10 @@ const spinner = document.getElementById("loadingSpinner");
 const searchInput = document.getElementById("searchInput");
 const saveForm = document.getElementById("saveForm");
 
-// =================== INITIALIZATION ===================
 function refreshUI() {
     updateCounts();
     updateSearchPoolButtons(getActiveDeckZone(), document.querySelectorAll(".search-pool .card-wrapper"), DeckBuilder.state.ruleSet);
 }
-// =================== COVER IMAGE HANDLING ===================
 function handleCoverDrop(coverDropArea, coverPreview, deckImageInput, decks) {
     const hoverClasses = ["border-blue-500", "bg-blue-50"];
     const toggleHover = (event) => {
@@ -71,7 +67,6 @@ function handleCoverDrop(coverDropArea, coverPreview, deckImageInput, decks) {
     coverPreview.addEventListener("click", () => { coverPreview.src = ""; coverPreview.classList.add("hidden"); deckImageInput.value = ""; });
 }
 
-// =================== PLUS / MINUS HANDLING ===================
 function handlePlusMin(cardContainer) {
     cardContainer.addEventListener("click", async (event) => {
         const card = event.target.closest(".card-wrapper");
@@ -79,28 +74,28 @@ function handlePlusMin(cardContainer) {
 
         const plus = event.target.closest(".plus-btn");
         const minus = event.target.closest(".minus-btn");
-        const activeDeck = getActiveDeckZone();
-        if (!activeDeck) return;
+        const active = getActiveDeckZone();
+        if (!active) return;
 
         const cardId = card.dataset.cardId;
         const cardType = card.querySelector("p")?.textContent ?? "Unknown";
 
         if (plus) {
-            const validation = validateCardPlacement(DeckBuilder.state.ruleSet, activeDeck, cardId, cardType);
-            if (!validation.valid) return flashInvalid(activeDeck, validation.reason);
+            const validation = validateCardPlacement(DeckBuilder.state.ruleSet, active, cardId, cardType);
+            if (!validation.valid) return flashInvalid(active, validation.reason);
 
             const cardData = getCardDataFromWrapper(card);
             const deckCard = createDeckCard(cardData);
 
-            activeDeck.appendChild(deckCard);
+            active.appendChild(deckCard);
             incrementCardCount(cardData.id);
 
         }
 
         if (minus) {
-            const target = Array.from(activeDeck.children).find(c => c.dataset.cardId === cardId);
+            const target = Array.from(active.children).find(c => c.dataset.cardId === cardId);
             if (target) {
-                activeDeck.removeChild(target);
+                active.removeChild(target);
                 decrementCardCount(cardId);
             }
         }
@@ -109,7 +104,6 @@ function handlePlusMin(cardContainer) {
 }
 function enableClickToRemoveFromDeck() {
     document.addEventListener("click", (event) => {
-        // Ignore button clicks
         if (event.target.closest(".plus-btn, .minus-btn, a")) return;
 
         const card = event.target.closest(".card-wrapper");
@@ -123,7 +117,6 @@ function enableClickToRemoveFromDeck() {
     });
 }
 
-// =================== DRAG & DROP ===================
 function handleDragAndDrop() {
     document.addEventListener("dragstart", (event) => {
         const wrapper = event.target.closest(".card-wrapper");
@@ -165,22 +158,21 @@ function handleDragAndDrop() {
             const cardWrapper = document.getElementById(wrapperId);
             if (!cardWrapper) return;
 
-            const targetDeck = zone;
-            const fromDeck = DeckBuilder.state.zones.find((z) => z.id === fromDeckId);
-            const movingCard = fromDeck && fromDeck !== targetDeck ? cardWrapper : null;
+            const target = zone;
+            const from = DeckBuilder.state.zones.find((z) => z.id === fromDeckId);
+            const movingCard = from && from !== target ? cardWrapper : null;
 
-            const validation = validateCardPlacement(DeckBuilder.state.ruleSet, targetDeck, cardId, cardType, movingCard);
-            if (!validation.valid) return flashInvalid(targetDeck, validation.reason);
-
+            const validation = validateCardPlacement(DeckBuilder.state.ruleSet, target, cardId, cardType, movingCard);
+            if (!validation.valid) return flashInvalid(target, validation.reason);
             if (fromDeckId === "searchPool") {
                 const cardData = getCardDataFromWrapper(cardWrapper);
                 const deckCard = createDeckCard(cardData);
-                targetDeck.appendChild(deckCard);
+                target.appendChild(deckCard);
                 incrementCardCount(cardData.id);
 
-            } else if (fromDeck && fromDeck !== targetDeck) {
-                fromDeck.removeChild(cardWrapper);
-                targetDeck.appendChild(cardWrapper);
+            } else if (from && from !== target) {
+                from.removeChild(cardWrapper);
+                target.appendChild(cardWrapper);
                 decrementCardCount(cardId);
                 incrementCardCount(cardId);
             }
@@ -188,8 +180,19 @@ function handleDragAndDrop() {
         });
     });
 }
+function loadExistingDeckCards(zones) {
+    zones.forEach(zoneId => {
+        const zone = document.getElementById(zoneId);
+        if (!zone) return;
 
-// =================== LOAD NEXT PAGE ===================
+        Array.from(zone.children).forEach(card => {
+            const cardId = card.dataset.cardId;
+            incrementCardCount(cardId);
+        });
+    });
+    console.log(zones);
+    refreshUI();
+}
 function loadNextPage(
     cardContainer,
     spinner,
@@ -205,7 +208,6 @@ function loadNextPage(
         spinner.classList.remove("hidden");
 
         try {
-            // Correct page to load: next page after current
             const pageToLoad = currentPageRef.value.number + 1;
 
             const params = new URLSearchParams({ page: pageToLoad });
@@ -232,7 +234,6 @@ function loadNextPage(
             if (newCards.length === 0) lastPageRef.value = true;
             else newCards.forEach((card) => cardContainer.appendChild(card));
 
-            // Increment the current page only after successful fetch
             currentPageRef.value.number = pageToLoad;
 
             updateSearchPoolButtons();
@@ -259,7 +260,6 @@ function handleSearchInput(searchInput, cardContainer, currentPageRef, currentSe
     });
 }
 
-// =================== INFINITE SCROLL ===================
 function handleInfiniteScroll(cardContainer, loadNextPageFn, currentPageRef) {
     let ticking = false;
     cardContainer.addEventListener("scroll", () => {
@@ -272,22 +272,28 @@ function handleInfiniteScroll(cardContainer, loadNextPageFn, currentPageRef) {
         });
     });
 
-    // Set current page based on existing cards
     const cardsPerPage = 20;
     currentPageRef.value.number = Math.floor(cardContainer.children.length / cardsPerPage);
 }
-
-// =================== SAVE DECK LOGIC ===================
 function saveDeckData(zones) {
-    // Map JS IDs → backend zone names
-    const zoneMap = { mainDeck: 'main', extraDeck: 'extra', sideDeck: 'side' };
-    const state = {};
+    const deckTitleInput = document.getElementById("deckTitleInput");
+    const deckDescInput = document.getElementById("deckDescInput");
+    const deckImageInput = document.getElementById("deckImage");
+    const cardsInput = document.getElementById("cards");
+    const deckTitleHidden = document.getElementById("deckTitle");
+    const deckDescHidden = document.getElementById("deckDescription");
+    const isPublicCheckbox = document.getElementById("isPublicCheckbox");
+    const isPublicHidden = document.getElementById("isPublicHidden");
 
+    if (!deckTitleInput || !deckDescInput || !cardsInput || !deckTitleHidden || !deckDescHidden || !isPublicCheckbox || !isPublicHidden) 
+        return false;
+    
+    const state = {};
     zones.forEach((zoneId) => {
         const list = document.getElementById(zoneId);
         if (!list) return;
 
-        state[zoneMap[zoneId]] = Array.from(list.children).map((card) => ({
+        state[zoneId] = Array.from(list.children).map((card) => ({
             id: card.dataset.cardId,
             name: card.dataset.cardName,
             image_url: card.dataset.cardImage,
@@ -297,43 +303,66 @@ function saveDeckData(zones) {
         }));
     });
 
-    const cardsInput = document.getElementById("cards");
-    if (cardsInput) cardsInput.value = JSON.stringify(state); // <-- object with proper keys
+    deckTitleHidden.value = deckTitleInput.value.trim();
+    deckDescHidden.value = deckDescInput.value.trim();
+    cardsInput.value = JSON.stringify(state);
+    deckImageInput.value = deckImageInput.value || ""; 
+    isPublicHidden.value = isPublicCheckbox.checked ? 1 : 0;
 
-    // Deck title / description
-    const deckTitleInput = document.getElementById("deckTitleInput");
-    if (deckTitleInput) document.getElementById("deckTitle").value = deckTitleInput.value;
-    const deckDescInput = document.getElementById("deckDescInput");
-    if (deckDescInput) document.getElementById("deckDescription").value = deckDescInput.value;
-
-    return state.main.length >= 40; // validate main deck
+    return state.main && state.main.length >= 40;
 }
 
-
-
 function handleSaveForm(saveForm, zones) {
+    if (!saveForm) return;
+
     const modal = document.getElementById("deckWarningModal");
     const cancelBtn = document.getElementById("cancelSaveBtn");
     const confirmBtn = document.getElementById("confirmSaveBtn");
 
+    let isSubmitting = false;
+
     saveForm.addEventListener("submit", function (event) {
-        if (!saveDeckData(zones)) {
+        if (isSubmitting) {
             event.preventDefault();
-            modal.classList.remove("hidden");
+            return;
         }
+
+        const isValid = saveDeckData(zones);
+
+        if (!isValid && document.getElementById("isPublicCheckbox").checked) {
+            event.preventDefault();
+            if (modal) modal.classList.remove("hidden");
+            return;
+        }
+        disableSubmit();
+        isSubmitting = true;
     });
 
-    cancelBtn.addEventListener("click", () => modal.classList.add("hidden"));
-    confirmBtn.addEventListener("click", () => {
-        modal.classList.add("hidden");
-        saveDeckData(zones);
-        saveForm.submit();
-    });
+    if (cancelBtn) cancelBtn.addEventListener("click", () => modal.classList.add("hidden"));
+    if (confirmBtn) {
+        confirmBtn.addEventListener("click", () => {
+            saveDeckData(zones);
+            isSubmitting = true;
+            disableSubmit();
+            modal.classList.add("hidden");
+            saveForm.submit();
+        });
+    }
+}
+
+function disableSubmit() {
+    const confirmBtn = document.getElementById("confirmSaveBtn");
+    if (confirmBtn) confirmBtn.disabled = true;
+
+    const submitBtn = document.querySelector('#saveForm [type="submit"]');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Saving...";
+    }
 }
 
 function setupDeck(cardContainer, decks) {
     handleCoverDrop(coverDropArea, coverPreview, deckImageInput, decks);
-    resetDecks(decks);
     highlightActiveDeck();
     handlePlusMin(cardContainer);
     handleDragAndDrop();
@@ -345,12 +374,7 @@ function setupDeck(cardContainer, decks) {
     if (resetButton) {
         resetButton.addEventListener("click", () => {
             resetDecks(decks);
-
-            // reset cover
-            coverPreview.src = "";
-            coverPreview.classList.add("hidden");
-            deckImageInput.value = "";
-
+            resetCoverImage(coverPreview, deckImageInput);
             refreshUI();
         });
     }
@@ -370,10 +394,10 @@ function setupSearch(cardContainer) {
     handleInfiniteScroll(cardContainer, loadNextPageFn, currentPageRef);
 }
 
-// =================== DOM CONTENT LOADED ===================
 document.addEventListener("DOMContentLoaded", () => {
 
     const deckApp = document.getElementById("deckApp");
+    const mode = deckApp?.dataset.mode || "create";
     if (!deckApp) return;
 
     DeckBuilder.state.game = deckApp.dataset.game;
@@ -387,8 +411,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!cardContainer) return;
 
     setupDeck(cardContainer, decks);
+    loadExistingDeckCards(["main", "extra", "side"]);
     setupSearch(cardContainer);
 
     if (saveForm)
-        handleSaveForm(saveForm, ["mainDeck", "extraDeck", "sideDeck"]);
+        handleSaveForm(saveForm, ["main", "extra", "side"]);
 });

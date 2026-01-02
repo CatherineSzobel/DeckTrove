@@ -1,44 +1,35 @@
-export const MAX_COPIES_STANDARD = 4;
-export const MAX_COPIES_BASIC = 99;
-export const MAX_COPIES_EXTRA = 3;
 
-export const DECK_IDS = {
-    main: "mainDeck",
-    extra: "extraDeck",
-    side: "sideDeck",
-};
+import {
+    DECK_IDS,
+    DeckBuilder,
+    getCardCount,
+    setCardCount,
+    deleteCardCount,
+    clearCardCounts,
+    countCardCopies
+} from './constants.js';
+
+import { validateCardPlacement } from './validation.js';
 
 const saveBtn = document.querySelector("#saveForm button");
 
-export const cardCounts = new Map();
-export const getTotalCopies = (cardId) => cardCounts.get(cardId) || 0;
-
 export function incrementCardCount(cardId) {
-    cardCounts.set(cardId, (cardCounts.get(cardId) || 0) + 1);
+    setCardCount(cardId, (getCardCount(cardId) || 0) + 1);
 }
 
 export function decrementCardCount(cardId) {
-    const count = cardCounts.get(cardId);
+    const count = getCardCount(cardId);
     if (!count) return;
-    count === 1 ? cardCounts.delete(cardId) : cardCounts.set(cardId, count - 1);
+    count === 1 ? deleteCardCount(cardId) : setCardCount(cardId, count - 1);
 }
 
-/** Returns currently active deck dropzone */
 export function getActiveDeckZone() {
     return DeckBuilder.state.activeDeckContainer?.querySelector(".dropzone") || null;
 }
 
-/** Count copies of a card in a deck, adjusting for moving card */
-export const countCardCopies = (deckZone, cardId, movingCard) => {
-    const count = deckZone?.querySelectorAll(`.card-wrapper[data-card-id='${cardId}']`)?.length || 0;
-    return movingCard?.parentElement === deckZone ? count - 1 : count;
-};
-
-/** Check if a card is in any of the given deck zones */
 export const isCardInDeck = (cardWrapper, deckZones) =>
     deckZones.some((zone) => zone.contains(cardWrapper));
 
-/** Extract card data from a wrapper element */
 export function getCardDataFromWrapper(wrapper) {
     return {
         id: wrapper.dataset.cardId,
@@ -50,7 +41,6 @@ export function getCardDataFromWrapper(wrapper) {
     };
 }
 
-/** Create a deck card element from data */
 export function createDeckCard(cardData) {
     const card = document.createElement("div");
     card.id = "card_" + Math.random().toString(36).slice(2);
@@ -90,35 +80,6 @@ export function createDeckCard(cardData) {
     return card;
 }
 
-/** Flash deck invalid state with optional message */
-export function flashInvalid(deckZone, message = "") {
-    const deckContainer = deckZone.closest(".deckContainer");
-    if (!deckContainer) return;
-
-    deckContainer.classList.add("drop-invalid");
-
-    const existingError = deckContainer.querySelector(".deck-error-msg");
-    if (existingError) existingError.remove();
-
-    if (message) {
-        const errorMsg = document.createElement("p");
-        errorMsg.className = "deck-error-msg text-red-600 text-sm mb-2";
-        errorMsg.textContent = message;
-        deckContainer.prepend(errorMsg);
-        setTimeout(() => errorMsg.remove(), 3000);
-    }
-
-    setTimeout(() => deckContainer.classList.remove("drop-invalid"), 800);
-}
-
-/** Sanitize HTML string to DocumentFragment */
-export function sanitizeHTML(html) {
-    const template = document.createElement("template");
-    template.innerHTML = html;
-    return template.content;
-}
-
-/** Set cover image from a card wrapper */
 export function setCoverImage(cardWrapper, coverPreview, deckImageInput) {
     const img = cardWrapper.querySelector("img");
     if (!img) return;
@@ -134,7 +95,6 @@ export function setCoverImage(cardWrapper, coverPreview, deckImageInput) {
         : img.addEventListener("load", applyCover, { once: true });
 }
 
-/** Enable or disable save button based on deck content */
 export function enableSaveButton() {
     if (!saveBtn) return;
     const totalCards =
@@ -144,58 +104,29 @@ export function enableSaveButton() {
     saveBtn.disabled = totalCards === 0;
 }
 
-/** Check if a card can be placed in a deck */
-export function validateCardPlacement(ruleSet, deckZone, cardId, cardType, movingCard = null) {
-    if (!deckZone) return { valid: false, reason: "No target deck found." };
-    const limits = ruleSet.deckLimits[deckZone.id];
-    if (!limits) return { valid: false, reason: "Deck limits not found." };
-
-    if (deckZone.children.length >= limits.max)
-        return { valid: false, reason: `Deck cannot exceed ${limits.max} cards.` };
-
-    const isBasic = cardType.toLowerCase().includes("basic");
-    const maxCopies =
-        ruleSet.extraTypes.length === 0
-            ? isBasic
-                ? MAX_COPIES_BASIC
-                : MAX_COPIES_STANDARD
-            : MAX_COPIES_EXTRA;
-
-    let total = getTotalCopies(cardId);
-    if (movingCard && movingCard.parentElement) total--;
-
-    if (total >= maxCopies)
-        return { valid: false, reason: `Cannot have more than ${maxCopies} copies of this card.` };
-
-    const isExtraType = ruleSet.extraTypes.some((t) => cardType.includes(t));
-
-    if (deckZone.id === DECK_IDS.extra && !isExtraType)
-        return { valid: false, reason: "Only Extra Deck cards (Fusion, Synchro, Xyz, Link) allowed here." };
-
-    if (deckZone.id === DECK_IDS.main && isExtraType)
-        return { valid: false, reason: "Extra Deck cards cannot be placed in the Main Deck." };
-
-    return { valid: true };
-}
-
-/** Reset all decks and card counts */
 export function resetDecks(decks = []) {
     decks.forEach((element) => {
-        if (!element) return;  // <== skip invalid elements
+        if (!element) return; 
         element.innerHTML = "";
     });
-    cardCounts.clear();
+    clearCardCounts();
     updateCounts();
 }
 
-/** Highlight decks and attach click listeners */
+export function resetCoverImage(coverPreview, deckImageInput) {
+    if (coverPreview) {
+        coverPreview.src = "";
+        coverPreview.classList.add("hidden");
+    }
+    if (deckImageInput) deckImageInput.value = "";
+}
+
 export function highlightActiveDeck() {
     document.querySelectorAll(".deckContainer").forEach((deck) => {
         deck.addEventListener("click", () => setActiveDeck(deck));
     });
 }
 
-/** Set the currently active deck */
 export function setActiveDeck(deck) {
     document.querySelectorAll(".deckContainer").forEach((d) => d.classList.remove("deck-active"));
     deck.classList.add("deck-active");
@@ -209,7 +140,6 @@ export function setActiveDeck(deck) {
     );
 }
 
-// Return current decks with limits and counter elements
 function getDeckState() {
     return [
         {
