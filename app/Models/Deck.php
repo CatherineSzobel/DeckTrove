@@ -12,7 +12,8 @@ class Deck extends Model
     public function cards()
     {
         return $this->belongsToMany(Card::class, 'deck_cards')
-            ->withPivot('count', 'zone')
+            ->using(DeckCard::class)
+            ->withPivot('zone', 'count')
             ->withTimestamps();
     }
 
