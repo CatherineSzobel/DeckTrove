@@ -8,7 +8,8 @@ use App\Services\YugiohService;
 class YugiohController extends Controller
 {
     protected $yugiohService;
-    public function __construct(YugiohService $yugiohService) {
+    public function __construct(YugiohService $yugiohService)
+    {
         $this->yugiohService = $yugiohService;
     }
     public function index(Request $request)
@@ -16,19 +17,26 @@ class YugiohController extends Controller
         $series = 'yugioh';
         $view = $request->get('view', 'full');
 
-        $cards = $this->yugiohService->loadCards();
-        $filtered = $this->yugiohService->applyFilters($cards, $request);
-        $paginated = $this->yugiohService->paginate($filtered, $request, $view);
-        $filterOptions = $this->yugiohService->generateFilterOptions($cards);
+        $params = [
+            'search'    => $request->input('search'),
+            'type'      => $request->input('type'),
+            'attribute' => $request->input('attribute'),
+            'race'      => $request->input('race'),
+            'archetype' => $request->input('archetype'),
+            'page'      => $request->input('page', 1),
+        ];
+
+        $paginated = $this->yugiohService->searchForDeckBuilder($params, $view);
+        $filters   = $this->yugiohService->getFilterOptions();
 
         return view('cards.cards', [
             'cards' => $paginated,
             'series' => $series,
             'options' => [
-                $filterOptions['type'] ?? [],
-                $filterOptions['attribute'] ?? [],
-                $filterOptions['race'] ?? [],
-                $filterOptions['archetype'] ?? [],
+                $filters['type'] ?? [],
+                $filters['attribute'] ?? [],
+                $filters['race'] ?? [],
+                $filters['archetype'] ?? [],
             ],
         ]);
     }

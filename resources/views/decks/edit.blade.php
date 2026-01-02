@@ -1,102 +1,182 @@
-<x-layout>
-    <div class="max-w-5xl mx-auto px-4 py-10">
+<x-layout :js="['resources/js/deck-builder.js']" :css="['resources/css/deckbuilder.css']">
+    <div
+        id="deckApp"
+        data-game="{{ $game }}"
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4
+           @guest pointer-events-none opacity-50 @endguest">
 
-        <!-- Edit Deck Header -->
-        <div class="text-center mb-10">
-            <h1 class="text-4xl font-extrabold text-gray-900">Edit Deck</h1>
-            <p class="text-gray-500 mt-1">Modify your deck details and card counts</p>
-        </div>
+        <div class="col-span-1 md:col-span-2">
+            @if ($errors->any())
+            <p class="text-center p-2 font-bold text-red-500">
+                {{ $errors->first() }}
+            </p>
+            @endif
 
-        <!-- Edit Deck Form -->
-        <form action="{{ route('decks.update', $deck->id) }}" method="POST" class="space-y-10">
-            @csrf
-            @method('PUT')
+            <div class="p-3 bg-white rounded shadow" id="deckCoverContainer">
+                <input id="deckTitleInput" class="input" placeholder="Enter deck title..." value="{{ $deck->name }}">
+                <input id="deckDescInput" class="input mt-2" placeholder="Enter deck description..." value="{{ $deck->description }}">
 
-            <!-- Deck Info -->
-            <div class="bg-white shadow-lg rounded-2xl p-6">
-                <h2 class="text-xl font-bold text-gray-900 mb-4">Deck Info</h2>
+                <div id="coverDropArea"
+                    class="mt-2 p-4 border-2 border-dashed border-gray-400 rounded text-center text-gray-600">
+                    Drag a card here to set as deck cover
+                </div>
 
-                <div class="space-y-4">
-                    <!-- Name -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Deck Name</label>
-                        <input type="text" name="name" value="{{ $deck->name }}"
-                            class="w-full border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" required>
-                    </div>
+                <img id="coverPreview"
+                    class="{{ $deck->image ? '' : 'hidden' }} mt-2 w-32 mx-auto rounded shadow"
+                    src="{{ $deck->image ?? Vite::asset('resources/img/decktrove-logo.png') }}"
+                    alt="Deck Cover Preview">
 
-                    <!-- Description -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Description</label>
-                        <textarea name="description" rows="3"
-                            class="w-full border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">{{ $deck->description }}</textarea>
-                    </div>
 
-                    <div>
-                        <form action="{{ route('decks.destroy', $deck->id) }}" method="POST">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit"
-                                class="px-8 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 shadow">
-                                Delete Deck
-                            </button>
-                        </form>
-                    </div>
+                <div class="flex justify-between items-center mt-3">
+                    <button id="resetButton" class="text-sm text-gray-600 hover:text-red-600">
+                        Reset
+                    </button>
+
+                    <label class="flex items-center gap-2 font-semibold">
+                        <input type="checkbox" id="isPublicCheckbox" {{ request('is_public') ? 'checked' : '' }}>
+                        Public
+                    </label>
                 </div>
             </div>
 
-            <!-- Cards Editing Grid -->
-            <div class="bg-white shadow-lg rounded-2xl p-6">
-                <h2 class="text-xl font-bold text-gray-900 mb-4">Cards in Deck</h2>
+            <div class="p-3 bg-white rounded shadow deckContainer active">
+                <h2 class="font-bold text-lg mb-2 bg-white">
+                    Main Deck (<span id="mainCount">{{ count($deckCards['main']) }}</span>)
+                </h2>
+                <div id="main" class="dropzone min-h-[150px] grid grid-cols-5 gap-2 max-h-[800px]">
+                    @foreach($deckCards['main'] as $card)
+                    <div class="relative w-20 h-28 mb-2 mx-auto group card-wrapper cursor-pointer"
+                        draggable="true"
+                        data-card-id="{{ $card['id'] }}"
+                        data-card-name="{{ $card['name'] ?? '' }}"
+                        data-card-image="{{ $card['image_uris']['normal'] ?? $card['image'] ?? '' }}"
+                        data-card-type="{{ $card['type'] ?? $card['card_type'] ?? '' }}"
+                        data-card-race="{{ $card['race'] ?? '' }}"
+                        data-card-desc="{{ $card['desc'] ?? $card['oracle_text'] ?? '' }}">
 
-                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-                    @foreach ($cards as $card)
-                    @php
-                    $img = data_get($card, 'card_images.0.image_url_small')
-                    ?: data_get($card, 'image_uris.normal')
-                    ?: data_get($card, 'image');
+                        <img src="{{ $card['image_uris']['normal'] ?? $card['image'] ?? Vite::asset('resources/img/decktrove-logo.png') }}"
+                            alt="{{ $card['name'] ?? 'Unknown' }}"
+                            class="w-full h-full object-cover rounded card">
 
-                    $name = $card['name'] ?? $card['card_name'] ?? 'Card';
-                    $count = $card['pivot']['count'] ?? 1;
-                    @endphp
-
-                    <div class="group bg-white rounded-lg shadow-md hover:shadow-xl transition overflow-hidden">
-                        <img src="{{ $img }}" alt="{{ $name }}" class="h-48 w-full object-cover">
-
-                        <div class="p-3">
-                            <h3 class="text-sm font-semibold text-gray-800 truncate">{{ $name }}</h3>
-
-                            <!-- Count Input -->
-                            <label class="text-xs mt-1 block text-gray-600">Quantity</label>
-                            <input type="number" name="cards[{{ $card['id'] }}]" value="{{ $count }}" min="0"
-                                class="w-20 border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 mt-1">
+                        <div class="absolute inset-0 bg-black bg-opacity-70 text-white opacity-0 
+                            group-hover:opacity-100 transition-opacity rounded p-1 
+                            flex flex-col justify-center items-center text-center">
+                            <h3 class="font-bold text-[10px] leading-snug">{{ $card['name'] ?? 'Unknown' }}</h3>
+                            <p class="text-[8px] mt-1 pointer-events-none">{{ $card['type'] ?? $card['card_type'] ?? $card['type_line'] ?? 'Unknown' }}</p>
                         </div>
-
-
                     </div>
                     @endforeach
                 </div>
-
-                @if($cards->isEmpty())
-                <div class="mt-6 text-center text-gray-500">No cards in this deck yet.</div>
-                @endif
             </div>
 
-            <!-- Submit Buttons -->
-            <div class="flex justify-between">
-                <a href="{{ route('decks.show', $deck->id) }}"
-                    class="px-6 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-gray-800 font-medium">
-                    Cancel
-                </a>
+            @if ($game === 'yugioh')
+            <div class="p-3 bg-white rounded shadow deckContainer">
+                <h2 class="font-bold text-lg mb-2 bg-white">
+                    Extra Deck (<span id="extraCount">{{ count($deckCards['extra']) }}</span>)
+                </h2>
+                <div id="extra" class="dropzone min-h-[150px] grid grid-cols-5 gap-2 max-h-[800px]">
+                    @foreach($deckCards['extra'] as $card)
+                    <div class="relative w-20 h-28 mb-2 mx-auto group card-wrapper cursor-pointer"
+                        draggable="true"
+                        data-card-id="{{ $card['id'] }}"
+                        data-card-name="{{ $card['name'] ?? '' }}"
+                        data-card-image="{{ $card['image_uris']['normal'] ?? $card['image'] ?? '' }}"
+                        data-card-type="{{ $card['type'] ?? $card['card_type'] ?? '' }}"
+                        data-card-race="{{ $card['race'] ?? '' }}"
+                        data-card-desc="{{ $card['desc'] ?? $card['oracle_text'] ?? '' }}">
 
-                <button type="submit"
-                    class="px-8 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 shadow">
-                    Save Changes
+                        <img src="{{ $card['image_uris']['normal'] ?? $card['image'] ?? Vite::asset('resources/img/decktrove-logo.png') }}"
+                            alt="{{ $card['name'] ?? 'Unknown' }}"
+                            class="w-full h-full object-cover rounded card">
+
+                        <div class="absolute inset-0 bg-black bg-opacity-70 text-white opacity-0 
+                            group-hover:opacity-100 transition-opacity rounded p-1 
+                            flex flex-col justify-center items-center text-center">
+                            <h3 class="font-bold text-[10px] leading-snug">{{ $card['name'] ?? 'Unknown' }}</h3>
+                            <p class="text-[8px] mt-1 pointer-events-none">{{ $card['type'] ?? $card['card_type'] ?? 'Unknown' }}</p>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+
+            <div class="p-3 bg-white rounded shadow deckContainer">
+                <h2 class="font-bold text-lg mb-2 bg-white">
+                    Side Deck (<span id="sideCount">{{ count($deckCards['side']) }}</span>)
+                </h2>
+                <div id="side" class="dropzone min-h-[150px] grid grid-cols-5 gap-2 max-h-[800px]">
+                    @foreach($deckCards['side'] as $card)
+                    <div class="relative w-20 h-28 mb-2 mx-auto group card-wrapper cursor-pointer"
+                        draggable="true"
+                        data-card-id="{{ $card['id'] }}"
+                        data-card-name="{{ $card['name'] ?? '' }}"
+                        data-card-image="{{ $card['image_uris']['normal'] ?? $card['image'] ?? '' }}"
+                        data-card-type="{{ $card['type'] ?? $card['card_type'] ?? '' }}"
+                        data-card-race="{{ $card['race'] ?? '' }}"
+                        data-card-desc="{{ $card['desc'] ?? $card['oracle_text'] ?? '' }}">
+
+                        <img src="{{ $card['image_uris']['normal'] ?? $card['image'] ?? Vite::asset('resources/img/decktrove-logo.png') }}"
+                            alt="{{ $card['name'] ?? 'Unknown' }}"
+                            class="w-full h-full object-cover rounded card">
+
+                        <div class="absolute inset-0 bg-black bg-opacity-70 text-white opacity-0 
+                            group-hover:opacity-100 transition-opacity rounded p-1 
+                            flex flex-col justify-center items-center text-center">
+                            <h3 class="font-bold text-[10px] leading-snug">{{ $card['name'] ?? 'Unknown' }}</h3>
+                            <p class="text-[8px] mt-1 pointer-events-none">{{ $card['type'] ?? $card['card_type'] ?? 'Unknown' }}</p>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-4 z-[999]">
+            <div class="flex w-full md:w-[400px] lg:w-[600px] gap-2">
+                <div class="flex-[4] p-3 bg-white rounded shadow">
+                    <h2 class="font-bold text-lg mb-2 bg-white">Card Search</h2>
+                    <div class="text-sm text-gray-600">
+                        @if(isset($cards) && method_exists($cards, 'total'))
+                        Showing {{ $cards->firstItem() }}-{{ $cards->lastItem() }} of {{ $cards->total() }} cards
+                        @else
+                        Loading cards...
+                        @endif
+                    </div>
+                    <input type="text" id="searchInput" placeholder="Search cards..." class="w-full p-2 border rounded" value="{{ request('search') }}">
+                </div>
+
+                <div class="flex-[1] p-3 bg-white rounded shadow flex flex-col gap-2">
+                    <button id="filter-button" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 transition-colors">
+                        Filter
+                    </button>
+                    <button id="clear-filter-button" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors">
+                        Clear
+                    </button>
+                </div>
+            </div>
+
+            @include("decks.$game.cards-view", ['cards' => $cards])
+
+            <div id="loadingSpinner" class="text-center my-4 hidden">
+                <p>Loading more cards...</p>
+            </div>
+
+            <form id="saveForm" action="{{ route('decks.update', $deck->id) }}" method="POST" class="space-y-10">
+                @csrf
+                @method('PATCH')
+
+                <input type="hidden" name="is_public" id="isPublicHidden" value="0">
+                <input type="hidden" name="deck_title" id="deckTitle">
+                <input type="hidden" name="deck_description" id="deckDescription">
+                <input type="hidden" name="cards" id="cards">
+                <input type="hidden" name="image" id="deckImage">
+
+                <button type="submit" class="mt-4 w-full bg-blue-600 text-white p-3 rounded hover:bg-blue-700">
+                    Edit Deck
                 </button>
-                <!-- Delete Button -->
+            </form>
 
-            </div>
-
-        </form>
-
+        </div>
     </div>
 </x-layout>

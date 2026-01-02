@@ -17,25 +17,28 @@ class MagicController extends Controller
     }
     public function index(Request $request)
     {
-        $page = $request->get('page', 1);
         $view = $request->get('view', 'full');
+        $page = max((int) $request->get('page', 1), 1);
 
         $filters = $request->only(['search', 'type', 'color', 'rarity', 'set_name']);
+        $filters['page'] = $page;
+        $filters['view'] = $view;
 
-        $apiResponse = $this->magic->fetchCards(array_merge($filters, [
-            'page' => $page,
-            'view' => $view,
-        ]));
+        $result = $this->magic->fetchCards($filters);
 
-        $filterOptions = $this->magic->getFilterOptions();
-        $cards = array_slice($apiResponse['data'] ?? [], 0, $this->magic->itemsPerPage($view));
+        $cards = $result['data'] ?? [];
+        $total = $result['total_cards'] ?? count($cards);
+        $perPage = $this->magic->itemsPerPage($view);
+
         $paginated = new LengthAwarePaginator(
-            $cards,
-            $apiResponse['total_cards'] ?? 10000,
-            $this->magic->itemsPerPage($view),
+            array_slice($cards, 0, $perPage),
+            $total,
+            $perPage,
             $page,
             ['path' => $request->url(), 'query' => $request->query()]
         );
+
+        $filterOptions = $this->magic->getFilterOptions();
 
         if ($request->ajax()) {
             return response()->json([
@@ -44,13 +47,12 @@ class MagicController extends Controller
                     'series' => 'magic',
                     'currentView' => $view,
                 ])->render(),
-                'count' => $paginated->total() ? "Showing {$paginated->firstItem()}-{$paginated->lastItem()} of {$paginated->total()} cards" : "No cards found",
+                'count' => $paginated->total()
+                    ? "Showing {$paginated->firstItem()}-{$paginated->lastItem()} of {$paginated->total()} cards"
+                    : "No cards found",
             ]);
         }
 
-
-
-        // Full page for normal requests
         return view('cards.cards', [
             'cards' => $paginated,
             'series' => 'magic',
@@ -63,15 +65,9 @@ class MagicController extends Controller
         ]);
     }
 
-    /**
-     * Show a single Magic card by ID
-     */
     public function show(string $id)
     {
-        // Fetch main card
         $card = $this->magic->fetchCardById($id);
-
-        // Fetch related set cards (optional)
         $setCards = $this->magic->fetchRelatedSetCards($card);
 
         return view('cards.card', [

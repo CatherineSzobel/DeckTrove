@@ -15,9 +15,6 @@ class YugiohService
         $this->jsonPath = public_path('/json/yugioh-cards.json');
     }
 
-    /**
-     * Load all cards from JSON
-     */
     public function loadCards(): array
     {
         if (!file_exists($this->jsonPath)) {
@@ -28,40 +25,81 @@ class YugiohService
         return json_decode($json, true)['data'] ?? [];
     }
 
-    /**
-     * Apply filters based on request parameters
-     */
-    public function applyFilters(array $cards, Request $request): array
+    public function applyFilters(array $cards, array $params): array
     {
         $filtered = $cards;
 
-        // Search filter
-        if ($request->filled('search')) {
-            $term = strtolower($request->search);
-            $filtered = array_filter($filtered, function ($card) use ($term) {
-                return str_contains(strtolower($card['name'] ?? ''), $term)
+        // Search
+        if (!empty($params['search'])) {
+            $term = strtolower($params['search']);
+            $filtered = array_filter(
+                $filtered,
+                fn($card) =>
+                str_contains(strtolower($card['name'] ?? ''), $term)
                     || str_contains(strtolower($card['type'] ?? ''), $term)
                     || str_contains(strtolower($card['race'] ?? ''), $term)
                     || str_contains(strtolower($card['archetype'] ?? ''), $term)
-                    || str_contains(strtolower($card['desc'] ?? ''), $term);
-            });
+                    || str_contains(strtolower($card['desc'] ?? ''), $term)
+            );
         }
 
-        // Type, Attribute, Race, Archetype filters
         foreach (['type', 'attribute', 'race', 'archetype'] as $key) {
-            if ($request->filled($key)) {
-                $filtered = array_filter($filtered, fn($card) => ($card[$key] ?? '') === $request->$key);
+            if (!empty($params[$key])) {
+                $filtered = array_filter($filtered, fn($card) => ($card[$key] ?? '') === $params[$key]);
             }
         }
 
         return array_values($filtered);
     }
 
-    /**
-     * Generate filter options from all cards
-     */
-    public function generateFilterOptions(array $cards): array
+    public function paginate(array $cards,  int $page = 1,  string $view = 'full'): LengthAwarePaginator
     {
+        $perPage = $this->itemsPerPage($view);
+
+        $collection = collect($cards);
+
+        return new LengthAwarePaginator(
+            $collection->forPage($page, $perPage)->values()->all(),
+            $collection->count(),
+            $perPage,
+            $page
+        );
+    }
+
+    public function searchCards(array $params): array
+    {
+        $allCards = $this->loadCards();
+        $filtered = $this->applyFilters($allCards, $params);
+        $page = (int)($params['page'] ?? 1);
+        $view = $params['view'] ?? 'full';
+        $paginated = $this->paginate($filtered, $page, $view);
+
+        return [
+            'data' => $paginated->items(),
+            'total_cards' => $paginated->total(),
+            'page' => $page,
+            'per_page' => $paginated->perPage(),
+        ];
+    }
+
+    public function searchForDeckBuilder(array $params, string $view): LengthAwarePaginator
+    {
+        $page = max((int)($params['page'] ?? 1), 1);
+        $perPage = $this->itemsPerPage($view);
+
+        $result = $this->searchCards($params);
+
+        return new LengthAwarePaginator(
+            $result['data'] ?? [],
+            $result['total_cards'] ?? 0,
+            $perPage,
+            $page
+        );
+    }
+
+    public function getFilterOptions(): array
+    {
+        $cards = $this->loadCards();
         $collection = collect($cards);
 
         return [
@@ -72,28 +110,6 @@ class YugiohService
         ];
     }
 
-    /**
-     * Paginate an array of cards
-     */
-    public function paginate(array $cards, Request $request, string $view = 'full'): LengthAwarePaginator
-    {
-        $page = $request->get('page', 1);
-        $perPage = $this->itemsPerPage($view);
-
-        $collection = collect($cards);
-
-        return new LengthAwarePaginator(
-            $collection->forPage($page, $perPage)->values()->all(),
-            $collection->count(),
-            $perPage,
-            $page,
-            ['path' => $request->url(), 'query' => $request->query()]
-        );
-    }
-
-    /**
-     * Get items per page based on view type
-     */
     public function itemsPerPage(string $view): int
     {
         return match ($view) {
@@ -103,9 +119,6 @@ class YugiohService
         };
     }
 
-    /**
-     * Find a single card by ID
-     */
     public function findCard(int $id): array
     {
         $cards = $this->loadCards();
@@ -118,9 +131,6 @@ class YugiohService
         return $card;
     }
 
-    /**
-     * Find related cards by archetype
-     */
     public function findRelatedCards(array $card, int $limit = 6): Collection
     {
         $cards = $this->loadCards();
