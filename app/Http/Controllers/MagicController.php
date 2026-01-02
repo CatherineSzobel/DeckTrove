@@ -9,11 +9,9 @@ use Illuminate\Http\Request;
 class MagicController extends Controller
 {
 
-    protected MagicService $magic;
-
-    public function __construct(MagicService $magic)
+    public function __construct(
+        protected MagicService $magicService)
     {
-        $this->magic = $magic;
     }
     public function index(Request $request)
     {
@@ -24,11 +22,11 @@ class MagicController extends Controller
         $filters['page'] = $page;
         $filters['view'] = $view;
 
-        $result = $this->magic->fetchCards($filters);
+        $result = $this->magicService->fetchCards($filters);
 
         $cards = $result['data'] ?? [];
         $total = $result['total_cards'] ?? count($cards);
-        $perPage = $this->magic->itemsPerPage($view);
+        $perPage = $this->magicService->itemsPerPage($view);
 
         $paginated = new LengthAwarePaginator(
             array_slice($cards, 0, $perPage),
@@ -38,7 +36,7 @@ class MagicController extends Controller
             ['path' => $request->url(), 'query' => $request->query()]
         );
 
-        $filterOptions = $this->magic->getFilterOptions();
+        $filterOptions = $this->magicService->getFilterOptions();
 
         if ($request->ajax()) {
             return response()->json([
@@ -67,8 +65,8 @@ class MagicController extends Controller
 
     public function show(string $id)
     {
-        $card = $this->magic->fetchCardById($id);
-        $setCards = $this->magic->fetchRelatedSetCards($card);
+        $card = $this->magicService->fetchCardById($id);
+        $setCards = $this->magicService->fetchRelatedSetCards($card);
 
         return view('cards.card', [
             'card' => $card,

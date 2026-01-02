@@ -8,13 +8,8 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class MagicPackController extends Controller
 {
-    protected MagicPackService $packService;
-
-    public function __construct(MagicPackService $packService)
-    {
-        $this->packService = $packService;
-    }
-
+    public function __construct(protected MagicPackService $packService)
+    {}
 
     public function index(Request $request)
     {

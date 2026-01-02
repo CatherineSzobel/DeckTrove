@@ -7,11 +7,8 @@ use App\Services\YugiohService;
 
 class YugiohController extends Controller
 {
-    protected $yugiohService;
-    public function __construct(YugiohService $yugiohService)
-    {
-        $this->yugiohService = $yugiohService;
-    }
+    public function __construct(protected YugiohService $yugiohService)
+    {}
     public function index(Request $request)
     {
         $series = 'yugioh';
