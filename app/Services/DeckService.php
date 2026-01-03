@@ -10,13 +10,9 @@ use App\Services\MagicService;
 
 class DeckService
 {
-    protected MagicService $magicService;
-    protected YugiohService $yugiohService;
 
-    public function __construct(MagicService $magicService)
-    {
-        $this->magicService = $magicService;
-    }
+    public function __construct(protected MagicService $magicService,protected YugiohService $yugiohService)
+    {}
     public function save(array $data): Deck
     {
         if (!Auth::check()) abort(403);
