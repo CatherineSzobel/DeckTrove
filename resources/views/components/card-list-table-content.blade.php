@@ -9,7 +9,6 @@
 
     @foreach($contents as $index => $content)
         @php
-            // Apply color for rarity column dynamically
             $textClass = '';
             if (strtolower($content ?? '') === 'common') $textClass = 'text-gray-600';
             elseif (strtolower($content ?? '') === 'uncommon') $textClass = 'text-green-700';

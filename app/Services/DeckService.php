@@ -122,7 +122,7 @@ class DeckService
         $sections = ['main' => collect(), 'extra' => collect(), 'side' => collect()];
 
         foreach ($deck->cards as $card) {
-            $data = $yugiohService->findCard((int)$card->external_id);
+            $data = $yugiohService->fetchCardById((int)$card->external_id);
             $sections[$card->pivot->zone]
                 ->push(...array_fill(0, $card->pivot->count, $data));
         }

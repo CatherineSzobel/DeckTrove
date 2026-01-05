@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\ResourceNotFoundException;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
@@ -9,7 +10,13 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Client\RequestException;
+use App\Exceptions\ScryfallUnavailableException;
 
+/*@TODO - [ ] Throttle or debounce heavy Scryfall API calls if user searches quickly 
+- [ ] Prewarm caches for popular sets/types (optional) 
+- [ ] Consider storing commonly searched cards in DB for faster queries 
+- [ ] Monitor & handle API rate limits (especially for live search) 
+- [ ] Investigate slow queries: 3s+ calls may need pagination or indexed search */
 
 class MagicService
 {
@@ -31,6 +38,26 @@ class MagicService
                     'query' => $options['query'] ?? null,
                 ]);
             });
+    }
+
+    public function getResponse(string $url, array $params = [])
+    {
+        try {
+            $response = $this->getWithLogging($url, $params);
+        } catch (RequestException $e) {
+            Log::error('Scryfall API request failed', [
+                'url' => $url,
+                'params' => $params,
+                'message' => $e->getMessage(),
+                'status' => optional($e->response)->status(),
+            ]);
+
+            throw new ScryfallUnavailableException(
+                'Scryfall API is currently unavailable'
+            );
+        }
+
+        return $response;
     }
 
     protected function getWithLogging(string $url, array $params = [])
@@ -97,7 +124,7 @@ class MagicService
 
         $cacheKey = "scryfall_set_{$setCode}_all_cards";
 
-        $allSetCards = Cache::remember($cacheKey, $this->cacheTTL, function () use ($setCode) {
+        $allSetCards = Cache::remember($cacheKey, $this->getCacheTTL(), function () use ($setCode) {
             $response = $this->scryfall()->get($this->apiPath, [
                 'q' => "set:{$setCode} game:paper",
                 'order' => 'name',
@@ -137,43 +164,45 @@ class MagicService
             $this->set($params),
         ])->filter()->implode(' ');
 
-        return Cache::remember('magic-search-' . md5(json_encode($params)), 
-        $this->cacheTTL, function () use ($query, $params) {
-            $page = max((int)($params['page'] ?? 1), 1);
+        return Cache::remember(
+            $this->getCacheSearchKey($params),
+            $this->getCacheTTL(),
+            function () use ($query, $params) {
+                $page = max((int)($params['page'] ?? 1), 1);
 
-            $response = $this->getWithLogging($this->apiPath, [
-                'q' => $query,
-                'order' => 'name',
-                'page' => $page,
-            ]);
-
-            if ($response->status() === 404 || $response->clientError()) {
-
-                                logger()->warning('Scryfall client error', [
-                    'status' => $response->status(),
-                    'params' => $params,
+                $response = $this->getResponse($this->apiPath, [
+                    'q' => $query,
+                    'order' => 'name',
+                    'page' => $page,
                 ]);
-                return ['data' => [], 'total_cards' => 0, 'has_more' => false];
-            }
 
-            if ($response->serverError()) {
-                abort(502, 'Scryfall API unavailable');
-            }
+                if ($response->status() === 404 || $response->clientError()) {
+                    throw new ScryfallUnavailableException(
+                        'Scryfall API returned a client error'
+                    );
+                }
 
-            return $response->json();
-        });
+                if ($response->serverError()) {
+                    throw new ScryfallUnavailableException(
+                        'Scryfall API returned a server error'
+                    );
+                }
+
+                return $response->json();
+            }
+        );
     }
 
-    public function searchForDeckBuilder(array $params, string $view): LengthAwarePaginator
+    public function fetchCardsByPagination(array $params): LengthAwarePaginator
     {
         $page = max((int)($params['page'] ?? 1), 1);
-        $perPage = $this->itemsPerPage($view);
+        $perPage = $this->itemsPerPage($params['view'] ?? 'full');
+        $result = $this->searchCards($params);
 
         try {
-            $result = $this->searchCards($params);
-
+            $dataForPage = array_slice($result['data'] ?? [], ($page - 1) * $perPage, $perPage);
             return new LengthAwarePaginator(
-                $result['data'] ?? [],
+                $dataForPage,
                 $result['total_cards'] ?? 0,
                 $perPage,
                 $page,
@@ -239,6 +268,15 @@ class MagicService
             'image' => 48,
             default => 24,
         };
+    }
+
+    public function getCacheSearchKey(array $params): string
+    {
+        return 'magic-search-' . md5(json_encode($params));
+    }
+    public function getCacheTTL(): int
+    {
+        return $this->cacheTTL;
     }
 
     public function getFilterOptions(): array

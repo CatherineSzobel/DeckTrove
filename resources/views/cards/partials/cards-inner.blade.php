@@ -5,11 +5,12 @@
         <p class="text-gray-500 mb-6 max-w-md">Try adjusting your search or clearing filters to see more results.</p>
     </div>
     @else
-    @include("cards.{$series}.view.cards-{$currentView}", ['cards' => $cards])
+    @include("cards.partials.cards-{$currentView}", ['cards' => $cards])
     @if($cards->hasPages())
     <div class="mt-16 flex justify-center">
         <div class="rounded-2xl bg-white shadow-sm px-10 py-8">
-            {{ $cards->links() }}
+            {{ $cards->appends(request()->except('page'))->withPath(route('cards.index', ['series' => $series]))->links() }}
+
         </div>
     </div>
     @endif

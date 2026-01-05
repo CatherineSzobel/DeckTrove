@@ -1,10 +1,9 @@
 <?php
 
+use App\Http\Controllers\CardsController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\YugiohPackController;
-use App\Http\Controllers\MagicController;
 use App\Http\Controllers\MagicPackController;
-use App\Http\Controllers\YugiohController;
 use App\Http\Controllers\RegisterUserController;
 use App\Http\Controllers\SessionController;
 use App\Http\Controllers\DeckController;
@@ -52,8 +51,6 @@ Route::delete('/decks/{deck}', [DeckController::class, 'destroy'])
 Route::get('/public-deck', [DeckController::class, 'index'])->name('public-deck');
 Route::get('/public-deck/filter', [DeckController::class, 'filter'])->name('public-deck.filter');
 
-
-
 // Auth
 Route::get('/register', [RegisterUserController::class, 'create'])->name('register')->middleware('guest');
 Route::post('/register', [RegisterUserController::class, 'store'])->middleware('guest');
@@ -61,11 +58,17 @@ Route::get('/login', [SessionController::class, 'create'])->name('login')->middl
 Route::post('/login', [SessionController::class, 'store'])->middleware('guest');
 Route::post('/logout', [SessionController::class, 'destroy'])->middleware('auth');
 
+Route::get('/{series}/cards', [CardsController::class, 'index'])
+    ->whereIn('series', ['magic', 'yugioh'])
+    ->name('cards.index');
+
+Route::get('/{series}/card/{id}', [CardsController::class, 'show'])
+    ->whereIn('series', ['magic', 'yugioh'])
+    ->name('cards.show');
+
 // Magic Routes
 Route::prefix('magic')->group(function () {
     Route::get('/', fn() => view('home'));
-    Route::get('/cards', [MagicController::class, 'index'])->name('magic.cards.index');
-    Route::get('/card/{card}', [MagicController::class, 'show'])->name('magic.cards.show');
     Route::get('/packs', [MagicPackController::class, 'index'])->name('magic.packs.index');
     Route::get('/pack/{pack}', [MagicPackController::class, 'show'])->name('magic.packs.show');
 
@@ -80,8 +83,6 @@ Route::prefix('magic')->group(function () {
 
 // Yu-Gi-Oh Routes
 Route::prefix('yugioh')->group(function () {
-    Route::get('/cards', [YugiohController::class, 'index'])->name('yugioh.cards.index');
-    Route::get('/card/{card}', [YugiohController::class, 'show'])->name('yugioh.cards.show');
     Route::get('/packs', [YugiohPackController::class, 'index'])->name('yugioh.packs.index');
     Route::get('/pack/{pack}', [YugiohPackController::class, 'show'])->name('yugioh.packs.show');
 

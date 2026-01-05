@@ -14,8 +14,8 @@ class DeckBuilderService
     public function search(string $game, array $params, string $view): LengthAwarePaginator
     {
         return match ($game) {
-            'magic'  => $this->magic->searchForDeckBuilder($params, $view),
-            'yugioh' => $this->yugioh->searchForDeckBuilder($params, $view),
+            'magic'  => $this->magic->fetchCardsByPagination($params),
+            'yugioh' => $this->yugioh->fetchCardsByPagination($params),
             default => abort(400, 'Unsupported game'),
         };
     }
@@ -24,7 +24,7 @@ class DeckBuilderService
     {
         return match ($game) {
             'magic' => $this->magic->fetchCollection($ids),
-            'yugioh' => collect($ids)->map(fn($id) => $this->yugioh->findCard($id)),
+            'yugioh' => collect($ids)->map(fn($id) => $this->yugioh->fetchCardById($id)),
             default => abort(400, 'Unsupported game'),
         };
     }

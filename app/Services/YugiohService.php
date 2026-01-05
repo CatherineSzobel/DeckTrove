@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
@@ -29,7 +28,6 @@ class YugiohService
     {
         $filtered = $cards;
 
-        // Search
         if (!empty($params['search'])) {
             $term = strtolower($params['search']);
             $filtered = array_filter(
@@ -66,35 +64,13 @@ class YugiohService
         );
     }
 
-    public function searchCards(array $params): array
+    public function fetchCardsByPagination(array $params): LengthAwarePaginator
     {
         $allCards = $this->loadCards();
         $filtered = $this->applyFilters($allCards, $params);
         $page = (int)($params['page'] ?? 1);
         $view = $params['view'] ?? 'full';
-        $paginated = $this->paginate($filtered, $page, $view);
-
-        return [
-            'data' => $paginated->items(),
-            'total_cards' => $paginated->total(),
-            'page' => $page,
-            'per_page' => $paginated->perPage(),
-        ];
-    }
-
-    public function searchForDeckBuilder(array $params, string $view): LengthAwarePaginator
-    {
-        $page = max((int)($params['page'] ?? 1), 1);
-        $perPage = $this->itemsPerPage($view);
-
-        $result = $this->searchCards($params);
-
-        return new LengthAwarePaginator(
-            $result['data'] ?? [],
-            $result['total_cards'] ?? 0,
-            $perPage,
-            $page
-        );
+        return $this->paginate($filtered, $page, $view);
     }
 
     public function getFilterOptions(): array
@@ -119,7 +95,7 @@ class YugiohService
         };
     }
 
-    public function findCard(int $id): array
+    public function fetchCardById(int $id): array
     {
         $cards = $this->loadCards();
         $card = collect($cards)->firstWhere('id', $id);
@@ -131,7 +107,7 @@ class YugiohService
         return $card;
     }
 
-    public function findRelatedCards(array $card, int $limit = 6): Collection
+    public function fetchRelatedSetCards(array $card, int $limit = 6): Collection
     {
         $cards = $this->loadCards();
         $archetype = $card['archetype'] ?? null;

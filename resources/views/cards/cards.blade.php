@@ -1,9 +1,3 @@
-@php
-$series = $series ?? 'yugioh';
-$currentView = request('view', 'full');
-$filterOptions = $filterOptions ?? [];
-@endphp
-
 <x-layout :js="['resources/js/card-database-core.js', 'resources/js/card-database.js']" :css="['resources/css/card-database.css']">
     <div class="container mx-auto px-4" data-series="{{ $series }}">
 
