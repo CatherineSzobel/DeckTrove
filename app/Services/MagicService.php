@@ -76,7 +76,6 @@ class MagicService
         return $response;
     }
 
-
     public function fetchCardById(string $id): array
     {
         $response = $this->scryfall()->get("https://api.scryfall.com/cards/{$id}");
@@ -87,36 +86,7 @@ class MagicService
 
         return $response->json();
     }
-    public function fetchCards(array $params): array
-    {
-        // Ensure page is at least 1
-        $page = max((int)($params['page'] ?? 1), 1);
-        $view = $params['view'] ?? 'default';
-
-        // Use the same logic as deck-builder search
-        $result = $this->searchCards($params);
-
-        return [
-            'data' => $result['data'] ?? [],
-            'total_cards' => $result['total_cards'] ?? count($result['data'] ?? []),
-            'page' => $page,
-            'per_page' => $this->itemsPerPage($view),
-        ];
-    }
-
-    public function fetchCardPrints(array $card): Collection
-    {
-        $uri = $card['prints_search_uri'] ?? null;
-        if (!$uri)
-            return collect();
-
-        $response = $this->scryfall()->get($uri);
-
-        return $response->ok()
-            ? collect($response->json('data', []))
-            : collect();
-    }
-
+  
     public function fetchRelatedSetCards(array $card, int $limit = 6): Collection
     {
         $setCode = $card['set'] ?? null;
