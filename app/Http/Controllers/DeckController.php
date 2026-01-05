@@ -66,8 +66,8 @@ class DeckController extends Controller
         };
 
         $cards = $this->deckBuilder->search($game, $params, $request->input('view', 'default'));
-
-        return view('decks.deck-builder', compact('cards', 'game'));
+        $seriesConfig = config("series.$game");
+        return view('decks.deck-builder', compact('cards', 'game','seriesConfig'));
     }
     public function save(Request $request)
     {
@@ -89,8 +89,8 @@ class DeckController extends Controller
     {
         $deck = Deck::with('cards')->findOrFail($id);
         $sections = $this->deckService->buildSections($deck);
-
-        return view('decks.deck', compact('deck', 'sections'));
+        $seriesConfig = config("series.$deck->game");
+        return view('decks.deck', compact('deck', 'sections','seriesConfig'));
     }
 
     public function edit(Deck $deck, Request $request)

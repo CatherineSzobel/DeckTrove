@@ -123,8 +123,8 @@
                 <div class="bg-slate-800 rounded-lg p-4 border border-slate-700">
                     <h4 class="text-sm font-semibold text-slate-300 mb-3">Quick Links</h4>
                     <div class="flex flex-col gap-2">
-                        <a href="#" class="px-3 py-2 rounded bg-slate-700 hover:bg-blue-600 text-white text-center">Yu-Gi-Oh! Cards</a>
-                        <a href="{{ route('magic.cards.index') }}" class="px-3 py-2 rounded bg-slate-700 hover:bg-purple-600 text-white text-center">Magic Cards</a>
+                        <a href="{{ route('cards.index', ['series' => 'yugioh']) }}" class="px-3 py-2 rounded bg-slate-700 hover:bg-blue-600 text-white text-center">Yu-Gi-Oh! Cards</a>
+                        <a href="{{ route('cards.index', ['series' => 'magic']) }}" class="px-3 py-2 rounded bg-slate-700 hover:bg-purple-600 text-white text-center">Magic Cards</a>
                     </div>
                 </div>
             </aside>

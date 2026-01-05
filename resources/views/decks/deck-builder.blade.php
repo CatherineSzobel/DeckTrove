@@ -133,7 +133,7 @@
                     </div>
                 </div>
 
-                @include("decks.$game.cards-view", ['cards' => $cards])
+                @include("decks.partials.cards-view", ['cards' => $cards])
 
                 <!-- Loading spinner -->
                 <div id="loadingSpinner" class="text-center my-4 hidden">

@@ -2,7 +2,6 @@
 <a href="{{ route('decks.show', $deck->id) }}"
     class="group relative flex flex-col bg-gradient-to-b from-gray-50 via-gray-100 to-gray-200 rounded-2xl border border-gray-200 shadow-md hover:shadow-lg transform transition-all duration-300 hover:-translate-y-1 overflow-hidden">
 
-    <!-- Header / Image -->
     <div class="h-44 w-full relative overflow-hidden rounded-t-2xl">
         @if($deck->image)
         <img src="{{ $deck->image }}" alt="{{ $deck->name }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
@@ -11,13 +10,11 @@
             <span class="text-6xl text-gray-400">🃏</span>
         </div>
         @endif
-        <!-- Card count badge -->
         <div class="absolute top-3 right-3 bg-gray-900/70 text-white text-xs font-medium px-3 py-1 rounded-full shadow">
             {{ $deck->cards->sum('pivot.count') ?? 0 }} cards
         </div>
     </div>
 
-    <!-- Card body -->
     <div class="p-5 flex flex-col justify-between flex-1">
         <div class="space-y-2">
             <div class="flex items-center justify-between">

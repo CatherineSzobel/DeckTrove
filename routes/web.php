@@ -59,7 +59,6 @@ Route::post('/logout', [SessionController::class, 'destroy'])->middleware('auth'
 Route::get('/{series}/cards', [CardsController::class, 'index'])
     ->whereIn('series', ['magic', 'yugioh'])
     ->name('cards.index');
-
 Route::get('/{series}/card/{id}', [CardsController::class, 'show'])
     ->whereIn('series', ['magic', 'yugioh'])
     ->name('cards.show');
@@ -74,9 +73,7 @@ Route::get('/{series}/pack/{setCode}', [PacksController::class, 'show'])
 
 // Magic Routes
 Route::prefix('magic')->group(function () {
-    Route::get('/', fn() => view('home'));
 
-    // Deck builder routes
     Route::get('/deck-builder', [DeckController::class, 'builder'])
         ->name('magic.deck.builder');
     Route::post('/deck-builder/save', [DeckController::class, 'save'])
@@ -92,5 +89,6 @@ Route::prefix('yugioh')->group(function () {
         ->name('yugioh.deck.builder');
     Route::post('/deck-builder/save', [DeckController::class, 'save'])
         ->name('yugioh.deck.builder.save')
+        ->middleware('auth')
         ->defaults('game', 'yugioh');
 });
