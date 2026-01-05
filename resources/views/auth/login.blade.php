@@ -37,7 +37,6 @@
             </div>
         </form>
 
-        <!-- Right Panel: Non-form content -->
         <x-welcome-div heading="Welcome to DeckTrove!"></x-welcome-div>
     </div>
 </x-layout>

@@ -1,14 +1,11 @@
 <x-layout :js="['resources/js/deck-builder.js']" :css="['resources/css/deckbuilder.css']">
 
     <div class="relative">
-
         @guest
-        <!-- AUTH WARNING OVERLAY -->
         <div class="fixed inset-0 z-[1000] flex items-center justify-center bg-gradient-to-br from-black/70 via-black/60 to-black/70">
 
             <div class="relative bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8 text-center">
 
-                <!-- Icon -->
                 <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-blue-100">
                     <svg xmlns="http://www.w3.org/2000/svg"
                         class="h-7 w-7 text-blue-600"
@@ -18,17 +15,14 @@
                     </svg>
                 </div>
 
-                <!-- Title -->
                 <h2 class="text-2xl font-bold text-gray-900 mb-2">
                     Login Required
                 </h2>
 
-                <!-- Description -->
                 <p class="text-gray-600 mb-6">
                     Sign in to build decks, save progress, and share your creations.
                 </p>
 
-                <!-- Actions -->
                 <div class="flex flex-col sm:flex-row justify-center gap-3">
                     <a href="{{ route('login') }}"
                         class="inline-flex justify-center items-center px-6 py-2.5 rounded-full
@@ -45,7 +39,6 @@
                     </a>
                 </div>
 
-                <!-- Subtle hint -->
                 <p class="mt-6 text-xs text-gray-400">
                     Your work will be available after you sign in.
                 </p>
@@ -61,7 +54,6 @@
             class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4
            @guest pointer-events-none opacity-50 @endguest">
 
-            <!-- LEFT: Card Search -->
             <div class="col-span-1 md:col-span-2">
                 @if ($errors->any())
                 <p class="text-center p-2 font-bold text-red-500">
@@ -92,8 +84,6 @@
                     </div>
                 </div>
 
-
-                <!-- Main Deck -->
                 <div class="p-3 bg-white rounded shadow deckContainer active">
                     <h2 class="font-bold text-lg mb-2 bg-white">
                         Main Deck (<span id="mainCount">0</span>)
@@ -103,7 +93,6 @@
 
 
                 @if ($game === 'yugioh')
-                <!-- Extra Deck -->
                 <div class="p-3 bg-white rounded shadow deckContainer">
                     <h2 class="font-bold text-lg mb-2 bg-white">
                         Extra Deck (<span id="extraCount">0</span>)
@@ -112,7 +101,6 @@
                 </div>
                 @endif
 
-                <!-- Side Deck -->
                 <div class="p-3 bg-white rounded shadow deckContainer">
                     <h2 class="font-bold text-lg mb-2 bg-white">
                         Side Deck (<span id="sideCount">0</span>)
@@ -121,10 +109,8 @@
                 </div>
             </div>
 
-            <!-- RIGHT: Deck Zones -->
             <div class="space-y-4 z-[999]">
                 <div class="flex w-full md:w-[400px] lg:w-[600px] gap-2">
-                    <!-- Card Search - 80% -->
                     <div class="flex-[4] p-3 bg-white rounded shadow">
                         <h2 class="font-bold text-lg mb-2 bg-white">Card Search</h2>
                         <div class="text-sm text-gray-600">
@@ -137,7 +123,6 @@
                         <input type="text" id="searchInput" placeholder="Search cards..." class="w-full p-2 border rounded" value="{{ request('search') }}">
                     </div>
 
-                    <!-- Buttons - 20% -->
                     <div class="flex-[1] p-3 bg-white rounded shadow flex flex-col gap-2">
                         <button id="filter-button" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 transition-colors">
                             Filter
@@ -169,7 +154,6 @@
                     <input type="hidden" name="isPublic" id="isPublic" value="0">
                     <input type="hidden" name="image" id="deckImage">
 
-
                     <button class="mt-4 w-full bg-blue-600 text-white p-3 rounded hover:bg-blue-700">
                         Save Deck
                     </button>
@@ -177,7 +161,6 @@
 
 
             </div>
-            <!-- Deck Warning Modal -->
             <div id="deckWarningModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
                 <div class="bg-white rounded p-6 w-96 max-w-full shadow-lg">
                     <h2 class="text-lg font-bold mb-4">Deck Too Small</h2>

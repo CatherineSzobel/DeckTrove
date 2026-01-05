@@ -9,14 +9,11 @@
 ])
 
 <div class="relative" id="{{ $id }}-container">
-    <!-- Avatar button -->
-
     <button id="{{ $id }}-btn"
         class="mt-2 w-10 h-10 rounded-full overflow-hidden ring-2 ring-gray-300 dark:ring-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
         <img src="{{ asset('storage/' . auth()->user()->avatar) }}" alt="Avatar" class="w-full h-full object-cover">
     </button>
 
-    <!-- Dropdown menu -->
     <div id="{{ $id }}-menu" class="hidden absolute right-0 mt-2 w-48 bg-white text-gray-800 rounded shadow-lg z-50">
         @foreach($options as $value => $label)
         @if($value === 'logout')

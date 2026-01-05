@@ -1,6 +1,5 @@
 <footer class="bg-white">
     <div class="mx-auto max-w-7xl space-y-8 px-4 py-16 sm:px-6 lg:space-y-16 lg:px-8">
-        <!-- Logo & Social -->
         <div class="sm:flex sm:items-center sm:justify-between">
             <div class="text-teal-600">
                 <img src="{{ Vite::asset('resources/img/decktrove-logo.png') }}" alt="DeckTrove Logo" class="h-24 w-24 mt-2" />
@@ -15,34 +14,29 @@
                         </svg>
                     </a>
                 </li>
-                <!-- Add more social links here if needed -->
             </ul>
         </div>
 
-        <!-- Footer Columns -->
         <div class="grid grid-cols-1 gap-8 border-t border-gray-100 pt-8 sm:grid-cols-2 lg:grid-cols-4 lg:pt-16">
 
-            <!-- Series -->
             <div>
                 <p class="font-medium text-gray-900">Series</p>
                 <ul class="mt-6 space-y-4 text-sm">
-                    <li><a href="{{ route('yugioh.cards.index') }}" class="text-gray-700 transition hover:opacity-75">Yu-Gi-Oh!</a></li>
-                    <li><a href="{{ route('magic.cards.index') }}" class="text-gray-700 transition hover:opacity-75">Magic the Gathering</a></li>
+                    <li><a href="#" class="text-gray-700 transition hover:opacity-75">Yu-Gi-Oh!</a></li>
+                    <li><a href="#" class="text-gray-700 transition hover:opacity-75">Magic the Gathering</a></li>
                     <li><a href="#" class="text-gray-700 transition hover:opacity-75">Pokémon</a></li>
                     <li><a href="#" class="text-gray-700 transition hover:opacity-75">Digimon</a></li>
                 </ul>
             </div>
 
-            <!-- Community -->
             <div>
                 <p class="font-medium text-gray-900">Community</p>
                 <ul class="mt-6 space-y-4 text-sm">
                     <li><a href="{{ route('public-deck') }}" class="text-gray-700 transition hover:opacity-75">Public Decks</a></li>
-                    <li><a href="{{ route('yugioh.deck.builder') }}" class="text-gray-700 transition hover:opacity-75">Create a Deck</a></li>
+                    <li><a href="#" class="text-gray-700 transition hover:opacity-75">Create a Deck</a></li>
                 </ul>
             </div>
 
-            <!-- Resources -->
             <div>
                 <p class="font-medium text-gray-900">Resources</p>
                 <ul class="mt-6 space-y-4 text-sm">
@@ -53,7 +47,6 @@
                 </ul>
             </div>
 
-            <!-- Project / Showcase -->
             <div>
                 <p class="font-medium text-gray-900">Project</p>
                 <ul class="mt-6 space-y-4 text-sm">
@@ -66,7 +59,6 @@
 
         </div>
 
-        <!-- Copyright -->
         <p class="text-xs text-gray-500">© {{ date('Y') }} DeckTrove. All rights reserved.</p>
     </div>
 </footer>

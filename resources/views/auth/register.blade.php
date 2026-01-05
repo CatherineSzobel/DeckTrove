@@ -4,7 +4,6 @@
     </x-slot:header>
 
     <div class="flex items-start justify-center min-h-screen gap-8 px-4 bg-gray-50">
-        <!-- Left Panel: Form -->
         <form method="POST" action="/register" class="w-full max-w-md bg-white p-8 rounded-lg shadow-lg text-center">
             @csrf
 

@@ -1,6 +1,5 @@
 <x-layout :js="['resources/js/portfolio.js', 'resources/js/carousel.js']" :css="['resources/css/portfolio.scss']">
 
-    <!-- About Me -->
     <div class="aboutme grid grid-cols-1 md:grid-cols-2 gap-4 items-center mx-auto mt-8">
         <div class="profile-picture w-48 h-48 mx-auto md:mx-0">
             <img src="{{ Vite::asset('resources/img/portfolio/portfolio-picture.jpg') }}" alt="Profile Picture" class="rounded-full w-full h-full object-cover shadow-lg">
@@ -18,16 +17,13 @@
         </div>
     </div>
 
-    <!-- Skills Section -->
     <div class="skills mt-8">
         <h3 class="text-xl font-bold border-b border-gray-300 border-b-8 p-2 w-1/5">My Skills</h3>
 
-        <!-- Tabs for Skills -->
         <div class="tab-container mt-4 ">
             <x-tabs-list :labels="['Full stack developer', 'Game developer', 'Miscellaneous']" :targets="['fullstackSkills', 'gamedevSkills', 'miscSkills']" />
             <div class="tab-content mt-4">
 
-                <!-- Full Stack Skills -->
                 <div id="fullstackSkills" class="tab-panel flex flex-wrap gap-4 justify-center">
 
                     <x-portfolio-skills-div title="Frontend" description="I craft responsive, accessible, and user-focused interfaces.">
@@ -53,7 +49,6 @@
                 </div>
             </div>
 
-            <!-- Game Developer Skills -->
             <div id="gamedevSkills" class="tab-panel hidden flex flex-wrap gap-4 justify-center">
                 <x-portfolio-skills-div title="Engine" description="Experience with leading game engines for immersive experiences.">
                     <x-portfolio-tech-list :items="['Unreal Engine','Unity']" class="justify-center" />
@@ -71,7 +66,6 @@
                 </x-portfolio-skills-div>
             </div>
 
-            <!-- Miscellaneous Skills -->
             <div id="miscSkills" class="tab-panel hidden flex flex-wrap gap-4 justify-center">
                 <x-portfolio-skills-div title="Soft Skills" description="Key interpersonal skills that enhance teamwork and productivity.">
                     <x-portfolio-tech-list :items="['Eager to learn','Teamwork','Problem-solving','Adaptability','Time management']" class="justify-center" />
@@ -88,16 +82,13 @@
         </div>
     </div>
 
-    <!-- Projects Section -->
     <div class="projects mt-8">
         <h3 class="text-xl font-bold border-b border-gray-300 border-b-8 p-2 w-1/5">My Projects</h3>
 
-        <!-- Tabs for Projects -->
         <div class="tab-container mt-4">
             <x-tabs-list :labels="['Full Stack Projects', 'Game Dev Projects']" :targets="['fullstackProjects', 'gamedevProjects']" />
 
             <div class="tab-content mt-4">
-                <!-- Full Stack Projects -->
                 <div id="fullstackProjects" class="tab-panel flex flex-wrap gap-4 justify-center">
                     <x-portfolio-piece
                         title="Deck Trove"
@@ -140,7 +131,6 @@
                     </x-portfolio-piece>
                 </div>
 
-                <!-- Game Dev Projects -->
                 <div id="gamedevProjects" class="tab-panel hidden flex flex-wrap gap-4 justify-center">
                     <x-portfolio-piece
                         title="DreamBots"
@@ -187,7 +177,6 @@
         </div>
     </div>
 
-    <!-- Contact Section -->
     <div class="contact mt-8">
         <h3 class=" text-xl font-bold border-b border-gray-300 border-b-8 p-2 w-1/5">Get in touch with me</h3>
         <div class="grid grid-cols-2 gap-4 mt-4">

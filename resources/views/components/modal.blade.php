@@ -1,10 +1,8 @@
 @props(['id'])
 
 <div id="{{ $id }}" class="fixed inset-0 z-50 hidden items-center justify-center">
-    <!-- Backdrop -->
     <div class="absolute inset-0 bg-black/50" data-close-modal></div>
-
-    <!-- Modal content -->
+    
     <div class="bg-white rounded-2xl shadow-xl max-w-5xl w-full 
      max-h-[90vh] overflow-y-auto p-6 lg:p-8 relative">
 

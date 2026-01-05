@@ -1,12 +1,8 @@
 <x-layout :js="['resources/js/moving-carousel.js']" :css="['resources/css/dashboard.css']">
     <div class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-4 md:p-8 rounded-lg">
         <div class="max-w-7xl mx-auto">
-
             <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                <!-- Main Content Area (Left - 3 columns) -->
                 <div class="lg:col-span-3 space-y-6">
-
-                    <!-- Your Decks Section -->
                     <div class="bg-slate-900/50 backdrop-blur-xl rounded-2xl shadow-2xl p-6 md:p-8 border border-slate-800/50 hover:border-amber-500/30 transition-all duration-300">
                         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
                             <div>
@@ -21,8 +17,6 @@
                                     </svg>
                                 </a>
                             </div>
-
-                            <!-- TCG Dropdown -->
                             <form method="GET" action="{{ route('dashboard') }}">
                                 <select name="tcg" onchange="this.form.submit()"
                                     class="bg-slate-800/80 text-white rounded-xl px-4 py-2.5 border border-slate-700 hover:border-amber-400 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 transition-all cursor-pointer">
@@ -34,8 +28,6 @@
                                 </select>
                             </form>
                         </div>
-
-                        <!-- Decks Grid -->
                         @if($recentDecks->count() > 0)
                         <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                             @foreach($recentDecks as $deck)
@@ -77,15 +69,10 @@
                         </div>
                         @endif
                     </div>
-
-                    <!-- Quick Stats -->
                     <div class="bg-slate-900/90 backdrop-blur-md rounded-2xl shadow-lg border border-slate-700/50 p-6 hover:border-amber-500/40 transition-all">
                         <div class="flex items-center gap-3 mb-4">
-                            <span class="text-2xl">📊</span>
                             <h3 class="text-xl font-bold text-white">Quick Stats</h3>
                         </div>
-
-                        <!-- Horizontal stats row -->
                         <div class="flex flex-wrap gap-4 justify-start">
                             @foreach($tcgs as $tcg)
                             <div class="flex-1 min-w-[90px] bg-slate-800/80 p-3 rounded-xl border border-slate-600/30 hover:border-amber-400/50 transition-all flex flex-col items-center text-center">
@@ -95,13 +82,7 @@
                             @endforeach
                         </div>
                     </div>
-
-                    <!-- Card Carousel Section -->
                     <div class="bg-slate-900/50 backdrop-blur-xl rounded-2xl shadow-2xl p-6 md:p-8 border border-slate-800/50 hover:border-purple-500/30 transition-all duration-300">
-                        <div class="flex items-center gap-3 mb-6">
-                            <span class="text-3xl">✨</span>
-                            <h2 class="text-3xl font-bold text-white">Featured Cards</h2>
-                        </div>
                         <div class="overflow-hidden relative rounded-xl">
                             <div class="marquee">
                                 <div class="flex gap-4 py-4">
@@ -127,10 +108,7 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Sidebar (Right - 1 column) -->
                 <div class="lg:col-span-1 flex flex-col gap-6 lg:h-full">
-                    <!-- Quick Links -->
                     <div class="bg-slate-900/90 backdrop-blur-md rounded-2xl shadow-lg border border-slate-700/50 p-6 hover:border-purple-500/40 transition-all flex flex-col">
                         <div class="flex items-center gap-3 mb-6">
                             <span class="text-2xl">🔗</span>
@@ -138,18 +116,17 @@
                         </div>
                         <div class="flex flex-col gap-3">
                             <x-dashboard-quick-link class="gap-2"
-                                :routes="['#', 'magic.cards.index', 'public-deck', 'magic.deck.builder']" :titles="['Yu-Gi-Oh! Cards', 'Magic Cards', 'Public Decks', 'Deck Builder']"
+                                :routes="['#', route('cards.index', ['series' => 'magic']), 'public-deck', 'magic.deck.builder']"
+                                :titles="['Yu-Gi-Oh! Cards', 'Magic Cards', 'Public Decks', 'Deck Builder']"
                                 :colors="[
-    'bg-slate-800 border border-slate-700 hover:border-purple-500',
-    'bg-slate-800 border border-slate-700 hover:border-purple-500',
-    'bg-slate-800 border border-slate-700 hover:border-red-500',
-    'bg-slate-800 border border-slate-700 hover:border-amber-500'
-]" />
+                                        'bg-slate-800 border border-slate-700 hover:border-purple-500',
+                                        'bg-slate-800 border border-slate-700 hover:border-purple-500',
+                                        'bg-slate-800 border border-slate-700 hover:border-red-500',
+                                        'bg-slate-800 border border-slate-700 hover:border-amber-500'
+                                        ]" />
                         </div>
                     </div>
-
                 </div>
-
             </div>
         </div>
     </div>
