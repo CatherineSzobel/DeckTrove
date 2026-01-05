@@ -3,7 +3,7 @@
 return [
 
     'yugioh' => [
-        'link_prefix' => '/yugioh/card/',
+        'link_prefix' => '/yugioh',
         'image' => fn($card) => data_get($card, 'card_images.0.image_url', 'https://via.placeholder.com/200x280?text=No+Image'),
         'type_field' =>  fn($card) => data_get($card, 'type', ''),
         'subtype_field' => 'race',
@@ -20,10 +20,17 @@ return [
             'secret' => 'text-purple-600',
         ],
         'filter_fields' => ['search', 'type', 'attribute', 'race', 'archetype'],
+        'pack' => [
+            'code' => 'set_code',
+            'name' => 'set_name',
+            'release_date' => 'tcg_date',
+            'card_count' => 'num_of_cards',
+            'image' => 'set_image',
+        ],
     ],
 
     'magic' => [
-        'link_prefix' => '/magic/card/',
+        'link_prefix' => '/magic',
         'image' => fn($card) => data_get($card, 'image_uris.normal')
             ?? data_get($card, 'card_faces.0.image_uris.normal')
             ?? 'https://via.placeholder.com/200x280?text=No+Image',
@@ -45,6 +52,14 @@ return [
             'bonus' => 'text-blue-600',
         ],
         'filter_fields' => ['search', 'type', 'color', 'rarity', 'set_name'],
+        'pack' => [
+            'code' => 'code',
+            'name' => 'name',
+            'type' => 'set_type',
+            'release_date' => 'released_at',
+            'card_count' => 'card_count',
+            'image' => 'icon_svg_uri',
+        ],
     ],
 
 ];

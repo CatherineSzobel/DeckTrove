@@ -2,7 +2,6 @@
     <div class="container mx-auto px-4" data-series="{{ $series }}">
         <x-database-header title="Packs">
 
-            <!-- Flex container: dropdowns left, search right -->
             <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
                 <div class="flex gap-2">
                     @foreach(['full' => 'Full', 'list' => 'List'] as $key => $label)
@@ -13,23 +12,19 @@
                     @endforeach
                 </div>
 
-                <!-- Right side: search bar -->
                 <x-search-button placeholder="Search pack...">Search</x-search-button>
             </div>
 
         </x-database-header>
 
     </div>
-    <!-- Pack container: JS will populate this -->
     <div class="container mx-auto">
         <div class="flex justify-center w-full">
             <div class="w-full ">
-                @include("packs.{$series}.packs-{$currentView}", ['packs' => $packs])
+                @include("packs.partials.packs-{$currentView}", ['packs' => $packs])
             </div>
         </div>
 
-
-        <!-- Pagination -->
         @if($packs->hasPages())
         <div class="mt-16 flex justify-center">
             <div class="rounded-2xl bg-white shadow-sm

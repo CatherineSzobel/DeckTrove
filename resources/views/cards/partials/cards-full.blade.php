@@ -29,7 +29,7 @@
 
     <div class="rounded-xl bg-white shadow hover:shadow-lg transition-transform transform hover:scale-105 flex flex-col h-full overflow-hidden">
         {{-- Link & Image --}}
-        <a href="{{ url(($seriesConfig['link_prefix'] ?? '/') . ($card['id'] ?? '')) }}" class="relative group">
+        <a href="{{ url(($seriesConfig['link_prefix'] . '/card/' ?? '/') . ($card['id'] ?? '')) }}" class="relative group">
             <img src="{{ $image }}" alt="{{ $card['name'] ?? 'Card Image' }}"
                 class="w-full h-64 object-cover rounded-t-lg transition-transform duration-300 group-hover:scale-105 object-top">
         </a>

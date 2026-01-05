@@ -2,8 +2,6 @@
 
 use App\Http\Controllers\CardsController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\YugiohPackController;
-use App\Http\Controllers\MagicPackController;
 use App\Http\Controllers\RegisterUserController;
 use App\Http\Controllers\SessionController;
 use App\Http\Controllers\DeckController;
@@ -11,8 +9,8 @@ use App\Models\Deck;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\IndexController;
+use App\Http\Controllers\PacksController;
 use App\Http\Controllers\ProfileController;
-
 
 
 Route::get('/', [IndexController::class, 'index'])->name('index');
@@ -66,11 +64,17 @@ Route::get('/{series}/card/{id}', [CardsController::class, 'show'])
     ->whereIn('series', ['magic', 'yugioh'])
     ->name('cards.show');
 
+Route::get('/{series}/packs', [PacksController::class, 'index'])
+    ->whereIn('series', ['magic', 'yugioh'])
+    ->name('packs.index');
+Route::get('/{series}/pack/{setCode}', [PacksController::class, 'show'])
+    ->whereIn('series', ['magic', 'yugioh'])
+    ->name('packs.show');
+
+
 // Magic Routes
 Route::prefix('magic')->group(function () {
     Route::get('/', fn() => view('home'));
-    Route::get('/packs', [MagicPackController::class, 'index'])->name('magic.packs.index');
-    Route::get('/pack/{pack}', [MagicPackController::class, 'show'])->name('magic.packs.show');
 
     // Deck builder routes
     Route::get('/deck-builder', [DeckController::class, 'builder'])
@@ -83,8 +87,6 @@ Route::prefix('magic')->group(function () {
 
 // Yu-Gi-Oh Routes
 Route::prefix('yugioh')->group(function () {
-    Route::get('/packs', [YugiohPackController::class, 'index'])->name('yugioh.packs.index');
-    Route::get('/pack/{pack}', [YugiohPackController::class, 'show'])->name('yugioh.packs.show');
 
     Route::get('/deck-builder', [DeckController::class, 'builder'])
         ->name('yugioh.deck.builder');

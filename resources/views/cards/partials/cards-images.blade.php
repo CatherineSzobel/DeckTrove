@@ -15,7 +15,7 @@
     $name = $card['name'] ?? 'Unknown Card';
     $type = data_get($card, $seriesConfig['subtype_field'] ?? '') ?? 'unknown';
 
-    $link = url(($seriesConfig['link_prefix'] ?? '/') . ($card['id'] ?? ''));
+    $link = url(($seriesConfig['link_prefix'] . '/card/' ?? '/') . ($card['id'] ?? ''));
     @endphp
 
     <x-card :desc="$desc">

@@ -35,7 +35,7 @@
                 $price = data_get($card, $seriesConfig['price_field'] ?? '') ?? 'N/A';
 
                 // URL prefix
-                $urlPrefix = $seriesConfig['link_prefix'] ?? '/';
+                $urlPrefix = $seriesConfig['link_prefix'] . '/card/' ?? '/';
                 $cardId = $card['id'] ?? null;
             @endphp
 

@@ -9,10 +9,8 @@ use Illuminate\Support\Facades\Log;
 
 class YugiohPackService
 {
-    private string $packsPath;
-    private array $packs;
 
-    public function __construct()
+    public function __construct(protected string $packsPath = '', protected array $packs = [])
     {
         $this->packsPath = public_path('json/yugioh-packs.json');
 
@@ -24,9 +22,6 @@ class YugiohPackService
         $this->packs = json_decode(file_get_contents($this->packsPath), true);
     }
 
-    /**
-     * Get all packs as a sorted collection
-     */
     public function getPacks(): Collection
     {
         return collect($this->packs)
@@ -34,32 +29,26 @@ class YugiohPackService
             ->values();
     }
 
-    /**
-     * Paginate packs
-     */
-    public function paginatePacks(Request $request, int $perPage = 24): LengthAwarePaginator
+    public function fetchPacksByPagination(array $params, int $perPage = 24): LengthAwarePaginator
     {
-        $page = $request->get('page', 1);
+        $page = $params['page'] ?? 1;
         $packsCollection = $this->getPacks();
 
         $currentPageItems = $packsCollection->slice(($page - 1) * $perPage, $perPage)->values();
 
         return new LengthAwarePaginator(
             $currentPageItems,
-            $packsCollection->count(),
-            $perPage,
-            $page,
-            [
-                'path' => $request->url(),
-                'query' => $request->query(),
+            total: $packsCollection->count(),
+            perPage: $perPage,
+            currentPage: $page,
+            options: [
+                'path' => $params['url'] ?? '',
+                'query' => $params,
             ]
         );
     }
 
-    /**
-     * Find a single pack by set code
-     */
-    public function findPack(string $code): ?object
+    public function getPackById(string $code): ?array
     {
         $pack = collect($this->packs)->firstWhere('set_code', $code);
 
@@ -68,13 +57,10 @@ class YugiohPackService
             return null;
         }
 
-        return (object)$pack;
+        return $pack;
     }
 
-    /**
-     * Load cards for a specific pack
-     */
-    public function loadPackCards(string $code): Collection
+    public function getPackCards(string $code): Collection
     {
         $packFile = public_path("json/packs/{$code}.json");
 
