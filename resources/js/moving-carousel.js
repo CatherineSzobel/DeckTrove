@@ -3,10 +3,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     marquees.forEach((marquee) => {
         let scrollAmount = 0;
-        const speed = 1; // pixels per frame, adjust as needed
+        const speed = 1;
         const containerWidth = marquee.scrollWidth;
 
-        // Duplicate content for infinite scroll
         marquee.innerHTML += marquee.innerHTML;
 
         function animate() {

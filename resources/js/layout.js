@@ -1,22 +1,18 @@
 const dashboardLinks = document.querySelectorAll(".dashboard-link");
 const SERIES_CONFIG = {
     magic: { label: "Magic: The Gathering", base: "/magic" },
-    yugioh:  { label: "Yu-Gi-Oh!", base: "/yugioh" },
+    yugioh: { label: "Yu-Gi-Oh!", base: "/yugioh" },
     //pokemon: { label: "Pokémon", base: "/pokemon" },
-    // digimon: { label: "Digimon", base: "/digimon" } // add when ready
+    // digimon: { label: "Digimon", base: "/digimon" } 
 };
 
 const SERIES_KEYS = Object.keys(SERIES_CONFIG);
 
-/* ---------------------------
-   Series Selector
----------------------------- */
 function seriesSelectorSetup() {
     const selectors = document.querySelectorAll(".series-selector");
     const dashboardLogos = document.querySelectorAll(".dashboard-logo");
     let selectedSeries = localStorage.getItem("selectedSeries");
 
-    // Redirect to homepage if invalid series
     if (selectedSeries && !SERIES_CONFIG[selectedSeries]) {
         localStorage.removeItem("selectedSeries");
         selectedSeries = null;
@@ -38,34 +34,36 @@ function seriesSelectorSetup() {
         }
 
         selector.addEventListener("change", () => {
-            const series = selector.value;
-
-            if (!SERIES_CONFIG[series]) return;
-
-            localStorage.setItem("selectedSeries", series);
-            updateLinks(series);
-            window.location.href = `/${series}/cards`;
+            directThroughSelector(selector);
         });
     });
 
-    // Dashboard logo clicks
     dashboardLogos.forEach((img) => {
         img.addEventListener("click", () => {
-            const series = img.dataset.series;
-            if (!SERIES_CONFIG[series]) return;
-
-            localStorage.setItem("selectedSeries", series);
-            updateLinks(series);
-            window.location.href = `/${series}/cards`;
+            directThroughLogo(img);
         });
     });
 
     if (selectedSeries) updateLinks(selectedSeries);
 }
+function directThroughSelector(selector) {
+    const series = selector.value;
 
-/* ---------------------------
-   Helpers
----------------------------- */
+    if (!SERIES_CONFIG[series]) return;
+
+    localStorage.setItem("selectedSeries", series);
+    updateLinks(series);
+    window.location.href = `/${series}/cards`;
+}
+function directThroughLogo(img) {
+    const series = img.dataset.series;
+    if (!SERIES_CONFIG[series]) return;
+
+    localStorage.setItem("selectedSeries", series);
+    updateLinks(series);
+    window.location.href = `/${series}/cards`;
+}
+
 function updateButtonText(selector, series) {
     const buttonText = selector
         .closest(".group")
@@ -73,7 +71,6 @@ function updateButtonText(selector, series) {
     if (buttonText) buttonText.textContent = SERIES_CONFIG[series].label;
 }
 
-// Remove existing series prefix from URLs
 function cleanPath(path) {
     const pattern = new RegExp(`^/(${SERIES_KEYS.join("|")})(/|$)`);
     return path.replace(pattern, "/");
@@ -91,9 +88,6 @@ function updateLinks(series) {
     });
 }
 
-/* ---------------------------
-   User Avatar Dropdown
----------------------------- */
 function initUserAvatarDropdown() {
     const container = document.getElementById("userDropdown-container");
     const btn = document.getElementById("userDropdown-btn");
@@ -111,9 +105,6 @@ function initUserAvatarDropdown() {
     });
 }
 
-/* ---------------------------
-   Showcase Toggle
----------------------------- */
 function initShowcaseToggle() {
     const button = document.getElementById("showcase_button");
     const details = document.getElementById("showcaseDetails");
@@ -140,9 +131,6 @@ function initShowcaseToggle() {
     });
 }
 
-/* ---------------------------
-   Init
----------------------------- */
 document.addEventListener("DOMContentLoaded", () => {
     seriesSelectorSetup();
     initUserAvatarDropdown();

@@ -2,10 +2,8 @@
 import { initAllTabs } from "./tabs.js";
 
 document.addEventListener("DOMContentLoaded", () => {
-    // Initialize all tab groups
     initAllTabs();
 
-    // Modal logic (optional)
     document.querySelectorAll("[data-modal-target]").forEach((button) => {
         button.addEventListener("click", () => {
             const modal = document.getElementById(button.dataset.modalTarget);

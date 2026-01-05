@@ -95,18 +95,23 @@ export function setCoverImage(cardWrapper, coverPreview, deckImageInput) {
         : img.addEventListener("load", applyCover, { once: true });
 }
 
+const getChildCount = (id) =>
+    document.getElementById(id)?.children.length ?? 0;
+
 export function enableSaveButton() {
     if (!saveBtn) return;
+
     const totalCards =
-        (document.getElementById(DECK_IDS.main)?.children.length || 0) +
-        (document.getElementById(DECK_IDS.extra)?.children.length || 0) +
-        (document.getElementById(DECK_IDS.side)?.children.length || 0);
+        getChildCount(DECK_IDS.main) +
+        getChildCount(DECK_IDS.extra) +
+        getChildCount(DECK_IDS.side);
+
     saveBtn.disabled = totalCards === 0;
 }
 
 export function resetDecks(decks = []) {
     decks.forEach((element) => {
-        if (!element) return; 
+        if (!element) return;
         element.innerHTML = "";
     });
     clearCardCounts();
