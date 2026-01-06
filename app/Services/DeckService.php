@@ -23,6 +23,7 @@ class DeckService
             'name' => $data['deck_title'] ?? 'New Deck',
             'description' => $data['deck_description'] ?? null,
             'image' => $data['image'] ?? null,
+            'is_public' => $data['is_public'] ?? false,
         ]);
 
         $this->syncCards($deck, $data['cards']);

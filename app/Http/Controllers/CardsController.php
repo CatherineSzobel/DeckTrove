@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\ViewModels\CardViewModel;
 use App\Services\CardService;
 
 class CardsController extends Controller
@@ -21,15 +22,20 @@ class CardsController extends Controller
         $params['view'] = $view;
 
         $cards = $this->cardService->getCardsBySeries($series, $params);
+
+        $cards = $cards->through(
+            fn($card) => new CardViewModel($card, $seriesConfig)
+        );
+
         $filters = $this->cardService->getFiltersBySeries($series);
 
-        return view('cards.cards', [
-            'cards' => $cards,
-            'series' => $series,
-            'currentView' => $view,
-            'options' => array_values($filters),
-            'seriesConfig' => $seriesConfig,
-        ]);
+        return view('cards.cards', array_merge(
+            compact('cards', 'series'),
+            [
+                'currentView' => $view,
+                'options' => array_values($filters),
+            ]
+        ));
     }
 
     public function show($series, $id)
@@ -37,12 +43,16 @@ class CardsController extends Controller
         $seriesConfig = config("series.$series");
 
         $card = $this->cardService->fetchCardById($id, $series);
-        $setCards = $this->cardService->getSetCardsBySeries($series, $card);
-        return view('cards.card', [
-            'card' => $card,
-            'setCards' => $setCards,
-            'series' => $series,
-            'seriesConfig' => $seriesConfig,
-        ]);
+
+        $setCards = $this->cardService
+            ->getSetCardsBySeries($series, $card)
+            ->map(fn($c) => new CardViewModel($c, $seriesConfig));
+
+        return view('cards.card', array_merge(
+            compact('setCards', 'series'),
+            [
+                'card' => new CardViewModel($card, $seriesConfig),
+            ]
+        ));
     }
 }

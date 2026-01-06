@@ -78,7 +78,7 @@
                         </button>
 
                         <label class="flex items-center gap-2 font-semibold">
-                            <input type="checkbox" id="isPublic" {{ request('is_public') ? 'checked' : '' }}>
+                            <input type="checkbox" id="isPublicCheckbox" {{ request('is_public') ? 'checked' : '' }}>
                             Public
                         </label>
                     </div>
@@ -151,7 +151,7 @@
                     <input type="hidden" name="game" value="{{ $game }}">
                     <input type="hidden" name="deck_title" id="deckTitle">
                     <input type="hidden" name="deck_description" id="deckDescription">
-                    <input type="hidden" name="isPublic" id="isPublic" value="0">
+                    <input type="hidden" name="is_public" id="isPublic" value="0">
                     <input type="hidden" name="image" id="deckImage">
 
                     <button class="mt-4 w-full bg-blue-600 text-white p-3 rounded hover:bg-blue-700">

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\ViewModels\CardViewModel;
 use Illuminate\Http\Request;
 use App\Models\Deck;
 use App\Services\DeckService;
@@ -64,11 +65,16 @@ class DeckController extends Controller
                 'page'
             ]),
         };
-
-        $cards = $this->deckBuilder->search($game, $params, $request->input('view', 'default'));
+        $rawCards = $this->deckBuilder->search($game, $params, $request->input('view', 'default'));
         $seriesConfig = config("series.$game");
-        return view('decks.deck-builder', compact('cards', 'game','seriesConfig'));
+        $cards = $rawCards->through(
+            fn($card) => new CardViewModel($card, $seriesConfig)
+        );
+
+
+        return view('decks.deck-builder', compact('cards', 'game', 'seriesConfig'));
     }
+
     public function save(Request $request)
     {
         $data = $request->validate([
@@ -77,8 +83,9 @@ class DeckController extends Controller
             'deck_description' => 'nullable|string',
             'game' => 'required|string',
             'image' => 'nullable|string',
+            'is_public' => 'nullable|boolean',
+            
         ]);
-
         $data['cards'] = json_decode($data['cards'], true);
 
         $this->deckService->save($data);
@@ -90,7 +97,7 @@ class DeckController extends Controller
         $deck = Deck::with('cards')->findOrFail($id);
         $sections = $this->deckService->buildSections($deck);
         $seriesConfig = config("series.$deck->game");
-        return view('decks.deck', compact('deck', 'sections','seriesConfig'));
+        return view('decks.deck', compact('deck', 'sections', 'seriesConfig'));
     }
 
     public function edit(Deck $deck, Request $request)
@@ -142,7 +149,7 @@ class DeckController extends Controller
             'is_public' => $data['is_public'] ?? $deck->is_public,
             'image' => $data['image'] ?? $deck->image,
         ]);
-      
+
         $this->deckService->updateCards($deck, $data['cards'] ?? []);
         return redirect()->route('decks.show', $deck);
     }

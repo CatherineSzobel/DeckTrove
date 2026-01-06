@@ -27,14 +27,15 @@ class DashboardController extends Controller
             ['name' => 'Pokemon', 'count' => $stats['pokemon'] ?? 0, 'color' => 'green-400'],
             ['name' => 'Digimon', 'count' => $stats['digimon'] ?? 0, 'color' => 'red-400'],
         ];
-        return view('dashboard', [
-            'totalDecks' => $stats['total'],
-            'recentDecks' => $service->getRecentDecks($user, $tcg),
-            'yugiohDecks' => $stats['yugioh'],
-            'magicDecks' => $stats['magic'],
-            'randomCards' => $randomCards,
-            'selectedTcg' => $tcg,
-            'tcgs' => $tcgs,
-        ]);
+        return view('dashboard', array_merge(
+            compact('randomCards', 'tcgs'),
+            [
+                'totalDecks' => $stats['total'],
+                'recentDecks' => $service->getRecentDecks($user, $tcg),
+                'yugiohDecks' => $stats['yugioh'],
+                'magicDecks' => $stats['magic'],
+                'selectedTcg' => $tcg,
+            ]
+        ));
     }
 }
