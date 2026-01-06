@@ -283,10 +283,7 @@ function saveDeckData(zones) {
     const deckTitleHidden = document.getElementById("deckTitle");
     const deckDescHidden = document.getElementById("deckDescription");
     const isPublicCheckbox = document.getElementById("isPublicCheckbox");
-    const isPublicHidden = document.getElementById("isPublicHidden");
-
-    if (!deckTitleInput || !deckDescInput || !cardsInput || !deckTitleHidden || !deckDescHidden || !isPublicCheckbox || !isPublicHidden) 
-        return false;
+    const isPublicHidden = document.getElementById("isPublic");
     
     const state = {};
     zones.forEach((zoneId) => {
