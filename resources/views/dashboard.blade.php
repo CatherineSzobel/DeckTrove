@@ -91,7 +91,7 @@
                                     $imgUrl = data_get($card, 'image_uris.small');
                                     $indexLink = url('/magic/card/' . ($card['id'] ?? ''));
                                     @endphp
-                                    <a href="{{ $indexLink }}" class="flex-shrink-0 card-link group">
+                                    <a href="{{ $indexLink }}"  target="_blank" class="flex-shrink-0 card-link group">
                                         <div class="h-56 w-40 rounded-xl overflow-hidden shadow-xl hover:shadow-2xl hover:shadow-purple-500/30 transition-all transform hover:scale-110 hover:-rotate-2 cursor-pointer border-2 border-slate-700 hover:border-purple-500">
                                             @if($imgUrl)
                                             <img src="{{ $imgUrl }}" alt="{{ $card['name'] ?? 'Card' }}" class="w-full h-full object-cover" loading="lazy">

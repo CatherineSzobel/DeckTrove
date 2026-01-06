@@ -2,7 +2,7 @@
 
 <tr class="hover:bg-gray-50 transition-colors">
     <td class="px-4 py-2 text-sm font-semibold text-gray-800 underline hover:decoration-blue-500 hover:text-blue-600">
-        <a href="{{ url($urlPrefix . $cardId) }}">
+        <a href="{{ url($urlPrefix) }}" target="_blank">
             {{ $name ?? 'Unknown' }}
         </a>
     </td>

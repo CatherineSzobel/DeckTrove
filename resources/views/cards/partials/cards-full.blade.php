@@ -3,7 +3,7 @@
         <div class="rounded-xl bg-white shadow hover:shadow-lg transition-transform transform hover:scale-105 flex flex-col h-full overflow-hidden">
 
             {{-- Link & Image --}}
-            <a href="{{ $card->link() }}" class="relative group">
+            <a href="{{ $card->link() }}" target="_blank" class="relative group">
                 <img 
                     src="{{ $card->image() }}" 
                     alt="{{ $card->name() }}" 

@@ -1,7 +1,7 @@
 <div class="relative grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 p-2">
     @foreach($cards as $card)
         <x-card :desc="$card->description()">
-            <a href="{{ $card->link() }}">
+            <a href="{{ $card->link() }}" target="_blank">
                 <img src="{{ $card->image() }}"
                      alt="{{ $card->name() }}"
                      class="max-w-full max-h-64 w-auto h-auto object-contain rounded">
