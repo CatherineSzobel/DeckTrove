@@ -4,6 +4,12 @@
 - [ ] Optionally log search duration for analytics
 
 */
+import {
+    initFilters,
+    appendFilterParams,
+    applyFiltersFromURL,
+} from "./filter.js";
+
 
 let currentView = "full";
 let currentSearch = "";
@@ -28,11 +34,6 @@ function debounce(fn, delay = 300) {
     };
 }
 
-function debounceFilter() {
-    filterSelects.forEach((f) =>
-        f.addEventListener("change", debounce(updateCards, 250))
-    );
-}
 function debounceSearch() {
     searchInput?.addEventListener(
         "input",
@@ -51,9 +52,7 @@ function buildURLParams() {
     const params = new URLSearchParams();
     if (currentView) params.set("view", currentView);
     if (currentSearch) params.set("search", currentSearch);
-    filterSelects.forEach((s) => {
-        if (s.value) params.set(s.name, s.value);
-    });
+    appendFilterParams(params);
     return params;
 }
 
@@ -86,32 +85,21 @@ async function updateCards() {
     }
 }
 
-function clearFilters() {
-
-        filterSelects.forEach((filter) => (filter.value = ""));
-        currentSearch = "";
-        searchInput.value = "";
-        updateCards();
-}
-function toggleFilterDetails() {
-
-    filterDetails?.classList.toggle("hidden");
-    const isHidden = filterDetails.classList.contains("hidden");
-    filterButton.textContent = isHidden ? "Show Filters" : "Hide Filters";
-    filterButton.classList.toggle("bg-blue-500", !isHidden);
-    filterButton.classList.toggle("text-white", !isHidden);
-}
-
 function browseNavigation() {
 
     const params = new URLSearchParams(window.location.search);
     currentView = params.get("view") || currentView;
     currentSearch = params.get("search") || "";
+    window.currentSearch = currentSearch;
+
     viewSelectors.forEach((b) =>
         b.dataset.view === currentView ? b.click() : null
     );
-    filterSelects.forEach((f) => (f.value = params.get(f.name) || ""));
-    searchInput.value = currentSearch;
+
+    applyFiltersFromURL(params);
+
+    if (searchInput) searchInput.value = currentSearch;
+
     updateCards();
 }
 
@@ -126,43 +114,30 @@ function handleViewChange(button) {
     button.classList.add("bg-blue-600", "text-white", "shadow-sm");
     button.classList.remove("text-gray-700", "hover:bg-white");
 
-    const hiddenViewInput =
-        searchForm.querySelector('input[name="view"]');
-    if (hiddenViewInput) hiddenViewInput.value = currentView;
     updateCards();
 
 }
 function setupEventListeners() {
 
-    viewSelectors.forEach((btn) => {
-        btn.addEventListener("click", () => {
-            handleViewChange(btn);
-        });
-    });
+    viewSelectors.forEach((btn) =>
+        btn.addEventListener("click", () => handleViewChange(btn))
+    );
 
-    debounceFilter();
     debounceSearch();
 
     searchForm?.addEventListener("submit", (e) => e.preventDefault());
 
-        clearFilterButton?.addEventListener("click", (e) => {
-            e.preventDefault();
-            clearFilters();
-        });
-
-    filterButton?.addEventListener("click", (e) => {
-        e.preventDefault();
-        toggleFilterDetails();
-    });
-
-    window.addEventListener("popstate", () => {
-        browseNavigation();
-    });
+    window.addEventListener("popstate", browseNavigation);
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    currentSearch =
-        new URLSearchParams(window.location.search).get("search") || "";
-    if (searchInput && currentSearch) searchInput.value = currentSearch;
+    initFilters({
+        selects: document.querySelectorAll(".filter-select"),
+        button: document.getElementById("filter-button"),
+        details: document.getElementById("filterDetails"),
+        clearButton: document.getElementById("clear-filter-button"),
+        onChange: updateCards,
+    });
+
     setupEventListeners();
 });

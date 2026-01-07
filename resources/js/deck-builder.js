@@ -27,6 +27,12 @@ import {
     gameRules
 } from './deckbuilder/constants.js';
 
+import {
+    initFilters,
+    appendFilterParams
+} from './filter.js';
+
+
 const main = document.getElementById(DECK_IDS.main);
 const extra = document.getElementById(DECK_IDS.extra);
 const side = document.getElementById(DECK_IDS.side);
@@ -214,6 +220,8 @@ function loadNextPage(
             if (currentSearchRef.value)
                 params.append("search", currentSearchRef.value);
 
+            appendFilterParams(params);
+
             const url = `/${game}/deck-builder?${params.toString()}`;
             const response = await fetch(url, {
                 headers: { "X-Requested-With": "XMLHttpRequest" },
@@ -284,7 +292,7 @@ function saveDeckData(zones) {
     const deckDescHidden = document.getElementById("deckDescription");
     const isPublicCheckbox = document.getElementById("isPublicCheckbox");
     const isPublicHidden = document.getElementById("isPublic");
-    
+
     const state = {};
     zones.forEach((zoneId) => {
         const list = document.getElementById(zoneId);
@@ -303,7 +311,7 @@ function saveDeckData(zones) {
     deckTitleHidden.value = deckTitleInput.value.trim();
     deckDescHidden.value = deckDescInput.value.trim();
     cardsInput.value = JSON.stringify(state);
-    deckImageInput.value = deckImageInput.value || ""; 
+    deckImageInput.value = deckImageInput.value || "";
     isPublicHidden.value = isPublicCheckbox.checked ? 1 : 0;
 
     return state.main && state.main.length >= 40;
@@ -379,17 +387,63 @@ function setupDeck(cardContainer, decks) {
     refreshUI();
 }
 
+function reloadSearchWithFilters(
+    cardContainer,
+    loadNextPageFn,
+    currentPageRef,
+    lastPageRef
+) {
+    currentPageRef.value.number = 0;
+    currentPageRef.value.loading = false;
+    lastPageRef.value = false;
+
+    cardContainer.innerHTML = "";
+    loadNextPageFn();
+}
+
 
 function setupSearch(cardContainer) {
-
     const currentPageRef = { value: { number: 0, loading: false } };
     const currentSearchRef = { value: "" };
     const lastPageRef = { value: false };
-    const loadNextPageFn = loadNextPage(cardContainer, spinner, currentPageRef, currentSearchRef, lastPageRef, DeckBuilder.state.game);
 
-    if (searchInput) handleSearchInput(searchInput, cardContainer, currentPageRef, currentSearchRef, lastPageRef, loadNextPageFn);
+    const loadNextPageFn = loadNextPage(
+        cardContainer,
+        spinner,
+        currentPageRef,
+        currentSearchRef,
+        lastPageRef,
+        DeckBuilder.state.game
+    );
+
+    if (searchInput)
+        handleSearchInput(
+            searchInput,
+            cardContainer,
+            currentPageRef,
+            currentSearchRef,
+            lastPageRef,
+            loadNextPageFn
+        );
+
     handleInfiniteScroll(cardContainer, loadNextPageFn, currentPageRef);
+
+    initFilters({
+        selects: document.querySelectorAll(".filter-select"),
+        button: document.getElementById("filter-button"),
+        details: document.getElementById("filterDetails"),
+        clearButton: document.getElementById("clear-filter-button"),
+        onChange: () =>
+            reloadSearchWithFilters(
+                cardContainer,
+                loadNextPageFn,
+                currentPageRef,
+                currentSearchRef,
+                lastPageRef
+            ),
+    });
 }
+
 
 document.addEventListener("DOMContentLoaded", () => {
 

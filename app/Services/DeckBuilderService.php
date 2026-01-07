@@ -11,7 +11,7 @@ class DeckBuilderService
         protected YugiohService $yugioh
     ) {}
 
-    public function search(string $game, array $params, string $view): LengthAwarePaginator
+    public function search(string $game, array $params): LengthAwarePaginator
     {
         return match ($game) {
             'magic'  => $this->magic->fetchCardsByPagination($params),

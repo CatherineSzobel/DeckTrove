@@ -1,4 +1,4 @@
-<x-layout :js="['resources/js/deck-builder.js']" :css="['resources/css/deckbuilder.css']">
+<x-layout :js="['resources/js/filter.js', 'resources/js/deck-builder.js']" :css="['resources/css/deckbuilder.css']">
 
     <div class="relative">
         @guest
@@ -124,15 +124,13 @@
                     </div>
 
                     <div class="flex-[1] p-3 bg-white rounded shadow flex flex-col gap-2">
-                        <button id="filter-button" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 transition-colors">
-                            Filter
-                        </button>
+                        <button id="filter-button" class="px-4 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600">Filter</button>
                         <button id="clear-filter-button" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors">
                             Clear
                         </button>
                     </div>
                 </div>
-
+                <x-filter-section :series="$game" :options="$options"></x-filter-section>
                 @include("decks.partials.cards-view", ['cards' => $cards])
 
                 <!-- Loading spinner -->

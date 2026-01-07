@@ -65,14 +65,20 @@ class DeckController extends Controller
                 'page'
             ]),
         };
-        $rawCards = $this->deckBuilder->search($game, $params, $request->input('view', 'default'));
+        $rawCards = $this->deckBuilder->search($game, $params);
         $seriesConfig = config("series.$game");
         $cards = $rawCards->through(
             fn($card) => new CardViewModel($card, $seriesConfig)
         );
+        $filters = $this->deckBuilder->filters($game);
 
-
-        return view('decks.deck-builder', compact('cards', 'game', 'seriesConfig'));
+        return view(
+            'decks.deck-builder',
+            array_merge(
+                compact('cards', 'game', 'seriesConfig'),
+                ['options' => array_values($filters)]
+            )
+        );
     }
 
     public function save(Request $request)
@@ -84,7 +90,7 @@ class DeckController extends Controller
             'game' => 'required|string',
             'image' => 'nullable|string',
             'is_public' => 'nullable|boolean',
-            
+
         ]);
         $data['cards'] = json_decode($data['cards'], true);
 
@@ -102,7 +108,8 @@ class DeckController extends Controller
 
     public function edit(Deck $deck, Request $request)
     {
-        if (!Auth::check()) return redirect()->route('login');
+        $this->authorize('update', $deck);
+
         $game = $deck->game;
         $params = match ($game) {
             'magic' => $request->only([
@@ -124,8 +131,13 @@ class DeckController extends Controller
         };
 
         $deckCards = $this->deckService->buildSections($deck);
-        $cards = $this->deckBuilder->search($game, $params, $request->input('view', 'default'));
         $filters = $this->deckBuilder->filters($game);
+        $seriesConfig = config("series.$game");
+
+        $rawCards = $this->deckBuilder->search($game, $params, $request->input('view', 'default'));
+        $cards = $rawCards->through(
+            fn($card) => new CardViewModel($card, $seriesConfig)
+        );
 
         return view('decks.edit', compact('deck', 'game', 'deckCards', 'cards', 'filters'));
     }
