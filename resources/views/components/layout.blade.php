@@ -116,8 +116,6 @@
                                     <x-dropdown-nav-link href="/deck-builder" class="dashboard-link">Deck builder</x-dropdown-nav-link>
                                 </x-dropdown-menu>
                             </div>
-
-                            <x-nav-link href="/portfolio" :active="request()->is('about_me')">About me</x-nav-link>
                         </div>
                     </div>
                     @endif

@@ -16,7 +16,6 @@ use App\Http\Controllers\ProfileController;
 Route::get('/', [IndexController::class, 'index'])->name('index');
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware('auth');
 // Public Pages
-Route::get('/portfolio', fn() => view('portfolio'))->name('portfolio');
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
     Route::get('/user/edit', [ProfileController::class, 'edit'])->name('profile.edit');

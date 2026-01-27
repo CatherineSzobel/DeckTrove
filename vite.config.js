@@ -16,8 +16,6 @@ export default defineConfig({
                 'resources/js/card-database.js',
                 'resources/js/deck-builder.js',
                 'resources/js/tabs.js',
-                'resources/js/portfolio.js',
-                'resources/js/portfolio.scss',
                 'resources/js/home.scss',
                 'resources/js/card.js',
                 'resources/js/carousel.js',
