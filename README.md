@@ -1,24 +1,49 @@
 # DeckTrove
 
-DeckTrove is a Laravel web application for managing and sharing trading card game (TCG) decks. It supports series like **Yu-Gi-Oh!**, **Magic: The Gathering**, and more in the works, allowing users to browse card databases, build decks, and explore public collections.
+DeckTrove is a Laravel full-stack web application for managing and sharing trading card game (TCG) decks. 
+It integrates multiple third‑party card APIs (such as Yu‑Gi‑Oh! and Magic: The Gathering) and normalizes their heterogeneous data structures into a unified domain model, allowing the rest of the application to remain clean, extensible, and API‑agnostic.
 
+This project was built to explore real‑world backend challenges such as external API integration, data normalization, and maintainable application architecture.
 ## Features
 
-* **Card Database:** Browse large card collections with detailed info, images, and pricing.
-* **Deck Builder:** Drag-and-drop interface for main, extra, and side decks.
-* **Public Decks:** Explore and share community-created decks.
-* **User Accounts:** Register, log in, and manage profiles and decks.
-* **Responsive Design:** Tailwind CSS for mobile-friendly UI.
+* **Card Database:** Browse large card collections with detailed metadata, images, and pricing.
+* **Deck Builder:** Build decks using structured zones (main, extra, side decks).
+* **Public Decks:** Share and explore decks created by other users.
+* **User Accounts:** Authentication, profile management, and deck ownership.
+* **Responsive Design:** Mobile‑friendly interface built with Tailwind CSS.
 * **API Integration:** Fetches data from APIs like Scryfall for Magic cards.
+* **Multi‑TCG Support** Designed to support multiple card games with minimal coupling.
 
-## Tech Stack
+# Architecture & Design Decisions
+## API Normalization (Core Design Decision)
+
+Different TCG APIs expose card data using inconsistent field names and schemas (e.g. atk vs power, different rarity formats, image structures, etc.).
+To solve this, DeckTrove uses a config‑driven mapping layer that normalizes external API responses into a unified internal card representation. This ensures:
+
+* The rest of the application does not depend on API‑specific field names
+* Adding a new TCG requires only configuration changes, not application rewrites
+* Controllers and views work with a consistent domain model
+
+This approach avoids conditional logic scattered throughout the codebase and keeps integrations maintainable.
+
+## Service Layer
+
+Business logic is extracted into service classes to avoid fat controllers. Services coordinate:
+
+* External API calls
+* Data normalization
+* Persistence logic
+
+This separation improves readability, testability, and long‑term maintainability.
+
+# Tech Stack
 
 * **Backend:** Laravel (PHP), MySQL
 * **Frontend:** HTML, CSS, JavaScript, Tailwind CSS
 * **Build Tool:** Vite
 * **Other Tools:** Composer, NPM
 
-## Installation
+# Installation
 
 1. **Clone the repository:**
 
@@ -78,12 +103,16 @@ npm run dev
 
 ## Usage
 
-* Explore TCGs on the homepage.
-* Register to access deck building and collections.
-* Drag cards into zones to build decks.
-* Browse public decks and card databases.
+* Browse supported TCGs on the homepage
+* Register or log in to build and manage decks
+* Search card databases and add cards to decks
+* Explore publicly shared decks
+  
+# Project Status
 
-## Project Structure
+Actively developed — core features implemented, with ongoing improvements and refinements planned.
+
+# Project Structure
 
 * **app:** Models, services, controllers.
 * **views:** Blade templates.
@@ -93,7 +122,7 @@ npm run dev
 * **database:** Migrations and seeders.
 * **public:** Static assets.
 
-## License
+# License
 
 MIT License. See LICENSE file for details.
 
