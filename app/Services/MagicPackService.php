@@ -1,71 +1,54 @@
 <?php
+
 namespace App\Services;
 
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Cache;
+use App\Contracts\PackProvider;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 
-class MagicPackService
+/**
+ * Magic sets from the Scryfall API.
+ */
+class MagicPackService implements PackProvider
 {
-    public function getSets(): array
+    public function __construct(private readonly MagicService $magic) {}
+
+    public function paginate(string $search = '', int $page = 1, int $perPage = 24): LengthAwarePaginator
     {
-        return Cache::remember('magic-sets', 3600, function () {
-            $response = Http::get('https://api.scryfall.com/sets');
+        $sets = $this->sets();
 
-            if ($response->failed()) {
-                abort(500, 'Failed to fetch sets from Scryfall');
-            }
-
-            return $response->json()['data'] ?? [];
-        });
-    }
-
-    public function searchSets(string $search, array $sets): array
-    {
-        if (!$search) return $sets;
-
-        return array_values(array_filter($sets, function ($set) use ($search) {
-            return stripos($set['name'], $search) !== false ||
-                stripos($set['code'], $search) !== false;
-        }));
-    }
-
-    public function getSetById(string $code): array
-    {
-        $response = Http::get("https://api.scryfall.com/sets/{$code}");
-
-        if ($response->failed()) {
-            abort(404, 'Set not found');
+        if ($search !== '') {
+            $sets = $sets->filter(fn ($set) => stripos($set['name'], $search) !== false
+                || stripos($set['code'], $search) !== false);
         }
 
-        return $response->json();
-    }
-
-    public function getSetCards(string $code): array
-    {
-        $response = Http::get('https://api.scryfall.com/cards/search', [
-            'q' => 'set:' . strtolower($code)
-        ]);
-
-        return $response->json()['data'] ?? [];
-    }
-
-    public function fetchPacksByPagination(array $params, int $perPage = 24): LengthAwarePaginator
-    {
-        $page = $params['page'] ?? 1;
-        $sets = $this->getSets();
-
-        $currentPageItems = collect($sets)->slice(($page - 1) * $perPage, $perPage)->values();
-
         return new LengthAwarePaginator(
-            $currentPageItems,
-            total: count($sets),
-            perPage: $perPage,
-            currentPage: $page,
-            options: [
-                'path' => $params['url'] ?? '',
-                'query' => $params,
-            ]
+            $sets->forPage($page, $perPage)->values(),
+            $sets->count(),
+            $perPage,
+            $page,
+            ['path' => Paginator::resolveCurrentPath()],
         );
+    }
+
+    public function find(string $code): array
+    {
+        $set = $this->sets()->firstWhere('code', strtolower($code));
+
+        return $set ?? abort(404, 'Set not found');
+    }
+
+    public function cards(string $code): Collection
+    {
+        return collect($this->magic->searchAll('set:'.strtolower($code).' game:paper'));
+    }
+
+    private function sets(): Collection
+    {
+        return collect(Cache::remember('magic-sets', 3600, function () {
+            return $this->magic->scryfall()->get('/sets')->throw()->json('data', []);
+        }));
     }
 }

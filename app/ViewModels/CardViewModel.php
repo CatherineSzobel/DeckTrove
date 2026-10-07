@@ -4,13 +4,16 @@ namespace App\ViewModels;
 
 use Illuminate\Support\Arr;
 
+/**
+ * Presents a raw card from any series through the field mapping in config/series.php.
+ */
 class CardViewModel
 {
     public function __construct(protected array $card, protected array $config) {}
 
     public function id(): ?string
     {
-        return $this->card['id'] ?? null;
+        return isset($this->card['id']) ? (string) $this->card['id'] : null;
     }
 
     public function name(): string
@@ -20,70 +23,60 @@ class CardViewModel
 
     public function image(): string
     {
-        return ($this->config['image'] ?? fn() => '')($this->card);
+        return $this->resolve('image', '');
+    }
+
+    public function imageSmall(): string
+    {
+        return $this->resolve('image_small') ?: $this->image();
+    }
+
+    /**
+     * Images of every face for double-faced cards; empty for regular cards.
+     */
+    public function faceImages(): array
+    {
+        return $this->resolve('face_images', []);
     }
 
     public function link(): string
     {
-        $prefix = $this->config['link_prefix'] ?? '/';
-        return $prefix . '/card/' . ($this->card['id'] ?? '');
+        return url(($this->config['link_prefix'] ?? '').'/card/'.$this->id());
     }
 
     public function type(): string
     {
-        $key = $this->isMultiFace() ? 'colorless_type' : 'type_field';
-        return ($this->config[$key] ?? fn() => '')($this->card);
+        return (string) $this->resolve('type_field', '');
     }
 
     public function subtype(): string
     {
-        return Arr::get($this->card, $this->config['subtype_field'] ?? '', '-');
+        return (string) Arr::get($this->card, $this->config['subtype_field'] ?? '', '');
     }
 
-    public function description(): ?string
+    public function description(): string
     {
-        $key = $this->isMultiFace()
-            ? 'colorless_description'
-            : 'description';
-
-        return ($this->config[$key] ?? fn() => null)($this->card);
+        return (string) $this->resolve('description', '');
     }
 
+    /**
+     * @return array{left: array{label: string, value: mixed}, right: array{label: string, value: mixed}}|array{}
+     */
     public function stats(): array
     {
-        $resolver = $this->config['stats'] ?? null;
-
-        return is_callable($resolver)
-            ? $resolver($this->card)
-            : [];
+        return $this->resolve('stats', []);
     }
 
     public function hasStats(): bool
     {
-        return collect($this->stats())
-            ->pluck('value')
-            ->filter(fn($v) => $v !== null)
-            ->isNotEmpty();
+        return collect($this->stats())->pluck('value')->contains(fn ($v) => $v !== null);
     }
 
     public function statLine(): string
     {
         return collect($this->stats())
-            ->map(fn($stat) => "{$stat['label']}: " . ($stat['value'] ?? '-'))
+            ->map(fn ($stat) => "{$stat['label']}: ".($stat['value'] ?? '-'))
             ->implode(' / ');
-    }
-    public function showStats(): string
-    {
-        return collect($this->stats())
-            ->map(fn($stat) => ($stat['value'] ?? '-'))
-            ->implode(' / ');
-    }
-
-    public function statsLabels(): array
-    {
-        return collect($this->stats())
-            ->pluck('label')
-            ->toArray();
     }
 
     public function setName(): string
@@ -91,37 +84,49 @@ class CardViewModel
         return Arr::get($this->card, $this->config['set_field'] ?? '') ?? 'No Set';
     }
 
-    public function rarity(): ?string
-    {
-        return $this->rarityRaw();
-    }
-
-    protected function rarityRaw(): string
+    public function rarity(): string
     {
         return Arr::get($this->card, $this->config['rarity_field'] ?? '') ?? 'unknown';
     }
+
     public function rarityLabel(): string
     {
-        return ucfirst($this->rarityRaw());
+        return ucfirst($this->rarity());
     }
 
     public function rarityColor(): string
     {
-        return $this->config['rarity_colors'][$this->rarityRaw()] ?? 'text-gray-500';
+        return $this->config['rarity_colors'][strtolower($this->rarity())] ?? 'text-gray-500';
     }
 
     public function price(): string
     {
-        return Arr::get($this->card, $this->config['price_field'] ?? 'N/A') ?: 'N/A';
-    }
-
-    public function isMultiFace(): bool
-    {
-        return isset($this->card['card_faces']) && is_array($this->card['card_faces']) && count($this->card['card_faces']) > 0;
+        return Arr::get($this->card, $this->config['price_field'] ?? '') ?: 'N/A';
     }
 
     public function printSets(): array
     {
-        return ($this->config['print_sets'] ?? fn() => [])($this->card);
+        return $this->resolve('print_sets', []);
+    }
+
+    /**
+     * The attributes the deck builder JS reads from a card element.
+     */
+    public function deckBuilderData(): array
+    {
+        return [
+            'data-card-id' => $this->id(),
+            'data-card-name' => $this->name(),
+            'data-card-image' => $this->image(),
+            'data-card-type' => trim($this->type().' '.$this->subtype()),
+            'data-card-desc' => $this->description(),
+        ];
+    }
+
+    private function resolve(string $key, mixed $default = null): mixed
+    {
+        $resolver = $this->config[$key] ?? null;
+
+        return is_callable($resolver) ? $resolver($this->card) : $default;
     }
 }

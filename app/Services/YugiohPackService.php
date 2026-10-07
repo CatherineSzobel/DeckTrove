@@ -2,73 +2,66 @@
 
 namespace App\Services;
 
-use Illuminate\Http\Request;
+use App\Contracts\PackProvider;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Log;
 
-class YugiohPackService
+/**
+ * Yu-Gi-Oh! sets from the local YGOPRODeck dump. Each set's card list lives in its own JSON file.
+ */
+class YugiohPackService implements PackProvider
 {
+    private ?Collection $packs = null;
 
-    public function __construct(protected string $packsPath = '', protected array $packs = [])
+    public function __construct(
+        private readonly string $packsPath,
+        private readonly string $packCardsDirectory,
+    ) {}
+
+    public function paginate(string $search = '', int $page = 1, int $perPage = 24): LengthAwarePaginator
     {
-        $this->packsPath = public_path('json/yugioh-packs.json');
+        $packs = $this->packs();
 
-        if (!file_exists($this->packsPath)) {
-            $this->packs = [];
-            return;
+        if ($search !== '') {
+            $packs = $packs->filter(fn ($pack) => stripos($pack['set_name'], $search) !== false
+                || stripos($pack['set_code'], $search) !== false);
         }
 
-        $this->packs = json_decode(file_get_contents($this->packsPath), true);
-    }
-
-    public function getPacks(): Collection
-    {
-        return collect($this->packs)
-            ->sortBy('release_date', SORT_NATURAL | SORT_FLAG_CASE)
-            ->values();
-    }
-
-    public function fetchPacksByPagination(array $params, int $perPage = 24): LengthAwarePaginator
-    {
-        $page = $params['page'] ?? 1;
-        $packsCollection = $this->getPacks();
-
-        $currentPageItems = $packsCollection->slice(($page - 1) * $perPage, $perPage)->values();
-
         return new LengthAwarePaginator(
-            $currentPageItems,
-            total: $packsCollection->count(),
-            perPage: $perPage,
-            currentPage: $page,
-            options: [
-                'path' => $params['url'] ?? '',
-                'query' => $params,
-            ]
+            $packs->forPage($page, $perPage)->values(),
+            $packs->count(),
+            $perPage,
+            $page,
+            ['path' => Paginator::resolveCurrentPath()],
         );
     }
 
-    public function getPackById(string $code): ?array
+    public function find(string $code): array
     {
-        $pack = collect($this->packs)->firstWhere('set_code', $code);
-
-        if (!$pack) {
-            Log::warning("Pack not found", ['code' => $code]);
-            return null;
-        }
-
-        return $pack;
+        return $this->packs()->firstWhere('set_code', $code) ?? abort(404, 'Pack not found');
     }
 
-    public function getPackCards(string $code): Collection
+    public function cards(string $code): Collection
     {
-        $packFile = public_path("json/packs/{$code}.json");
+        // Only codes from our own pack list map to files, so the code can never escape the directory.
+        $code = $this->find($code)['set_code'];
+        $file = $this->packCardsDirectory.DIRECTORY_SEPARATOR.$code.'.json';
 
-        if (!file_exists($packFile)) {
-            Log::warning("Pack JSON file not found", ['file' => $packFile]);
-            return collect();
-        }
+        return is_file($file)
+            ? collect(json_decode(file_get_contents($file), true) ?? [])
+            : collect();
+    }
 
-        return collect(json_decode(file_get_contents($packFile), true));
+    /**
+     * All packs, newest first.
+     */
+    private function packs(): Collection
+    {
+        return $this->packs ??= collect(is_file($this->packsPath)
+            ? json_decode(file_get_contents($this->packsPath), true) ?? []
+            : [])
+            ->sortByDesc('tcg_date')
+            ->values();
     }
 }

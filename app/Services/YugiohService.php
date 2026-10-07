@@ -2,121 +2,92 @@
 
 namespace App\Services;
 
+use App\Contracts\CardProvider;
+use App\Models\YugiohCard;
+use App\Support\Paginates;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 
-class YugiohService
+/**
+ * Yu-Gi-Oh! cards from the yugioh_cards table (filled by `php artisan yugioh:import`).
+ */
+class YugiohService implements CardProvider
 {
-    private string $jsonPath;
+    use Paginates;
 
-    public function __construct()
+    public const FILTER_CACHE_KEY = 'yugioh-filter-options';
+
+    private const FILTER_KEYS = ['type', 'attribute', 'race', 'archetype'];
+
+    public function search(array $params): LengthAwarePaginator
     {
-        $this->jsonPath = public_path('/json/yugioh-cards.json');
+        $term = trim($params['search'] ?? '');
+
+        return YugiohCard::query()
+            ->select('data')
+            ->when($term !== '', function ($query) use ($term) {
+                // Case-insensitive on every database: LIKE on SQLite/MySQL, ILIKE on Postgres.
+                $like = "%$term%";
+
+                $query->where(fn ($q) => $q
+                    ->whereLike('name', $like)
+                    ->orWhereLike('type', $like)
+                    ->orWhereLike('race', $like)
+                    ->orWhereLike('archetype', $like)
+                    ->orWhereLike('desc', $like));
+            })
+            ->where(function ($query) use ($params) {
+                foreach (self::FILTER_KEYS as $key) {
+                    if (filled($params[$key] ?? null)) {
+                        $query->where($key, $params[$key]);
+                    }
+                }
+            })
+            ->orderBy('name')
+            ->paginate($this->perPage($params['view'] ?? null), page: $this->currentPage($params))
+            ->withQueryString()
+            ->through(fn (YugiohCard $card) => $card->data);
     }
 
-    public function loadCards(): array
+    public function find(string $id): array
     {
-        if (!file_exists($this->jsonPath)) {
-            abort(404, 'Cards file not found');
-        }
-
-        $json = file_get_contents($this->jsonPath);
-        return json_decode($json, true)['data'] ?? [];
-    }
-
-    public function applyFilters(array $cards, array $params): array
-    {
-        $filtered = $cards;
-
-        if (!empty($params['search'])) {
-            $term = strtolower($params['search']);
-            $filtered = array_filter(
-                $filtered,
-                fn($card) =>
-                str_contains(strtolower($card['name'] ?? ''), $term)
-                    || str_contains(strtolower($card['type'] ?? ''), $term)
-                    || str_contains(strtolower($card['race'] ?? ''), $term)
-                    || str_contains(strtolower($card['archetype'] ?? ''), $term)
-                    || str_contains(strtolower($card['desc'] ?? ''), $term)
-            );
-        }
-
-        foreach (['type', 'attribute', 'race', 'archetype'] as $key) {
-            if (!empty($params[$key])) {
-                $filtered = array_filter($filtered, fn($card) => ($card[$key] ?? '') === $params[$key]);
-            }
-        }
-
-        return array_values($filtered);
-    }
-
-    public function paginate(array $cards,  int $page = 1,  string $view = 'full'): LengthAwarePaginator
-    {
-        $perPage = $this->itemsPerPage($view);
-
-        $collection = collect($cards);
-
-        return new LengthAwarePaginator(
-            $collection->forPage($page, $perPage)->values()->all(),
-            $collection->count(),
-            $perPage,
-            $page
-        );
-    }
-
-    public function fetchCardsByPagination(array $params): LengthAwarePaginator
-    {
-        $allCards = $this->loadCards();
-        $filtered = $this->applyFilters($allCards, $params);
-        $page = (int)($params['page'] ?? 1);
-        $view = $params['view'] ?? 'full';
-        return $this->paginate($filtered, $page, $view);
-    }
-
-    public function getFilterOptions(): array
-    {
-        $cards = $this->loadCards();
-        $collection = collect($cards);
-
-        return [
-            'type' => $collection->pluck('type')->filter()->unique()->sort()->values()->all(),
-            'attribute' => $collection->pluck('attribute')->filter()->unique()->sort()->values()->all(),
-            'race' => $collection->pluck('race')->filter()->unique()->sort()->values()->all(),
-            'archetype' => $collection->pluck('archetype')->filter()->unique()->sort()->values()->all(),
-        ];
-    }
-
-    public function itemsPerPage(string $view): int
-    {
-        return match ($view) {
-            'list' => 50,
-            'images' => 48,
-            default => 24
-        };
-    }
-
-    public function fetchCardById(int $id): array
-    {
-        $cards = $this->loadCards();
-        $card = collect($cards)->firstWhere('id', $id);
-
-        if (!$card) {
+        if (! ctype_digit($id)) {
             abort(404, 'Card not found');
         }
 
-        return $card;
+        return YugiohCard::find($id)?->data ?? abort(404, 'Card not found');
     }
 
-    public function fetchRelatedSetCards(array $card, int $limit = 6): Collection
+    public function findMany(array $ids): Collection
     {
-        $cards = $this->loadCards();
-        $archetype = $card['archetype'] ?? null;
+        $ids = array_filter(array_map('strval', $ids), 'ctype_digit');
 
-        if (!$archetype) return collect();
+        if (! $ids) {
+            return collect();
+        }
 
-        return collect($cards)
-            ->filter(fn($c) => ($c['archetype'] ?? null) === $archetype)
-            ->shuffle()
-            ->take($limit);
+        return YugiohCard::whereIn('id', $ids)->get()->mapWithKeys(fn (YugiohCard $card) => [$card->id => $card->data]);
+    }
+
+    public function related(array $card, int $limit = 6): Collection
+    {
+        if (empty($card['archetype'])) {
+            return collect();
+        }
+
+        return YugiohCard::where('archetype', $card['archetype'])
+            ->whereKeyNot($card['id'])
+            ->inRandomOrder()
+            ->limit($limit)
+            ->pluck('data');
+    }
+
+    public function filterOptions(): array
+    {
+        return Cache::rememberForever(self::FILTER_CACHE_KEY, fn () => collect(self::FILTER_KEYS)
+            ->mapWithKeys(fn ($key) => [$key => YugiohCard::whereNotNull($key)->where($key, '!=', '')
+                ->distinct()->orderBy($key)->pluck($key)->all()])
+            ->all());
     }
 }

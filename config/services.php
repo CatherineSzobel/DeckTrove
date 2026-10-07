@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'scryfall' => [
+        'user_agent' => env('SCRYFALL_USER_AGENT', 'DeckTrove/1.0'),
+    ],
+
 ];

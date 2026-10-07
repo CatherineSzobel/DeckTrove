@@ -2,14 +2,12 @@
 
 namespace App\Exceptions;
 
-use Exception;
+use RuntimeException;
 
-class ScryfallUnavailableException extends Exception
+class ScryfallUnavailableException extends RuntimeException
 {
-    public function __construct(
-        string $message = 'Scryfall API unavailable',
-        int $code = 502
-    ) {
-        parent::__construct($message, $code);
+    public function __construct(string $message = 'The Magic card database (Scryfall) is unavailable right now. Please try again in a moment.')
+    {
+        parent::__construct($message);
     }
 }
