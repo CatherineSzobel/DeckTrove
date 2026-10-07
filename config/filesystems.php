@@ -17,6 +17,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Media Disk
+    |--------------------------------------------------------------------------
+    |
+    | Publicly viewable files the app stores: user avatars and re-hosted card
+    | images. Locally this is the "public" disk (run `php artisan storage:link`).
+    | On Laravel Cloud, set MEDIA_DISK to the disk name of an attached public
+    | bucket, and AWS_URL to the bucket's public URL so links can be built.
+    |
+    */
+
+    'media' => env('MEDIA_DISK', 'public'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Filesystem Disks
     |--------------------------------------------------------------------------
     |

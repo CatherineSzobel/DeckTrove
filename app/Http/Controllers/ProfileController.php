@@ -28,19 +28,21 @@ class ProfileController extends Controller
             'avatar' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ]);
 
-        if ($request->hasFile('avatar')) {
-            $oldAvatar = $user->avatar;
-            $validated['avatar'] = $request->file('avatar')->store('avatars', 'public');
+        $disk = Storage::disk(config('filesystems.media'));
+        $oldAvatar = $user->avatar;
 
-            // Only remove the old avatar once the new one is safely stored.
-            if ($oldAvatar) {
-                Storage::disk('public')->delete($oldAvatar);
-            }
+        if ($request->hasFile('avatar')) {
+            $validated['avatar'] = $request->file('avatar')->store('avatars', config('filesystems.media'));
         } else {
             unset($validated['avatar']);
         }
 
         $user->update($validated);
+
+        // Only remove the old avatar once the new one is stored and saved.
+        if ($oldAvatar && $user->avatar !== $oldAvatar) {
+            $disk->delete($oldAvatar);
+        }
 
         return redirect()->route('profile')->with('success', 'Profile updated successfully!');
     }
