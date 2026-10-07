@@ -1,5 +1,11 @@
  @props([ 'heading' => '' ,
- 'images' => ['resources/img/decktrove-logo.png', 'resources/img/yugiohcards.png', 'resources/img/magiccards.png']])
+ 'images' => [
+     'resources/img/decktrove-logo.png',
+     'resources/img/screenshots/card-database.png',
+     'resources/img/screenshots/deck-builder.png',
+     'resources/img/yugiohcards.png',
+     'resources/img/magiccards.png',
+ ]])
 
  <div class="w-full max-w-md bg-white p-8 rounded-lg shadow-lg text-center">
      <h2 class="mt-6 text-3xl font-bold tracking-tight text-gray-900">{{$heading}}</h2>

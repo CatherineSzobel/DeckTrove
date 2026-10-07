@@ -1,25 +1,32 @@
-import { initTabs } from "./tabs.js";
+function initPrintListToggles() {
+    document.querySelectorAll("[data-toggle-target]").forEach((button) => {
+        button.addEventListener("click", () => {
+            const list = document.getElementById(button.dataset.toggleTarget);
+            if (!list) return;
 
-function togglePrintList(id) {
-    const list = document.getElementById(id);
-    if (!list) return;
+            const hidden = list.classList.toggle("hidden");
+            button.textContent = hidden ? "Show more" : "Show less";
+            button.setAttribute("aria-expanded", String(!hidden));
+        });
+    });
+}
 
-    list.classList.toggle("hidden");
+/** Flips between the faces of a double-faced Magic card. */
+function initTransformButton() {
+    const button = document.getElementById("transformButton");
+    const image = document.getElementById("cardImage");
+    if (!button || !image?.dataset.faces) return;
 
-    const btn = document.querySelector(`[data-toggle-target="${id}"]`);
-    if (!btn) return;
+    const faces = JSON.parse(image.dataset.faces);
+    let index = 0;
 
-    btn.textContent = list.classList.contains("hidden")
-        ? "Show More"
-        : "Show Less";
+    button.addEventListener("click", () => {
+        index = (index + 1) % faces.length;
+        image.src = faces[index];
+    });
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    document.querySelectorAll(".tab-container").forEach(initTabs);
-
-    document.querySelectorAll("[data-toggle-target]").forEach((btn) => {
-        btn.addEventListener("click", () => {
-            togglePrintList(btn.dataset.toggleTarget);
-        });
-    });
+    initPrintListToggles();
+    initTransformButton();
 });

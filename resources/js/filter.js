@@ -1,80 +1,47 @@
+/**
+ * Shared filter dropdown behaviour for the card database and the deck builder.
+ */
+import { debounce } from "./utils.js";
+
 let filterSelects = [];
-let filterButton;
-let filterDetails;
-let clearFilterButton;
-let onChangeCallback;
 
-export function initFilters({
-    selects = [],
-    button,
-    details,
-    clearButton,
-    onChange,
-}) {
+export function initFilters({ selects = [], button, details, clearButton, onChange }) {
     filterSelects = [...selects];
-    filterButton = button;
-    filterDetails = details;
-    clearFilterButton = clearButton;
-    onChangeCallback = onChange;
+    const debouncedChange = debounce(() => onChange?.(), 250);
 
-    setupFilterListeners();
-}
+    filterSelects.forEach((select) => select.addEventListener("change", debouncedChange));
 
-function setupFilterListeners() {
-    filterSelects.forEach((filter) => {
-        const debouncedChange = debounce(() => {
-            onChangeCallback?.();
-        }, 250);
+    // Open the filter panel straight away when the page was loaded with filters applied.
+    if (filterSelects.some((select) => select.value)) toggleFilterDetails(button, details, true);
 
-        filter.addEventListener("change", debouncedChange);
+    button?.addEventListener("click", (event) => {
+        event.preventDefault();
+        toggleFilterDetails(button, details);
     });
 
-    filterButton?.addEventListener("click", (e) => {
-        e.preventDefault();
-        toggleFilterDetails();
-    });
-
-    clearFilterButton?.addEventListener("click", (e) => {
-        e.preventDefault();
-        clearFilters();
-        onChangeCallback?.();
+    clearButton?.addEventListener("click", (event) => {
+        event.preventDefault();
+        filterSelects.forEach((select) => (select.value = ""));
+        onChange?.();
     });
 }
 
 export function appendFilterParams(params) {
-    filterSelects.forEach((filter) => {
-        if (filter.value) {
-            params.set(filter.name, filter.value);
-        }
+    filterSelects.forEach((select) => {
+        if (select.value) params.set(select.name, select.value);
     });
 }
 
 export function applyFiltersFromURL(params) {
-    filterSelects.forEach((filter) => {
-        filter.value = params.get(filter.name) ?? "";
-    });
+    filterSelects.forEach((select) => (select.value = params.get(select.name) ?? ""));
 }
 
-function clearFilters() {
-    filterSelects.forEach((filter) => {
-        filter.value = "";
-    });
-}
+function toggleFilterDetails(button, details, forceOpen) {
+    if (!button || !details) return;
 
-function toggleFilterDetails() {
-    if (!filterDetails || !filterButton) return;
-
-    const isHidden = filterDetails.classList.toggle("hidden");
-
-    filterButton.textContent = isHidden ? "Filter" : "Hide Filters";
-    filterButton.classList.toggle("bg-blue-500", !isHidden);
-    filterButton.classList.toggle("text-white", !isHidden);
-}
-
-function debounce(fn, delay = 300) {
-    let timeout;
-    return (...args) => {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => fn(...args), delay);
-    };
+    const open = forceOpen ?? details.classList.contains("hidden");
+    details.classList.toggle("hidden", !open);
+    // Only update the label so the button's icon stays in place.
+    (button.querySelector("[data-label]") ?? button).textContent = open ? "Hide Filters" : "Filter";
+    button.setAttribute("aria-expanded", String(open));
 }

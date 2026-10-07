@@ -1,108 +1,40 @@
-const dashboardLinks = document.querySelectorAll(".dashboard-link");
-const SERIES_CONFIG = {
-    magic: { label: "Magic: The Gathering", base: "/magic" },
-    yugioh: { label: "Yu-Gi-Oh!", base: "/yugioh" },
-    //pokemon: { label: "Pokémon", base: "/pokemon" },
-    // digimon: { label: "Digimon", base: "/digimon" } 
-};
+/**
+ * Behaviour shared by every page: navigation menus, the showcase banner and small form helpers.
+ */
 
-const SERIES_KEYS = Object.keys(SERIES_CONFIG);
+// Let Vite process the images referenced with Vite::asset() in Blade, so they exist in production builds.
+import.meta.glob(["../img/**"]);
 
-function seriesSelectorSetup() {
-    const selectors = document.querySelectorAll(".series-selector");
-    const dashboardLogos = document.querySelectorAll(".dashboard-logo");
-    let selectedSeries = localStorage.getItem("selectedSeries");
+function initSeriesSelect() {
+    // Each option's value is the URL of that series' card database.
+    document.querySelectorAll("[data-series-select]").forEach((select) => {
+        select.addEventListener("change", () => {
+            if (select.value) window.location.href = select.value;
+        });
+    });
+}
 
-    if (selectedSeries && !SERIES_CONFIG[selectedSeries]) {
-        localStorage.removeItem("selectedSeries");
-        selectedSeries = null;
+function initToggle(button, panel, { closeOnOutsideClick = false } = {}) {
+    if (!button || !panel) return;
+
+    const setOpen = (open) => {
+        panel.classList.toggle("hidden", !open);
+        button.setAttribute("aria-expanded", String(open));
+    };
+
+    button.addEventListener("click", (event) => {
+        event.stopPropagation();
+        setOpen(panel.classList.contains("hidden"));
+    });
+
+    if (closeOnOutsideClick) {
+        document.addEventListener("click", (event) => {
+            if (!panel.contains(event.target)) setOpen(false);
+        });
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape") setOpen(false);
+        });
     }
-
-    if (!selectedSeries && window.location.pathname !== "/") {
-        window.location.href = "/";
-        return;
-    }
-
-    selectors.forEach((selector) => {
-        Array.from(selector.options).forEach((option) => {
-            option.disabled = !SERIES_CONFIG[option.value];
-        });
-
-        if (selectedSeries) {
-            selector.value = selectedSeries;
-            updateButtonText(selector, selectedSeries);
-        }
-
-        selector.addEventListener("change", () => {
-            directThroughSelector(selector);
-        });
-    });
-
-    dashboardLogos.forEach((img) => {
-        img.addEventListener("click", () => {
-            directThroughLogo(img);
-        });
-    });
-
-    if (selectedSeries) updateLinks(selectedSeries);
-}
-function directThroughSelector(selector) {
-    const series = selector.value;
-
-    if (!SERIES_CONFIG[series]) return;
-
-    localStorage.setItem("selectedSeries", series);
-    updateLinks(series);
-    window.location.href = `/${series}/cards`;
-}
-function directThroughLogo(img) {
-    const series = img.dataset.series;
-    if (!SERIES_CONFIG[series]) return;
-
-    localStorage.setItem("selectedSeries", series);
-    updateLinks(series);
-    window.location.href = `/${series}/cards`;
-}
-
-function updateButtonText(selector, series) {
-    const buttonText = selector
-        .closest(".group")
-        ?.querySelector(".viewtype_text");
-    if (buttonText) buttonText.textContent = SERIES_CONFIG[series].label;
-}
-
-function cleanPath(path) {
-    const pattern = new RegExp(`^/(${SERIES_KEYS.join("|")})(/|$)`);
-    return path.replace(pattern, "/");
-}
-
-function updateLinks(series) {
-    dashboardLinks.forEach((link) => {
-        const href = link.getAttribute("href");
-        if (!href || href.startsWith("#")) return;
-
-        const cleanHref = cleanPath(href);
-        const newHref =
-            cleanHref === "/" ? `/${series}/cards` : `/${series}${cleanHref}`;
-        link.setAttribute("href", newHref);
-    });
-}
-
-function initUserAvatarDropdown() {
-    const container = document.getElementById("userDropdown-container");
-    const btn = document.getElementById("userDropdown-btn");
-    const menu = document.getElementById("userDropdown-menu");
-
-    if (!container || !btn || !menu) return;
-
-    btn.addEventListener("click", (event) => {
-        event.preventDefault();
-        menu.classList.toggle("hidden");
-    });
-
-    document.addEventListener("click", (event) => {
-        if (!container.contains(event.target)) menu.classList.add("hidden");
-    });
 }
 
 function initShowcaseToggle() {
@@ -110,29 +42,32 @@ function initShowcaseToggle() {
     const details = document.getElementById("showcaseDetails");
     if (!button || !details) return;
 
-    let isOpen = false;
+    button.addEventListener("click", () => {
+        const open = button.getAttribute("aria-expanded") !== "true";
+        button.setAttribute("aria-expanded", String(open));
+        details.style.maxHeight = open ? `${details.scrollHeight}px` : "0px";
+        details.classList.toggle("opacity-0", !open);
+    });
+}
 
-    details.style.overflow = "hidden";
-    details.style.transition = "max-height 0.5s ease, opacity 0.5s ease";
-    details.style.maxHeight = "0px";
-    details.style.opacity = 0;
+function initFormHelpers() {
+    // <form data-confirm="Are you sure?"> asks before submitting.
+    document.querySelectorAll("form[data-confirm]").forEach((form) => {
+        form.addEventListener("submit", (event) => {
+            if (!window.confirm(form.dataset.confirm)) event.preventDefault();
+        });
+    });
 
-    button.addEventListener("click", (event) => {
-        event.preventDefault();
-        isOpen = !isOpen;
-
-        if (isOpen) {
-            details.style.maxHeight = details.scrollHeight + "px";
-            details.style.opacity = 1;
-        } else {
-            details.style.maxHeight = "0px";
-            details.style.opacity = 0;
-        }
+    // <select data-autosubmit> submits its form when changed.
+    document.querySelectorAll("select[data-autosubmit]").forEach((select) => {
+        select.addEventListener("change", () => select.form?.requestSubmit());
     });
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    seriesSelectorSetup();
-    initUserAvatarDropdown();
+    initSeriesSelect();
+    initToggle(document.getElementById("userDropdown-btn"), document.getElementById("userDropdown-menu"), { closeOnOutsideClick: true });
+    initToggle(document.getElementById("mobileMenuButton"), document.getElementById("mobileMenu"));
     initShowcaseToggle();
+    initFormHelpers();
 });

@@ -1,15 +1,12 @@
-@props(['name' => '', 'contents' => [], 'urlPrefix' => '', 'cardId' => null])
+@props(['card'])
 
 <tr class="hover:bg-gray-50 transition-colors">
     <td class="px-4 py-2 text-sm font-semibold text-gray-800 underline hover:decoration-blue-500 hover:text-blue-600">
-        <a href="{{ url($urlPrefix) }}" target="_blank">
-            {{ $name ?? 'Unknown' }}
-        </a>
+        <a href="{{ $card->link() }}" target="_blank">{{ $card->name() }}</a>
     </td>
-
-    @foreach($contents as $index => $content)
-        <td class="px-4 py-2 text-sm text-gray-800 {{ $index === 2 ? 'whitespace-pre-line max-w-xs' : '' }}">
-            {!! $index === 2 ? $content : e($content) !!}
-        </td>
-    @endforeach
+    <td class="px-4 py-2 text-sm text-gray-800 whitespace-pre-line max-w-md">{{ $card->description() ?: '-' }}</td>
+    <td class="px-4 py-2 text-sm text-gray-800">{{ trim($card->type().' '.$card->subtype()) ?: '-' }}</td>
+    <td class="px-4 py-2 text-sm {{ $card->rarityColor() }}">{{ $card->rarityLabel() }}</td>
+    <td class="px-4 py-2 text-sm text-gray-800">{{ $card->setName() }}</td>
+    <td class="px-4 py-2 text-sm text-gray-800">${{ $card->price() }}</td>
 </tr>

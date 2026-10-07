@@ -1,4 +1,4 @@
-@props(['type' => '', 'user' => null])
+@props(['user', 'editable' => false])
 <div class="max-w-sm mx-auto mt-12">
     <div class="bg-white dark:bg-gray-900 shadow-xl rounded-2xl flex flex-col items-center">
         <div class="w-full relative">
@@ -16,7 +16,7 @@
             </div>
 
             <div class="absolute left-1/2 -bottom-14 transform -translate-x-1/2 w-28 h-28 rounded-full bg-white border-4 border-gray-200 dark:border-gray-700 shadow-md flex items-center justify-center overflow-hidden">
-                <x-profile-avatar :type="$type" :user="$user"/>
+                <x-profile-avatar :user="$user" :editable="$editable" />
             </div>
         </div>
 

@@ -1,17 +1,22 @@
+/** Endless horizontal scroll for the dashboard's random cards. */
 document.addEventListener("DOMContentLoaded", () => {
-    const marquees = document.querySelectorAll(".marquee");
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-    marquees.forEach((marquee) => {
-        let scrollAmount = 0;
-        const speed = 1;
-        const containerWidth = marquee.scrollWidth;
+    document.querySelectorAll(".marquee").forEach((marquee) => {
+        const width = marquee.scrollWidth;
+        let offset = 0;
+        let paused = false;
 
+        // Duplicate the cards so the loop is seamless.
         marquee.innerHTML += marquee.innerHTML;
+        marquee.addEventListener("mouseenter", () => (paused = true));
+        marquee.addEventListener("mouseleave", () => (paused = false));
 
         function animate() {
-            scrollAmount += speed;
-            if (scrollAmount >= containerWidth) scrollAmount = 0;
-            marquee.style.transform = `translateX(-${scrollAmount}px)`;
+            if (!paused) {
+                offset = (offset + 1) % width;
+                marquee.style.transform = `translateX(-${offset}px)`;
+            }
             requestAnimationFrame(animate);
         }
 

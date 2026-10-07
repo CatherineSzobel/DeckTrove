@@ -1,69 +1,39 @@
-@props(['sets', 'tcgGame' => 'yugioh'])
+@props(['sets', 'series'])
 
 @php
-// Normalize + dedupe print sets
-$uniqueSets = collect($sets)
-->map(function($set) {
-$raw = $set['set_code'] ?? '';
-$pack = explode('-', $raw)[0] ?? $raw;
+    // One entry per pack: a print's set code looks like "LOB-EN001", the pack code is "LOB".
+    $packs = collect($sets)
+        ->map(fn ($set) => [
+            'pack_code' => explode('-', $set['set_code'] ?? '')[0],
+            'set_name' => $set['set_name'] ?? 'Unknown',
+        ])
+        ->filter(fn ($set) => $set['pack_code'] !== '')
+        ->unique('pack_code')
+        ->values();
 
-return [
-'pack_code' => $pack,
-'set_name' => $set['set_name'] ?? 'Unknown',
-];
-})
-->unique('pack_code')
-->values(); // reindex
-
-$hasMore = $uniqueSets->count() > 4;
-
-// Build a stable unique id for the hidden list
-$id = 'more-prints-' . ($attributes->get('id') ?? 'default');
-
-// Base URL by TCG
-$baseUrl = match(strtolower($tcgGame)) {
-'magic' => '/magic/pack/',
-default => '/yugioh/pack/',
-};
+    $listId = 'more-prints-'.($attributes->get('id') ?? 'default');
 @endphp
 
 <div class="mb-4">
-
-    @if($uniqueSets->isNotEmpty())
-    <ul class="list-inside list-disc text-blue-400 font-bold">
-        @foreach($uniqueSets->take(4) as $set)
-        <li>
-            <a href="{{ url($baseUrl . urlencode($set['pack_code'])) }}"
-                class="hover:text-blue-800">
-                {{ $set['set_name'] }}
-            </a>
-        </li>
+    @if ($packs->isNotEmpty())
+    <ul class="list-inside list-disc text-blue-500 font-bold">
+        @foreach ($packs->take(4) as $pack)
+        <li><a href="{{ route('packs.show', [$series, $pack['pack_code']]) }}" class="hover:text-blue-800">{{ $pack['set_name'] }}</a></li>
         @endforeach
     </ul>
 
-    {{-- Hidden items --}}
-    @if($hasMore)
-    <ul id="{{ $id }}" class="hidden list-inside list-disc text-blue-400 font-bold mt-2">
-        @foreach($uniqueSets->slice(4) as $set)
-        <li>
-            <a href="{{ url($baseUrl . urlencode($set['pack_code'])) }}"
-                class="hover:text-blue-800">
-                {{ $set['set_name'] }}
-            </a>
-        </li>
+    @if ($packs->count() > 4)
+    <ul id="{{ $listId }}" class="hidden list-inside list-disc text-blue-500 font-bold mt-2">
+        @foreach ($packs->slice(4) as $pack)
+        <li><a href="{{ route('packs.show', [$series, $pack['pack_code']]) }}" class="hover:text-blue-800">{{ $pack['set_name'] }}</a></li>
         @endforeach
     </ul>
 
-    <button
-        type="button"
-        class="text-blue-600 underline mt-1"
-        data-toggle-target="{{ $id }}"
-        aria-expanded="false">
-        Show More
+    <button type="button" class="text-blue-600 underline mt-1" data-toggle-target="{{ $listId }}" aria-expanded="false" aria-controls="{{ $listId }}">
+        Show more
     </button>
     @endif
-
     @else
-    <p class="text-slate-200">No prints available</p>
+    <p class="text-slate-500">No prints available</p>
     @endif
 </div>

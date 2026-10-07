@@ -1,27 +1,25 @@
+/** My decks page: client-side search and series filter. */
 document.addEventListener("DOMContentLoaded", () => {
     const searchInput = document.getElementById("deckSearch");
     const seriesFilter = document.getElementById("seriesFilter");
+    const noMatches = document.getElementById("noDeckMatches");
     const cards = [...document.querySelectorAll(".deck-card")];
 
     const applyFilters = () => {
         const query = searchInput.value.trim().toLowerCase();
-        const selectedSeries = seriesFilter.value;
+        const series = seriesFilter.value;
+        let visible = 0;
 
         cards.forEach((card) => {
-            const title =
-                card.querySelector("h3")?.textContent.toLowerCase() || "";
-            const desc =
-                card.querySelector("p")?.textContent.toLowerCase() || "";
-            const series = card.dataset.series?.toLowerCase() || "";
+            const matches =
+                (!query || card.dataset.search.includes(query)) &&
+                (series === "all" || card.dataset.series === series);
 
-            const matchesSearch =
-                !query || title.includes(query) || desc.includes(query);
-
-            const matchesSeries =
-                selectedSeries === "all" || series === selectedSeries;
-
-            card.style.display = matchesSearch && matchesSeries ? "" : "none";
+            card.hidden = !matches;
+            if (matches) visible++;
         });
+
+        noMatches?.classList.toggle("hidden", visible > 0);
     };
 
     searchInput?.addEventListener("input", applyFilters);

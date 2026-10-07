@@ -1,9 +1,15 @@
 @props([
-'js' => [], // example: ['resources/js/app.js']
-'css' => [], // example: ['resources/css/app.css']
-'class' => '',
-'hideNav' => false
+    'js' => [], // page scripts, e.g. ['resources/js/deck.js']
+    'css' => [], // page styles, e.g. ['resources/css/deckbuilder.css']
+    'class' => '',
+    'hideNav' => false,
+    'title' => null,
 ])
+
+@php
+    $seriesLabels = collect(config('series'))->map(fn ($config) => $config['label'])->all();
+    $comingSoon = ['pokemon' => 'Pokémon', 'digimon' => 'Digimon'];
+@endphp
 
 <!DOCTYPE html>
 <html lang="en" class="h-full bg-gray-100">
@@ -11,65 +17,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DeckTrove</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>{{ $title ? "$title · DeckTrove" : 'DeckTrove' }}</title>
 
-    @php
-    $defaultAssets = [
-    'resources/css/app.css',
-    'resources/js/app.js',
-    'resources/css/layout.scss',
-    'resources/js/layout.js'
-    ];
+    @vite(['resources/css/app.css', 'resources/js/layout.js', ...$css, ...$js])
 
-
-    $allAssets = array_merge($defaultAssets, $css, $js);
-    @endphp
-    @vite($allAssets)
-
-    <link rel="shortcut icon" href="{{ Vite::asset('resources/img/decktrove-logo.png') }}" />
+    <link rel="icon" href="{{ Vite::asset('resources/img/decktrove-logo.png') }}" />
 </head>
 
 <body class="h-full {{ $class }}">
 
     @unless($hideNav)
-    <!-- HEADER / SHOWCASE -->
     <header>
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div id="showcase" class="flex flex-col items-center justify-start w-full">
-                <a href="#" id="showcase_button" class="flex flex-col items-center justify-center text-center w-full">
-                    <p class="text-sm font-semibold cursor-pointer hover:text-blue-500 transition-colors w-full text-center">
-                        This is a showcase project.
-                    </p>
-                </a>
+                <button type="button" id="showcase_button" aria-expanded="false" aria-controls="showcaseDetails"
+                    class="text-sm font-semibold hover:text-blue-500 transition-colors w-full text-center py-1">
+                    This is a showcase project.
+                </button>
 
-                <section id="showcaseDetails"
-                    class="max-h-0 overflow-hidden w-full ... transition-all duration-500 ease-in-out">
-                    <div class="h-1 w-24 bg-gray-300 relative">
-                        <div id="showcaseProgress" class="h-1 bg-blue-500 transition-all duration-500 ease-in-out"></div>
-                    </div>
+                <section id="showcaseDetails" class="max-h-0 opacity-0 overflow-hidden w-full transition-all duration-500 ease-in-out">
+                    <p class="text-center">Made with: HTML, Tailwind CSS, JavaScript, PHP, Laravel, MySQL</p>
 
-                    <p class="text-center">Made with: HTML, Tailwind CSS, JavaScript, SASS, PHP, Laravel, MySQL</p>
-
-                    <div id="container_img" class="flex flex-row flex-wrap justify-center gap-6">
-                        <!-- Frontend -->
+                    <div class="flex flex-row flex-wrap justify-center gap-6 py-2">
                         <div class="flex flex-col items-center">
                             <p>Frontend:</p>
-                            <img src="https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=500" alt="Tailwind CSS Logo" class="h-6 w-6" />
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/6/61/HTML5_logo_and_wordmark.svg" alt="HTML5 Logo" class="h-6 w-6" />
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/d/d5/CSS3_logo_and_wordmark.svg" alt="CSS3 Logo" class="h-6 w-6" />
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/9/99/Unofficial_JavaScript_logo_2.svg" alt="JavaScript Logo" class="h-6 w-6" />
+                            <img src="https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=500" alt="Tailwind CSS" class="h-6 w-6" />
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/6/61/HTML5_logo_and_wordmark.svg" alt="HTML5" class="h-6 w-6" />
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/d/d5/CSS3_logo_and_wordmark.svg" alt="CSS3" class="h-6 w-6" />
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/9/99/Unofficial_JavaScript_logo_2.svg" alt="JavaScript" class="h-6 w-6" />
                         </div>
-                        <!-- Backend -->
                         <div class="flex flex-col items-center">
                             <p>Backend:</p>
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/2/27/PHP-logo.svg" alt="PHP Logo" class="h-6 w-6" />
-                            <img src="https://laravel.com/img/logomark.min.svg" alt="Laravel Logo" class="h-6 w-6" />
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/2/27/PHP-logo.svg" alt="PHP" class="h-6 w-6" />
+                            <img src="https://laravel.com/img/logomark.min.svg" alt="Laravel" class="h-6 w-6" />
                         </div>
-                        <!-- Database -->
                         <div class="flex flex-col items-center">
                             <p>Database:</p>
-                            <img src="https://www.mysql.com/common/logos/logo-mysql-170x115.png" alt="MySQL Logo" class="h-6 w-6" />
+                            <img src="https://www.mysql.com/common/logos/logo-mysql-170x115.png" alt="MySQL" class="h-6 w-6" />
                         </div>
                     </div>
                 </section>
@@ -77,76 +62,65 @@
         </div>
     </header>
 
-    <!-- NAVBAR -->
     <nav class="bg-gray-800">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div class="flex h-16 items-center justify-between">
-                <!-- Logo -->
                 <div class="flex items-center">
-                    <div class="shrink-0">
-                        <a href="/"><img src="{{ Vite::asset('resources/img/decktrove-logo-white.png') }}" alt="Logo" class="h-20 w-20 mt-2" /></a>
+                    <a href="{{ route('index') }}" class="shrink-0">
+                        <img src="{{ Vite::asset('resources/img/decktrove-logo-white.png') }}" alt="DeckTrove home" class="h-20 w-20 mt-2" />
+                    </a>
+
+                    <div class="hidden md:flex items-center ml-10 space-x-4">
+                        <x-nav-links :series="$navSeries" :series-labels="$seriesLabels" :coming-soon="$comingSoon" />
                     </div>
-
-                    @if (!request()->is('/'))
-                    <div class="hidden md:block ml-10">
-                        <div class="flex items-baseline space-x-4">
-
-                            @if (!request()->routeIs('register','login','profile','decks','public-deck') && !request()->is('*/card/*') && !request()->is('*/pack/*'))
-                            <x-select-dropdown :class="'series-selector'" :options="['magic' => 'Magic: The Gathering','yugioh' => 'Yu-Gi-Oh!', 'pokemon' => 'Pokémon', 'digimon' => 'Digimon']" />
-                            @endif
-
-                            @auth
-                            <x-nav-link href="/dashboard" :active="request()->is('home')" class="dashboard-link">Home</x-nav-link>
-                            @endauth
-
-                            <!-- Cards Dropdown -->
-                            <div class="relative group inline-block text-left">
-                                <x-dropdown-button>Cards</x-dropdown-button>
-                                <x-dropdown-menu>
-                                    <x-dropdown-nav-link href="/cards" class="dashboard-link">Cards database</x-dropdown-nav-link>
-                                    <x-dropdown-nav-link href="/packs" class="dashboard-link">Packs</x-dropdown-nav-link>
-                                </x-dropdown-menu>
-                            </div>
-
-                            <!-- Decks Dropdown -->
-                            <div class="relative group inline-block text-left">
-                                <x-dropdown-button>Decks</x-dropdown-button>
-                                <x-dropdown-menu>
-                                    <x-dropdown-nav-link href="/public-deck">Public decks</x-dropdown-nav-link>
-                                    <x-dropdown-nav-link href="/deck-builder" class="dashboard-link">Deck builder</x-dropdown-nav-link>
-                                </x-dropdown-menu>
-                            </div>
-                        </div>
-                    </div>
-                    @endif
                 </div>
 
-                <!-- Auth Links -->
-                @if (!request()->is('/'))
                 <div class="hidden md:block ml-4 md:ml-6">
                     @guest
-                    <x-nav-link href="/register" :active="request()->is('register')">Register</x-nav-link>
-                    <x-nav-link href="/login" :active="request()->is('login')">Login</x-nav-link>
+                    <x-nav-link :href="route('register')" :active="request()->routeIs('register')">Register</x-nav-link>
+                    <x-nav-link :href="route('login')" :active="request()->routeIs('login')">Login</x-nav-link>
                     @endguest
                     @auth
-                    <form method="POST" action="/logout" id="logoutForm" class="hidden">@csrf</form>
                     <x-user-dropdown />
                     @endauth
                 </div>
-                @endif
+
+                <button type="button" id="mobileMenuButton" aria-controls="mobileMenu" aria-expanded="false"
+                    class="md:hidden inline-flex items-center justify-center rounded-md p-2 text-gray-300 hover:bg-gray-700 hover:text-white">
+                    <span class="sr-only">Open main menu</span>
+                    <x-heroicon-o-bars-3 class="h-6 w-6" />
+                </button>
+            </div>
+        </div>
+
+        <div id="mobileMenu" class="hidden md:hidden border-t border-gray-700 px-4 pb-4 pt-2 space-y-2">
+            <x-nav-links :series="$navSeries" :series-labels="$seriesLabels" :coming-soon="$comingSoon" mobile />
+            <div class="border-t border-gray-700 pt-2 flex flex-col gap-1">
+                @guest
+                <x-nav-link :href="route('register')" :active="request()->routeIs('register')">Register</x-nav-link>
+                <x-nav-link :href="route('login')" :active="request()->routeIs('login')">Login</x-nav-link>
+                @endguest
+                @auth
+                <x-nav-link :href="route('profile')">Profile</x-nav-link>
+                <x-nav-link :href="route('decks')">My decks</x-nav-link>
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit" class="w-full text-left rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-white/5 hover:text-white">Logout</button>
+                </form>
+                @endauth
             </div>
         </div>
     </nav>
     @endunless
 
-    <!-- MAIN CONTENT -->
     <main class="{{ $class }}">
         <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+            <x-flash />
             {{ $slot }}
         </div>
     </main>
+
     @unless($hideNav)
-    <!-- FOOTER -->
     <x-footer />
     @endunless
 </body>

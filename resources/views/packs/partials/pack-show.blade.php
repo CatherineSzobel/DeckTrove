@@ -46,7 +46,7 @@
     </div>
 
     <div class="w-full md:w-1/5">
-        <a href="{{ url($seriesConfig['link_prefix'] . '/packs' ?? '/' ) }}"
+        <a href="{{ route('packs.index', $series) }}"
             class="inline-block bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded">
             Back to Packs
         </a>
@@ -91,11 +91,9 @@
                             <div class="text-slate-200 mt-1">Rarity: {{ ucfirst($card->rarity()) }}</div>
                             @endif
 
-                            @if($card->stats())
+                            @if($card->hasStats())
                             <p class="text-[10px] mt-1">
-                                {{ $card->stats()['left']['label'] }}: {{ $card->stats()['left']['value'] }}
-                                |
-                                {{ $card->stats()['right']['label'] }}: {{ $card->stats()['right']['value'] }}
+                                {{ $card->statLine() }}
                             </p>
                             @endif
                         </div>
