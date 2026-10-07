@@ -38,7 +38,8 @@ This separation improves readability, testability, and long‑term maintainabili
 
 # Tech Stack
 
-* **Backend:** Laravel (PHP), MySQL
+* **Backend:** Laravel 12 (PHP 8.2+), MySQL
+* **Testing:** Pest
 * **Frontend:** HTML, CSS, JavaScript, Tailwind CSS
 * **Build Tool:** Vite
 * **Other Tools:** Composer, NPM
@@ -83,23 +84,37 @@ php artisan key:generate
 php artisan migrate
 ```
 
-7. **Build assets:**
+7. **Import the Yu-Gi-Oh! card data** (from the bundled JSON dump, or `--fetch` to download the latest from YGOPRODeck):
+
+```bash
+php artisan yugioh:import
+```
+
+8. **Link the storage folder** (needed for profile avatars):
+
+```bash
+php artisan storage:link
+```
+
+9. **Build assets:**
 
 ```bash
 npm run build
 ```
 
-8. **Start development server:**
+10. **Start the development server** (runs the web server, queue worker and Vite together):
 
 ```bash
-php artisan serve
+composer dev
 ```
 
-9. **For asset watching:**
+## Testing
 
 ```bash
-npm run dev
+composer test
 ```
+
+The feature tests cover authentication, deck authorization, deck validation and the main browsing pages. External APIs are faked, so the tests run offline.
 
 ## Usage
 
