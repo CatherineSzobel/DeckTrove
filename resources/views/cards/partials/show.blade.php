@@ -1,6 +1,6 @@
 @php $faces = $card->faceImages(); @endphp
 
-<div class="flex flex-col md:flex-row md:items-start gap-6 md:gap-8 text-black">
+<div class="flex flex-col md:flex-row md:items-start gap-6 md:gap-8 text-gray-900">
     <div class="md:w-1/2 flex-shrink-0 flex items-center justify-center md:flex-1 flex-col">
         <img id="cardImage" src="{{ $card->image() }}" alt="{{ $card->name() }}"
             @if (count($faces) > 1) data-faces="{{ json_encode($faces) }}" @endif
@@ -15,9 +15,9 @@
     </div>
 
     <div class="md:flex-1">
-        <h1 class="text-2xl font-bold mb-2 text-black">{{ $card->name() }}</h1>
+        <h1 class="text-2xl font-bold mb-2 text-gray-900">{{ $card->name() }}</h1>
 
-        <div class="text-sm text-slate-800 mb-3">
+        <div class="text-sm text-gray-800 mb-3">
             Type: <strong>{{ $card->type() ?: '-' }}</strong>
             @if ($card->subtype())
             — <span>{{ $card->subtype() }}</span>
@@ -32,16 +32,16 @@
             @endif
         </div>
 
-        <div class="text-black mb-4 whitespace-pre-line">{{ $card->description() }}</div>
+        <div class="text-gray-900 mb-4 whitespace-pre-line">{{ $card->description() }}</div>
 
         <div class="mb-4">
-            <h3 class="text-lg font-semibold mb-2 text-black">Printings</h3>
+            <h3 class="text-lg font-semibold mb-2 text-gray-900">Printings</h3>
             <x-print-list :sets="$card->printSets()" :series="$series" id="prints-{{ $card->id() ?? 'default' }}" />
         </div>
 
         @if ($setCards->isNotEmpty())
         <div class="mt-6 border-slate-700 p-6">
-            <h3 class="text-lg text-black font-semibold mb-3">{{ $series === 'magic' ? 'More from this set' : 'More from this archetype' }}</h3>
+            <h3 class="text-lg text-gray-900 font-semibold mb-3">{{ $series === 'magic' ? 'More from this set' : 'More from this archetype' }}</h3>
 
             <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
                 @foreach ($setCards as $setCard)

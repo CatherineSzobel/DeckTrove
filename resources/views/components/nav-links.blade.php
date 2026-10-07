@@ -6,7 +6,7 @@
 @endphp
 
 <select aria-label="Select series" data-series-select
-    class="rounded border border-gray-600 bg-gray-700 px-2 py-1 text-sm text-gray-200 {{ $mobile ? 'w-full mb-2' : '' }}">
+    class="rounded border border-slate-600 bg-slate-700 px-2 py-1 text-sm text-slate-200 {{ $mobile ? 'w-full mb-2' : '' }}">
     <option value="" @selected(! $series) disabled>Select series</option>
     @foreach ($seriesLabels as $value => $label)
     <option value="{{ route('cards.index', $value) }}" @selected($series === $value)>{{ $label }}</option>

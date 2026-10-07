@@ -4,7 +4,7 @@
     <div class="max-w-7xl mx-auto px-4 py-10">
         <div class="flex items-center justify-between mb-6">
             <div>
-                <h1 class="text-3xl font-extrabold text-black">My Decks</h1>
+                <h1 class="text-3xl font-extrabold text-gray-900">My Decks</h1>
                 <p class="text-sm text-slate-500 mt-1">Manage and preview all your decks</p>
             </div>
 

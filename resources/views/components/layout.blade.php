@@ -20,12 +20,23 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ? "$title · DeckTrove" : 'DeckTrove' }}</title>
 
+    {{-- Apply the saved theme before the page paints, so dark mode doesn't flash white. --}}
+    <script>
+        (() => {
+            let theme = null;
+            try { theme = localStorage.getItem("theme"); } catch {}
+            if (theme === "dark" || (!theme && matchMedia("(prefers-color-scheme: dark)").matches)) {
+                document.documentElement.classList.add("dark");
+            }
+        })();
+    </script>
+
     @vite(['resources/css/app.css', 'resources/js/layout.js', ...$css, ...$js])
 
     <link rel="icon" href="{{ Vite::asset('resources/img/decktrove-logo.png') }}" />
 </head>
 
-<body class="h-full {{ $class }}">
+<body class="h-full text-gray-900 {{ $class }}">
 
     @unless($hideNav)
     <header>
@@ -62,7 +73,7 @@
         </div>
     </header>
 
-    <nav class="bg-gray-800">
+    <nav class="bg-slate-800">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div class="flex h-16 items-center justify-between">
                 <div class="flex items-center">
@@ -75,7 +86,8 @@
                     </div>
                 </div>
 
-                <div class="hidden md:block ml-4 md:ml-6">
+                <div class="hidden md:flex items-center gap-2 ml-4 md:ml-6">
+                    <x-theme-toggle />
                     @guest
                     <x-nav-link :href="route('register')" :active="request()->routeIs('register')">Register</x-nav-link>
                     <x-nav-link :href="route('login')" :active="request()->routeIs('login')">Login</x-nav-link>
@@ -85,17 +97,20 @@
                     @endauth
                 </div>
 
-                <button type="button" id="mobileMenuButton" aria-controls="mobileMenu" aria-expanded="false"
-                    class="md:hidden inline-flex items-center justify-center rounded-md p-2 text-gray-300 hover:bg-gray-700 hover:text-white">
-                    <span class="sr-only">Open main menu</span>
-                    <x-heroicon-o-bars-3 class="h-6 w-6" />
-                </button>
+                <div class="flex items-center gap-1 md:hidden">
+                    <x-theme-toggle />
+                    <button type="button" id="mobileMenuButton" aria-controls="mobileMenu" aria-expanded="false"
+                        class="inline-flex items-center justify-center rounded-md p-2 text-slate-300 hover:bg-slate-700 hover:text-white">
+                        <span class="sr-only">Open main menu</span>
+                        <x-heroicon-o-bars-3 class="h-6 w-6" />
+                    </button>
+                </div>
             </div>
         </div>
 
-        <div id="mobileMenu" class="hidden md:hidden border-t border-gray-700 px-4 pb-4 pt-2 space-y-2">
+        <div id="mobileMenu" class="hidden md:hidden border-t border-slate-700 px-4 pb-4 pt-2 space-y-2">
             <x-nav-links :series="$navSeries" :series-labels="$seriesLabels" :coming-soon="$comingSoon" mobile />
-            <div class="border-t border-gray-700 pt-2 flex flex-col gap-1">
+            <div class="border-t border-slate-700 pt-2 flex flex-col gap-1">
                 @guest
                 <x-nav-link :href="route('register')" :active="request()->routeIs('register')">Register</x-nav-link>
                 <x-nav-link :href="route('login')" :active="request()->routeIs('login')">Login</x-nav-link>
@@ -105,12 +120,14 @@
                 <x-nav-link :href="route('decks')">My decks</x-nav-link>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
-                    <button type="submit" class="w-full text-left rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-white/5 hover:text-white">Logout</button>
+                    <button type="submit" class="w-full text-left rounded-md px-3 py-2 text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white">Logout</button>
                 </form>
                 @endauth
             </div>
         </div>
     </nav>
+    @else
+    <x-theme-toggle class="fixed top-4 right-4 z-50 bg-slate-800 shadow-lg" />
     @endunless
 
     <main class="{{ $class }}">

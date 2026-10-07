@@ -39,16 +39,16 @@
                             class="w-20 h-auto rounded-sm shadow-sm cursor-pointer transition-transform duration-200 hover:scale-105">
                     </a>
 
-                    <div class="absolute z-50 hidden group-hover:block w-80 p-4 bg-gray-900 text-white rounded-lg shadow-lg border border-gray-700 -top-2 left-full ml-2 pointer-events-none">
+                    <div class="absolute z-50 hidden group-hover:block w-80 p-4 bg-slate-900 text-white rounded-lg shadow-lg border border-slate-700 -top-2 left-full ml-2 pointer-events-none">
                         <div class="flex space-x-3">
-                            <img src="{{ $card->imageSmall() }}" alt="" class="w-24 h-auto rounded-sm border border-gray-600">
+                            <img src="{{ $card->imageSmall() }}" alt="" class="w-24 h-auto rounded-sm border border-slate-600">
                             <div class="flex-1">
                                 <h3 class="font-bold text-lg">{{ $card->name() }}</h3>
-                                <p class="text-sm text-gray-300 mt-1">{{ trim($card->type().' '.$card->subtype()) }}</p>
+                                <p class="text-sm text-slate-300 mt-1">{{ trim($card->type().' '.$card->subtype()) }}</p>
                                 @if ($card->hasStats())
                                 <p class="text-sm mt-1">{{ $card->statLine() }}</p>
                                 @endif
-                                <p class="text-xs mt-2 text-gray-200 line-clamp-6">{{ $card->description() ?: 'No description' }}</p>
+                                <p class="text-xs mt-2 text-slate-200 line-clamp-6">{{ $card->description() ?: 'No description' }}</p>
                             </div>
                         </div>
                     </div>

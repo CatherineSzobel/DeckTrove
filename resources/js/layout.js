@@ -50,6 +50,31 @@ function initShowcaseToggle() {
     });
 }
 
+/** Light/dark mode. The initial theme is applied by an inline script in the layout's <head>. */
+function initThemeToggle() {
+    const root = document.documentElement;
+
+    const update = () => {
+        document.querySelectorAll("[data-theme-toggle]").forEach((button) => {
+            button.setAttribute("aria-pressed", String(root.classList.contains("dark")));
+        });
+    };
+
+    document.querySelectorAll("[data-theme-toggle]").forEach((button) => {
+        button.addEventListener("click", () => {
+            const dark = root.classList.toggle("dark");
+            try {
+                localStorage.setItem("theme", dark ? "dark" : "light");
+            } catch {
+                // Storage can be unavailable (e.g. private mode); the toggle still works for this page.
+            }
+            update();
+        });
+    });
+
+    update();
+}
+
 function initFormHelpers() {
     // <form data-confirm="Are you sure?"> asks before submitting.
     document.querySelectorAll("form[data-confirm]").forEach((form) => {
@@ -69,5 +94,6 @@ document.addEventListener("DOMContentLoaded", () => {
     initToggle(document.getElementById("userDropdown-btn"), document.getElementById("userDropdown-menu"), { closeOnOutsideClick: true });
     initToggle(document.getElementById("mobileMenuButton"), document.getElementById("mobileMenu"));
     initShowcaseToggle();
+    initThemeToggle();
     initFormHelpers();
 });
