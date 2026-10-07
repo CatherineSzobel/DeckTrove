@@ -26,7 +26,7 @@ class DeckService
         $rules = config("series.{$deck->game}.deck");
         $cards = $this->resolveCards($deck->game, $counts);
 
-        $this->validateRules($rules, $counts, $cards);
+        $this->validateRules($deck->game, $counts, $cards);
 
         $mainCount = array_sum($counts['main'] ?? []);
 
@@ -88,11 +88,16 @@ class DeckService
         return $cards;
     }
 
-    private function validateRules(array $rules, array $counts, Collection $cards): void
+    private function validateRules(string $game, array $counts, Collection $cards): void
     {
+        $config = config("series.$game");
+        $rules = $config['deck'];
         $errors = [];
-        $typeOf = fn (string $id) => (string) ($cards[$id]['type_line'] ?? $cards[$id]['type'] ?? '');
-        $nameOf = fn (string $id) => $cards[$id]['name'] ?? $id;
+
+        // Rules match against the mapped type (e.g. "XYZ Monster", "Basic Land"), whatever the source's field names.
+        $viewModels = $cards->map(fn (array $raw) => new CardViewModel($raw, $config));
+        $typeOf = fn (string $id) => $viewModels[$id]->fullType();
+        $nameOf = fn (string $id) => $viewModels[$id]->name();
         $matches = fn (string $type, array $needles) => collect($needles)
             ->contains(fn ($needle) => stripos($type, $needle) !== false);
 

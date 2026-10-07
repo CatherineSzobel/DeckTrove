@@ -1,46 +1,28 @@
 <?php
 
+use App\Cards\MagicCardMapper;
+use App\Cards\YugiohCardMapper;
 use App\Services\MagicPackService;
 use App\Services\MagicService;
 use App\Services\YugiohPackService;
 use App\Services\YugiohService;
 
 /**
- * Config mapping external card APIs to internal app fields.
+ * Supported card series.
  *
- * - Each top-level key is a supported series and is used as the {series} route segment.
- * - Field values are either dot-paths into the raw card array or callables receiving it.
+ * - Each top-level key is a series and is used as the {series} route segment.
+ * - `provider` fetches raw cards, `mapper` reads them into the fields the app shows.
  * - `deck` holds the deck building rules, which are enforced by the server and passed to the deck builder JS.
+ *
+ * Only plain values belong here (no closures), so the config can be cached in production.
  */
-$placeholder = 'https://placehold.co/200x280?text=No+Image';
-
-// Double-faced Magic cards keep most fields per face instead of at the top level.
-$magicFaces = fn (array $card, string $field) => data_get($card, $field)
-    ?? collect(data_get($card, 'card_faces', []))->pluck($field)->filter()->implode(' // ');
-
 return [
 
     'yugioh' => [
         'label' => 'Yu-Gi-Oh!',
         'provider' => YugiohService::class,
+        'mapper' => YugiohCardMapper::class,
         'link_prefix' => '/yugioh',
-        'image' => fn ($card) => data_get($card, 'card_images.0.image_url', $placeholder),
-        'image_small' => fn ($card) => data_get($card, 'card_images.0.image_url_small', $placeholder),
-        'type_field' => fn ($card) => data_get($card, 'type', ''),
-        'subtype_field' => 'race',
-
-        'stats' => fn (array $card) => [
-            'left' => ['label' => 'ATK', 'value' => $card['atk'] ?? null],
-            'right' => str_contains(strtolower($card['type'] ?? ''), 'link')
-                ? ['label' => 'LINK', 'value' => $card['linkval'] ?? null]
-                : ['label' => 'DEF', 'value' => $card['def'] ?? null],
-        ],
-
-        'description' => fn ($card) => data_get($card, 'desc', ''),
-
-        'set_field' => 'card_sets.0.set_name',
-        'rarity_field' => 'card_sets.0.set_rarity',
-        'price_field' => 'card_prices.0.cardmarket_price',
 
         'rarity_colors' => [
             'common' => 'text-gray-600',
@@ -57,11 +39,6 @@ return [
             'race' => ['label' => 'Race'],
             'archetype' => ['label' => 'Archetype'],
         ],
-
-        'print_sets' => fn ($card) => collect(data_get($card, 'card_sets', []))->map(fn ($set) => [
-            'set_code' => $set['set_code'] ?? '',
-            'set_name' => $set['set_name'] ?? 'Unknown',
-        ])->toArray(),
 
         'deck' => [
             'zones' => [
@@ -90,31 +67,8 @@ return [
     'magic' => [
         'label' => 'Magic: The Gathering',
         'provider' => MagicService::class,
+        'mapper' => MagicCardMapper::class,
         'link_prefix' => '/magic',
-
-        'image' => fn ($card) => data_get($card, 'image_uris.normal')
-            ?? data_get($card, 'card_faces.0.image_uris.normal')
-            ?? $placeholder,
-        'image_small' => fn ($card) => data_get($card, 'image_uris.small')
-            ?? data_get($card, 'card_faces.0.image_uris.small')
-            ?? $placeholder,
-        // Every face image, used by the "Transform" toggle on double-faced cards.
-        'face_images' => fn ($card) => collect(data_get($card, 'card_faces', []))
-            ->pluck('image_uris.normal')->filter()->values()->all(),
-
-        'type_field' => fn ($card) => $magicFaces($card, 'mana_cost'),
-        'subtype_field' => 'type_line',
-
-        'stats' => fn (array $card) => [
-            'left' => ['label' => 'Power', 'value' => $card['power'] ?? data_get($card, 'card_faces.0.power')],
-            'right' => ['label' => 'Toughness', 'value' => $card['toughness'] ?? data_get($card, 'card_faces.0.toughness')],
-        ],
-
-        'description' => fn ($card) => $magicFaces($card, 'oracle_text'),
-
-        'set_field' => 'set_name',
-        'rarity_field' => 'rarity',
-        'price_field' => 'prices.usd',
 
         'rarity_colors' => [
             'common' => 'text-gray-600',
@@ -130,13 +84,6 @@ return [
             'color' => ['label' => 'Color', 'labels' => ['W' => 'White', 'U' => 'Blue', 'B' => 'Black', 'R' => 'Red', 'G' => 'Green', 'C' => 'Colorless']],
             'rarity' => ['label' => 'Rarity'],
             'set_name' => ['label' => 'Set'],
-        ],
-
-        'print_sets' => fn ($card) => [
-            [
-                'set_code' => data_get($card, 'set') ?? '',
-                'set_name' => data_get($card, 'set_name') ?? 'Unknown',
-            ],
         ],
 
         'deck' => [

@@ -22,11 +22,7 @@ class PackViewModel
 
     public function image(): ?string
     {
-        $field = $this->config['image'] ?? null;
-
-        return is_callable($field)
-            ? $field($this->pack)
-            : Arr::get($this->pack, $field);
+        return Arr::get($this->pack, $this->config['image'] ?? '');
     }
 
     public function code(): ?string
@@ -46,7 +42,7 @@ class PackViewModel
 
     public function type(): ?string
     {
-        if (!isset($this->config['type'])) {
+        if (! isset($this->config['type'])) {
             return null;
         }
 
