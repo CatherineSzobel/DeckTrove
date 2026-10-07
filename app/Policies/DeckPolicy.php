@@ -9,58 +9,28 @@ use Illuminate\Auth\Access\Response;
 class DeckPolicy
 {
     /**
-     * Determine whether the user can view any models.
+     * Public decks are visible to everyone; private ones only to their owner.
+     * Others get a 404 so private decks don't reveal that they exist.
      */
-    public function viewAny(User $user): bool
+    public function view(?User $user, Deck $deck): Response
     {
-        return false;
+        return $deck->is_public || $this->owns($user, $deck)
+            ? Response::allow()
+            : Response::denyAsNotFound();
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, Deck $deck): bool
-    {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): bool
-    {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can update the model.
-     */
     public function update(User $user, Deck $deck): bool
     {
-        return $user->id === $deck->user_id;
+        return $this->owns($user, $deck);
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
     public function delete(User $user, Deck $deck): bool
     {
-        return false;
+        return $this->owns($user, $deck);
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, Deck $deck): bool
+    private function owns(?User $user, Deck $deck): bool
     {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, Deck $deck): bool
-    {
-        return false;
+        return $user !== null && $user->id === $deck->user_id;
     }
 }

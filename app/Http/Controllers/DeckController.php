@@ -2,172 +2,132 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\SaveDeckRequest;
+use App\Models\Deck;
+use App\Services\CardService;
+use App\Services\DeckService;
 use App\ViewModels\CardViewModel;
 use Illuminate\Http\Request;
-use App\Models\Deck;
-use App\Services\DeckService;
-use App\Services\DeckBuilderService;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 
 class DeckController extends Controller
 {
     public function __construct(
         protected DeckService $deckService,
-        protected DeckBuilderService $deckBuilder
+        protected CardService $cardService,
     ) {}
 
-    public function index()
+    /**
+     * Public decks, optionally filtered by game. AJAX requests get just the deck grid.
+     */
+    public function index(Request $request)
     {
-        $decks = Deck::with('user')
-            ->where('is_public', true)
-            ->get();
+        $game = $request->query('game');
+
+        $decks = Deck::public()
+            ->with('user')
+            ->withCardCount()
+            ->when(array_key_exists((string) $game, config('series')), fn ($query) => $query->where('game', $game))
+            ->latest()
+            ->paginate(18)
+            ->withQueryString();
+
+        if ($request->ajax()) {
+            return response()->json(['html' => view('decks.partials.deck-card', compact('decks'))->render()]);
+        }
 
         return view('decks.public-deck', compact('decks'));
     }
 
-    public function filter(Request $request)
+    public function mine(Request $request)
     {
-        $game = $request->query('game', 'all');
+        $decks = $request->user()->decks()->withCardCount()->latest()->get();
 
-        $decks = Deck::with('user')
-            ->where('is_public', true)
-            ->when($game !== 'all', fn($q) => $q->where('game', $game))
-            ->get();
-
-        return response()->json([
-            'html' => view('decks.partials.deck-cards', compact('decks'))->render()
-        ]);
+        return view('decks.mydecks', compact('decks'));
     }
 
-    public function builder(Request $request)
+    public function show(Deck $deck)
     {
-        $game = match (true) {
-            $request->routeIs('magic.deck.builder') => 'magic',
-            $request->routeIs('yugioh.deck.builder') => 'yugioh',
-            default => abort(400, 'Unsupported game')
-        };
+        Gate::authorize('view', $deck);
 
-        $params = match ($game) {
-            'magic' => $request->only([
-                'search',
-                'type',
-                'color',
-                'rarity',
-                'set_name',
-                'page'
-            ]),
-            'yugioh' => $request->only([
-                'search',
-                'type',
-                'attribute',
-                'race',
-                'archetype',
-                'page'
-            ]),
-        };
-        $rawCards = $this->deckBuilder->search($game, $params);
-        $seriesConfig = config("series.$game");
-        $cards = $rawCards->through(
-            fn($card) => new CardViewModel($card, $seriesConfig)
-        );
-        $filters = $this->deckBuilder->filters($game);
-
-        return view(
-            'decks.deck-builder',
-            array_merge(
-                compact('cards', 'game', 'seriesConfig'),
-                ['options' => array_values($filters)]
-            )
-        );
-    }
-
-    public function save(Request $request)
-    {
-        $data = $request->validate([
-            'cards' => 'required|string',
-            'deck_title' => 'nullable|string|max:255',
-            'deck_description' => 'nullable|string',
-            'game' => 'required|string',
-            'image' => 'nullable|string',
-            'is_public' => 'nullable|boolean',
-
-        ]);
-        $data['cards'] = json_decode($data['cards'], true);
-
-        $this->deckService->save($data);
-
-        return redirect()->route('decks')->with('success', 'Deck saved successfully!');
-    }
-    public function show(int $id)
-    {
-        $deck = Deck::with('cards')->findOrFail($id);
+        $deck->load('user');
         $sections = $this->deckService->buildSections($deck);
-        $seriesConfig = config("series.$deck->game");
-        return view('decks.deck', compact('deck', 'sections', 'seriesConfig'));
+        $zones = config("series.{$deck->game}.deck.zones");
+
+        return view('decks.deck', compact('deck', 'sections', 'zones'));
     }
 
-    public function edit(Deck $deck, Request $request)
+    /**
+     * The deck builder. AJAX requests (infinite scroll / search) get only the card results.
+     */
+    public function builder(Request $request, string $series)
     {
-        $this->authorize('update', $deck);
+        $cards = $this->searchCards($request, $series);
 
-        $game = $deck->game;
-        $params = match ($game) {
-            'magic' => $request->only([
-                'search',
-                'type',
-                'color',
-                'rarity',
-                'set_name',
-                'page'
-            ]),
-            'yugioh' => $request->only([
-                'search',
-                'type',
-                'attribute',
-                'race',
-                'archetype',
-                'page'
-            ]),
-        };
+        if ($request->ajax()) {
+            return response()
+                ->view('decks.partials.cards-view', compact('cards'))
+                ->header('X-Next-Page', $cards->hasMorePages() ? $cards->currentPage() + 1 : '')
+                ->header('X-Total', $cards->total());
+        }
 
-        $deckCards = $this->deckService->buildSections($deck);
-        $filters = $this->deckBuilder->filters($game);
-        $seriesConfig = config("series.$game");
-
-        $rawCards = $this->deckBuilder->search($game, $params, $request->input('view', 'default'));
-        $cards = $rawCards->through(
-            fn($card) => new CardViewModel($card, $seriesConfig)
-        );
-
-        return view('decks.edit', compact('deck', 'game', 'deckCards', 'cards', 'filters'));
+        return view('decks.deck-builder', [
+            'deck' => null,
+            'game' => $series,
+            'cards' => $cards,
+            'sections' => [],
+            'options' => $this->cardService->for($series)->filterOptions(),
+        ]);
     }
-    public function update(Deck $deck, Request $request)
+
+    public function store(SaveDeckRequest $request, string $series)
     {
-        $request->merge([
-            'cards' => $request->input('cards') ? json_decode($request->input('cards'), true) : [],
-        ]);
+        $deck = $request->user()->decks()->make(['game' => $series]);
 
-        $data = $request->validate([
-            'deck_title' => ['nullable', 'min:3'],
-            'deck_description' => ['nullable', 'min:3'],
-            'cards' => ['nullable', 'array'],
-            'is_public' => ['nullable', 'boolean'],
-            'image' => ['nullable', 'string'],
-        ]);
+        $this->deckService->save($deck, $request->validated(), $request->cardCounts());
 
-        $deck->update([
-            'name' => $data['deck_title'] ?? $deck->name,
-            'description' => $data['deck_description'] ?? $deck->description,
-            'is_public' => $data['is_public'] ?? $deck->is_public,
-            'image' => $data['image'] ?? $deck->image,
-        ]);
-
-        $this->deckService->updateCards($deck, $data['cards'] ?? []);
-        return redirect()->route('decks.show', $deck);
+        return redirect()->route('decks')->with('success', $this->savedMessage($deck, $request));
     }
+
+    public function edit(Request $request, Deck $deck)
+    {
+        return view('decks.deck-builder', [
+            'deck' => $deck,
+            'game' => $deck->game,
+            'cards' => $this->searchCards($request, $deck->game),
+            'sections' => $this->deckService->buildSections($deck),
+            'options' => $this->cardService->for($deck->game)->filterOptions(),
+        ]);
+    }
+
+    public function update(SaveDeckRequest $request, Deck $deck)
+    {
+        $this->deckService->save($deck, $request->validated(), $request->cardCounts());
+
+        return redirect()->route('decks.show', $deck)->with('success', $this->savedMessage($deck, $request));
+    }
+
     public function destroy(Deck $deck)
     {
         $deck->delete();
-        return redirect()->route('decks');
+
+        return redirect()->route('decks')->with('success', 'Deck deleted.');
+    }
+
+    private function searchCards(Request $request, string $series)
+    {
+        $config = config("series.$series");
+        $params = $request->only([...array_keys($config['filters']), 'search', 'page']);
+
+        return $this->cardService->for($series)
+            ->search($params)
+            ->through(fn ($card) => new CardViewModel($card, $config));
+    }
+
+    private function savedMessage(Deck $deck, SaveDeckRequest $request): string
+    {
+        return $request->boolean('is_public') && ! $deck->is_public
+            ? 'Deck saved as private: it needs at least '.config("series.{$deck->game}.deck.zones.main.min").' main deck cards to be public.'
+            : 'Deck saved successfully!';
     }
 }

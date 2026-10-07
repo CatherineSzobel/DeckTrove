@@ -3,19 +3,19 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
+/**
+ * Local reference to a card from an external TCG source, so decks can point at it.
+ */
 class Card extends Model
 {
-    protected $fillable = ['game', 'external_id', 'name', 'type', 'subtype', 'image_url', 'stats'];
+    protected $fillable = ['game', 'external_id', 'name', 'image_url'];
 
-    protected $casts = [
-        'stats' => 'array'
-    ];
-
-    public function decks()
+    public function decks(): BelongsToMany
     {
-        // Include pivot fields for count & zone
         return $this->belongsToMany(Deck::class, 'deck_cards')
+            ->using(DeckCard::class)
             ->withPivot('count', 'zone')
             ->withTimestamps();
     }

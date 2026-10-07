@@ -2,71 +2,47 @@
 
 namespace App\Services;
 
-use App\Models\Deck;
 use App\Models\User;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 
 class DashboardService
 {
+    public function __construct(private readonly MagicService $magic) {}
 
-    public function getRecentDecks(User $user, string $tcg = 'all', int $limit = 3): Collection
+    public function recentDecks(User $user, ?string $game = null, int $limit = 3): Collection
     {
-        return Deck::where('user_id', $user->id)
-            ->when($tcg !== 'all', fn($q) => $q->where('game', $tcg))
+        return $user->decks()
+            ->withCardCount()
+            ->when($game, fn ($query) => $query->where('game', $game))
             ->latest()
             ->take($limit)
             ->get();
     }
+
     /**
-     * Get user deck statistics
+     * Deck counts for every supported series, plus a total.
+     *
+     * @return array<string, int>
      */
-    public function countDecksByTcg(User $user): array
+    public function deckCounts(User $user): array
     {
-        $counts = Deck::where('user_id', $user->id)
+        $counts = $user->decks()
             ->selectRaw('game, COUNT(*) as count')
             ->groupBy('game')
             ->pluck('count', 'game');
 
-        return [
-            'total'   => $counts->sum(),
-            'yugioh'  => $counts['yugioh'] ?? 0,
-            'magic'   => $counts['magic'] ?? 0,
-            'pokemon' => $counts['pokemon'] ?? 0,
-            'digimon' => $counts['digimon'] ?? 0,
-        ];
+        return collect(config('series'))
+            ->map(fn ($config, $series) => (int) ($counts[$series] ?? 0))
+            ->prepend((int) $counts->sum(), 'total')
+            ->all();
     }
 
     /**
-     * @TODO refactor into a cardservice so for the future if there are more tcg series
+     * A handful of random Magic cards for the dashboard carousel, refreshed every 10 minutes.
      */
-    public function getRandomCards(int $count): Collection
+    public function randomCards(int $count = 6): Collection
     {
-        return $this->getRandomMagicCards($count)
-            ->shuffle()
-            ->values();
-    }
-
-    /**
-     * Random Magic cards from Scryfall API
-     */
-    private function getRandomMagicCards(int $count): Collection
-    {
-        $cards = [];
-
-        for ($i = 0; $i < $count; $i++) {
-            try {
-                $response = Http::get('https://api.scryfall.com/cards/random');
-                if ($response->successful()) {
-                    $cards[] = $response->json();
-                } else {
-                    $cards[] = ['error' => 'Failed to fetch card', 'status' => $response->status()];
-                }
-            } catch (\Exception $e) {
-                $cards[] = ['error' => $e->getMessage()];
-            }
-        }
-
-        return collect($cards);
+        return Cache::remember("dashboard-random-cards-$count", 600, fn () => $this->magic->random($count));
     }
 }

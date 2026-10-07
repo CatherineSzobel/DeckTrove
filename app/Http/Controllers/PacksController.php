@@ -2,56 +2,41 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Services\PackService;
 use App\ViewModels\CardCollectionViewModel;
 use App\ViewModels\CardViewModel;
 use App\ViewModels\PackViewModel;
+use Illuminate\Http\Request;
 
 class PacksController extends Controller
 {
+    private const VIEWS = ['full', 'list'];
+
     public function __construct(protected PackService $packService) {}
 
-    public function index(Request $request, $series)
+    public function index(Request $request, string $series)
     {
-        $currentView = $request->input('view', 'full');
-        $page = (int) $request->input('page', 1);
-        $search = $request->input('search', '');
+        $currentView = in_array($request->query('view'), self::VIEWS, true) ? $request->query('view') : 'full';
+        $search = trim((string) $request->query('search', ''));
+        $packConfig = config("series.$series.pack");
 
-        $params = [
-            'view' => $currentView,
-            'page' => $page,
-            'search' => $search,
-        ];
+        $packs = $this->packService->for($series)
+            ->paginate($search, max((int) $request->query('page', 1), 1))
+            ->withQueryString()
+            ->through(fn ($pack) => new PackViewModel((array) $pack, $packConfig));
 
-        $packs = $this->packService->getPaginatedPacksBySeries($series, $params);
-        $packs->getCollection()->transform(
-            fn($pack) => new PackViewModel((array) $pack, config("series.$series.pack"))
-        );
-
-        return view('packs.packs', array_merge(
-            compact('packs', 'series'),
-            ['currentView' => $currentView]
-        ));
+        return view('packs.packs', compact('packs', 'series', 'currentView', 'search'));
     }
 
-    public function show($series, $id)
+    public function show(string $series, string $setCode)
     {
-        $seriesConfig = config("series.$series");
-        $packConfig = $seriesConfig['pack'] ?? [];
+        $config = config("series.$series");
+        $provider = $this->packService->for($series);
 
-        $rawPack = $this->packService->getPackByIdBySeries($series, $id);
-
-        $rawCards = $this->packService->getCardsFromSetBySeries($series, $id);
-        $cards = collect($rawCards)->map(
-            fn($card) => new CardViewModel((array) $card, $seriesConfig)
-        );
-
+        $pack = new PackViewModel($provider->find($setCode), $config['pack']);
+        $cards = $provider->cards($setCode)->map(fn ($card) => new CardViewModel((array) $card, $config));
         $cardCollection = new CardCollectionViewModel($cards);
 
-        return view('packs.pack', array_merge(
-            compact('cards', 'series', 'cardCollection', 'seriesConfig'),
-            ['pack' => new PackViewModel((array) $rawPack, $packConfig)]
-        ));
+        return view('packs.pack', compact('pack', 'cards', 'series', 'cardCollection'));
     }
 }

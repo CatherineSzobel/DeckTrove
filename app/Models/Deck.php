@@ -2,14 +2,33 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\User;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Deck extends Model
 {
-    protected $fillable = ['user_id', 'game', 'name', 'description', 'is_public', 'image'];
+    /** @use HasFactory<\Database\Factories\DeckFactory> */
+    use HasFactory;
 
-    public function cards()
+    protected $fillable = ['game', 'name', 'description', 'is_public', 'image'];
+
+    protected function casts(): array
+    {
+        return [
+            'is_public' => 'boolean',
+        ];
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function cards(): BelongsToMany
     {
         return $this->belongsToMany(Card::class, 'deck_cards')
             ->using(DeckCard::class)
@@ -17,9 +36,26 @@ class Deck extends Model
             ->withTimestamps();
     }
 
-    // Add this relationship
-    public function user()
+    public function deckCards(): HasMany
     {
-        return $this->belongsTo(User::class);
+        return $this->hasMany(DeckCard::class);
+    }
+
+    public function scopePublic($query)
+    {
+        return $query->where('is_public', true);
+    }
+
+    /**
+     * Total number of cards (including duplicates). Use withCardCount() to avoid N+1 queries in lists.
+     */
+    protected function cardCount(): Attribute
+    {
+        return Attribute::get(fn ($value) => (int) ($value ?? $this->deckCards()->sum('count')));
+    }
+
+    public function scopeWithCardCount($query)
+    {
+        return $query->withSum('deckCards as card_count', 'count');
     }
 }

@@ -2,57 +2,57 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\ViewModels\CardViewModel;
 use App\Services\CardService;
+use App\ViewModels\CardViewModel;
+use Illuminate\Http\Request;
 
 class CardsController extends Controller
 {
+    private const VIEWS = ['full', 'images', 'list'];
+
     public function __construct(protected CardService $cardService) {}
 
-    public function index(Request $request, $series)
+    /**
+     * The card database. AJAX requests (live search/filter) get just the results as JSON.
+     */
+    public function index(Request $request, string $series)
     {
-        $seriesConfig = config("series.$series");
+        $config = config("series.$series");
+        $provider = $this->cardService->for($series);
 
-        $view = $request->get('view', 'full');
-        $page = max((int) $request->get('page', 1), 1);
+        $currentView = in_array($request->query('view'), self::VIEWS, true) ? $request->query('view') : 'full';
 
-        $params = $request->only($seriesConfig['filter_fields'] ?? []);
-        $params['page'] = $page;
-        $params['view'] = $view;
+        $params = $request->only([...array_keys($config['filters']), 'search', 'page']);
+        $params['view'] = $currentView;
 
-        $cards = $this->cardService->getCardsBySeries($series, $params);
+        $cards = $provider->search($params)->through(fn ($card) => new CardViewModel($card, $config));
 
-        $cards = $cards->through(
-            fn($card) => new CardViewModel($card, $seriesConfig)
-        );
+        if ($request->ajax()) {
+            return response()->json([
+                'html' => view('cards.partials.cards-inner', compact('cards', 'series', 'currentView'))->render(),
+                'count' => view('cards.partials.result-count', compact('cards'))->render(),
+            ]);
+        }
 
-        $filters = $this->cardService->getFiltersBySeries($series);
-
-        return view('cards.cards', array_merge(
-            compact('cards', 'series'),
-            [
-                'currentView' => $view,
-                'options' => array_values($filters),
-            ]
-        ));
+        return view('cards.cards', [
+            'cards' => $cards,
+            'series' => $series,
+            'currentView' => $currentView,
+            'options' => $provider->filterOptions(),
+        ]);
     }
 
-    public function show($series, $id)
+    public function show(string $series, string $id)
     {
-        $seriesConfig = config("series.$series");
+        $config = config("series.$series");
+        $provider = $this->cardService->for($series);
 
-        $card = $this->cardService->fetchCardById($id, $series);
+        $card = $provider->find($id);
 
-        $setCards = $this->cardService
-            ->getSetCardsBySeries($series, $card)
-            ->map(fn($c) => new CardViewModel($c, $seriesConfig));
-
-        return view('cards.card', array_merge(
-            compact('setCards', 'series'),
-            [
-                'card' => new CardViewModel($card, $seriesConfig),
-            ]
-        ));
+        return view('cards.card', [
+            'series' => $series,
+            'card' => new CardViewModel($card, $config),
+            'setCards' => $provider->related($card)->map(fn ($c) => new CardViewModel($c, $config)),
+        ]);
     }
 }

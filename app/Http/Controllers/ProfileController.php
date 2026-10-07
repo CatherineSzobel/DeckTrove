@@ -3,96 +3,45 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Log;
-
+use Illuminate\Validation\Rule;
 
 class ProfileController extends Controller
 {
-
-    public function __construct()
+    public function show(Request $request)
     {
-        $this->middleware('auth');
+        return view('account.profile', ['user' => $request->user()]);
     }
 
-    public function edit()
+    public function edit(Request $request)
     {
-        $user = Auth::user();
-        return view('account.edit', compact('user'));
+        return view('account.edit', ['user' => $request->user()]);
     }
 
     public function update(Request $request)
     {
-        /** @var \App\Models\User $user */
-        $user = Auth::user();
+        $user = $request->user();
 
         $validated = $request->validate([
-            'username' => 'required|string|max:255|unique:users,username,' . $user->id,
-            'about' => 'nullable|string|max:500',
-            'avatar' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'username' => ['required', 'string', 'alpha_dash', 'min:3', 'max:30', Rule::unique('users')->ignore($user)],
+            'about' => ['nullable', 'string', 'max:500'],
+            'avatar' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ]);
 
-        // Handle avatar
-        // Handle avatar upload with logging
         if ($request->hasFile('avatar')) {
+            $oldAvatar = $user->avatar;
+            $validated['avatar'] = $request->file('avatar')->store('avatars', 'public');
 
-            Log::info('Avatar upload attempt', [
-                'user_id' => $user->id,
-                'original_name' => $request->file('avatar')->getClientOriginalName(),
-                'mime' => $request->file('avatar')->getMimeType(),
-                'size_kb' => round($request->file('avatar')->getSize() / 1024, 2),
-            ]);
-
-            try {
-                // Delete old avatar if exists
-                if ($user->avatar) {
-                    Storage::disk('public')->delete($user->avatar);
-                }
-
-                // Store new avatar
-                $path = $request->file('avatar')->store('avatars', 'public');
-
-                if (!$path) {
-                    Log::error('Avatar upload failed: store() returned null', [
-                        'user_id' => $user->id,
-                    ]);
-                } else {
-                    Log::info('Avatar uploaded successfully', [
-                        'user_id' => $user->id,
-                        'path' => $path,
-                    ]);
-
-                    $validated['avatar'] = $path;
-                }
-            } catch (\Throwable $e) {
-
-                Log::error('Avatar upload exception', [
-                    'user_id' => $user->id,
-                    'message' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString(),
-                ]);
-
-                return back()->withErrors([
-                    'avatar' => 'Avatar upload failed. Please try again.',
-                ]);
+            // Only remove the old avatar once the new one is safely stored.
+            if ($oldAvatar) {
+                Storage::disk('public')->delete($oldAvatar);
             }
         } else {
-            Log::warning('Profile update without avatar file', [
-                'user_id' => $user->id,
-            ]);
+            unset($validated['avatar']);
         }
-        
-        Log::info('Updating user profile', ['validated' => $validated]);
+
         $user->update($validated);
 
-
         return redirect()->route('profile')->with('success', 'Profile updated successfully!');
-    }
-
-    public function show()
-    {
-        $user = Auth::user();
-        return view('account.profile', compact('user'));
     }
 }

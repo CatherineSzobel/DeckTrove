@@ -2,32 +2,32 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Validation\Rules\Password;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rules\Password;
 
 class RegisterUserController extends Controller
 {
-
     public function create()
     {
         return view('auth.register');
     }
-    public function store()
+
+    public function store(Request $request)
     {
-        $validatedAttributes = request()->validate([
-            'username' => ['required', 'unique:users,username'],
-            'email' => ['required', 'email', 'unique:users,email'],
-            'password' => ['required', Password::min(6), 'confirmed'],
+        $attributes = $request->validate([
+            'username' => ['required', 'string', 'alpha_dash', 'min:3', 'max:30', 'unique:users,username'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'password' => ['required', 'confirmed', Password::min(8)],
         ]);
 
-        $validatedAttributes['password'] = bcrypt($validatedAttributes['password']);
-
-        $user = User::create($validatedAttributes);
+        // The model's "hashed" cast hashes the password.
+        $user = User::create($attributes);
 
         Auth::login($user);
+        $request->session()->regenerate();
 
-        return redirect(url()->previous());
+        return redirect()->intended(route('dashboard'));
     }
 }
