@@ -90,6 +90,12 @@ php artisan migrate
 php artisan yugioh:import
 ```
 
+   In production, also copy the card images to your own storage (YGOPRODeck doesn't allow hotlinking). It's resumable and takes about 45 minutes; locally you can skip it or try `--limit=50`:
+
+```bash
+php artisan yugioh:images
+```
+
 8. **Link the storage folder** (needed for profile avatars):
 
 ```bash

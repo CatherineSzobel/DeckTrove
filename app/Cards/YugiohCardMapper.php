@@ -2,6 +2,8 @@
 
 namespace App\Cards;
 
+use Illuminate\Support\Facades\Storage;
+
 /**
  * Yu-Gi-Oh! cards in the YGOPRODeck format.
  */
@@ -9,12 +11,37 @@ class YugiohCardMapper extends CardMapper
 {
     public function image(array $card): string
     {
-        return data_get($card, 'card_images.0.image_url') ?? self::PLACEHOLDER_IMAGE;
+        return $this->hostedImage($card, 'cards')
+            ?? data_get($card, 'card_images.0.image_url')
+            ?? self::PLACEHOLDER_IMAGE;
     }
 
     public function imageSmall(array $card): string
     {
-        return data_get($card, 'card_images.0.image_url_small') ?? $this->image($card);
+        return $this->hostedImage($card, 'cards_small')
+            ?? data_get($card, 'card_images.0.image_url_small')
+            ?? $this->image($card);
+    }
+
+    /**
+     * Where `php artisan yugioh:images` stores a card's image on the media disk.
+     */
+    public static function imagePath(int|string $id, string $size): string
+    {
+        return "yugioh/$size/$id.jpg";
+    }
+
+    /**
+     * Our own copy of the image once it has been downloaded. YGOPRODeck asks that images are
+     * re-hosted rather than hotlinked; until then the original URL is used.
+     */
+    private function hostedImage(array $card, string $size): ?string
+    {
+        if (empty($card['hosted_images'])) {
+            return null;
+        }
+
+        return Storage::disk(config('filesystems.media'))->url(self::imagePath($card['id'], $size));
     }
 
     public function type(array $card): string

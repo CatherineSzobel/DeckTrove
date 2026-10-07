@@ -25,7 +25,7 @@ class YugiohService implements CardProvider
         $term = trim($params['search'] ?? '');
 
         return YugiohCard::query()
-            ->select('data')
+            ->select(['data', 'images_hosted_at'])
             ->when($term !== '', function ($query) use ($term) {
                 // Case-insensitive on every database: LIKE on SQLite/MySQL, ILIKE on Postgres.
                 $like = "%$term%";
@@ -47,7 +47,7 @@ class YugiohService implements CardProvider
             ->orderBy('name')
             ->paginate($this->perPage($params['view'] ?? null), page: $this->currentPage($params))
             ->withQueryString()
-            ->through(fn (YugiohCard $card) => $card->data);
+            ->through(fn (YugiohCard $card) => $card->toCardArray());
     }
 
     public function find(string $id): array
@@ -56,7 +56,7 @@ class YugiohService implements CardProvider
             abort(404, 'Card not found');
         }
 
-        return YugiohCard::find($id)?->data ?? abort(404, 'Card not found');
+        return YugiohCard::find($id)?->toCardArray() ?? abort(404, 'Card not found');
     }
 
     public function findMany(array $ids): Collection
@@ -67,7 +67,7 @@ class YugiohService implements CardProvider
             return collect();
         }
 
-        return YugiohCard::whereIn('id', $ids)->get()->mapWithKeys(fn (YugiohCard $card) => [$card->id => $card->data]);
+        return YugiohCard::whereIn('id', $ids)->get()->mapWithKeys(fn (YugiohCard $card) => [$card->id => $card->toCardArray()]);
     }
 
     public function related(array $card, int $limit = 6): Collection
@@ -80,7 +80,8 @@ class YugiohService implements CardProvider
             ->whereKeyNot($card['id'])
             ->inRandomOrder()
             ->limit($limit)
-            ->pluck('data');
+            ->get()
+            ->map(fn (YugiohCard $card) => $card->toCardArray());
     }
 
     public function filterOptions(): array

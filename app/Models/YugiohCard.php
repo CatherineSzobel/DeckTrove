@@ -2,23 +2,33 @@
 
 namespace App\Models;
 
+use Database\Factories\YugiohCardFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class YugiohCard extends Model
 {
-    /** @use HasFactory<\Database\Factories\YugiohCardFactory> */
+    /** @use HasFactory<YugiohCardFactory> */
     use HasFactory;
 
     public $incrementing = false;
 
     public $timestamps = false;
 
-    protected $fillable = ['id', 'name', 'type', 'race', 'attribute', 'archetype', 'desc', 'data'];
+    protected $fillable = ['id', 'name', 'type', 'race', 'attribute', 'archetype', 'desc', 'data', 'images_hosted_at'];
 
     protected function casts(): array
     {
-        return ['data' => 'array'];
+        return ['data' => 'array', 'images_hosted_at' => 'datetime'];
+    }
+
+    /**
+     * The raw card as the rest of the app uses it, plus whether its images are hosted by us
+     * (read by YugiohCardMapper).
+     */
+    public function toCardArray(): array
+    {
+        return $this->data + ['hosted_images' => $this->images_hosted_at !== null];
     }
 
     /**
