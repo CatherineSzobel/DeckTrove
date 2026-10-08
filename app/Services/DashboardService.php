@@ -3,12 +3,13 @@
 namespace App\Services;
 
 use App\Models\User;
+use App\ViewModels\CardViewModel;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 
 class DashboardService
 {
-    public function __construct(private readonly MagicService $magic) {}
+    public function __construct(private readonly CardService $cards) {}
 
     public function recentDecks(User $user, ?string $game = null, int $limit = 3): Collection
     {
@@ -39,10 +40,21 @@ class DashboardService
     }
 
     /**
-     * A handful of random Magic cards for the dashboard carousel, refreshed every 10 minutes.
+     * Random cards from every series for the dashboard carousel, refreshed every 10 minutes.
+     *
+     * @return Collection<int, CardViewModel>
      */
-    public function randomCards(int $count = 6): Collection
+    public function randomCards(int $perSeries = 4): Collection
     {
-        return Cache::remember("dashboard-random-cards-$count", 600, fn () => $this->magic->random($count));
+        return collect(config('series'))
+            ->flatMap(function (array $config, string $series) use ($perSeries) {
+                // Only the raw card data is cached; view models are rebuilt from it.
+                $cards = Cache::remember("dashboard-random-cards-$series-$perSeries", 600,
+                    fn () => $this->cards->for($series)->random($perSeries)->values()->all());
+
+                return array_map(fn (array $card) => new CardViewModel($card, $config), $cards);
+            })
+            ->shuffle()
+            ->values();
     }
 }

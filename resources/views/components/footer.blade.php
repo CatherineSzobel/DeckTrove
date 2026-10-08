@@ -41,6 +41,13 @@
             @endforeach
         </div>
 
-        <p class="text-xs text-gray-500">© {{ date('Y') }} DeckTrove. All rights reserved.</p>
+        <div class="space-y-2 text-xs text-gray-500">
+            <p>© {{ date('Y') }} DeckTrove. All rights reserved.</p>
+
+            {{-- Wording required by the Wizards of the Coast Fan Content Policy. --}}
+            <p>DeckTrove is unofficial Fan Content permitted under the Fan Content Policy. Not approved/endorsed by Wizards. Portions of the materials used are property of Wizards of the Coast. ©Wizards of the Coast LLC.</p>
+            <p>Yu-Gi-Oh! is a trademark of Konami Digital Entertainment. DeckTrove is not affiliated with or endorsed by Konami.</p>
+            <p>Card data from <a href="https://scryfall.com" class="underline hover:text-gray-700" rel="noreferrer" target="_blank">Scryfall</a> and <a href="https://ygoprodeck.com" class="underline hover:text-gray-700" rel="noreferrer" target="_blank">YGOPRODeck</a>.</p>
+        </div>
     </div>
 </footer>

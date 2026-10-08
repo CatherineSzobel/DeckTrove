@@ -43,7 +43,7 @@ class SaveDeckRequest extends FormRequest
             'is_public' => ['boolean'],
             'cards' => ['present', 'array:'.implode(',', $zones)],
             'cards.*' => ['array', 'max:100'],
-            'cards.*.*.id' => ['required', 'string', 'max:64', 'regex:/^[0-9a-fA-F-]+$/'],
+            'cards.*.*.id' => ['required', 'string', 'max:64', 'regex:/^[A-Za-z0-9._-]+$/'],
         ];
     }
 

@@ -57,7 +57,7 @@ Route::get('/public-deck', [DeckController::class, 'index'])->name('public-deck'
 // Per series
 Route::prefix('{series}')->group(function () {
     Route::get('/cards', [CardsController::class, 'index'])->name('cards.index');
-    Route::get('/card/{id}', [CardsController::class, 'show'])->where('id', '[0-9a-fA-F-]+')->name('cards.show');
+    Route::get('/card/{id}', [CardsController::class, 'show'])->where('id', '[A-Za-z0-9._-]+')->name('cards.show');
 
     Route::get('/packs', [PacksController::class, 'index'])->name('packs.index');
     // The optional slug picks between Yu-Gi-Oh! products that share a set code.

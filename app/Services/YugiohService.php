@@ -84,6 +84,14 @@ class YugiohService implements CardProvider
             ->map(fn (YugiohCard $card) => $card->toCardArray());
     }
 
+    public function random(int $count): Collection
+    {
+        return YugiohCard::inRandomOrder()
+            ->limit($count)
+            ->get()
+            ->map(fn (YugiohCard $card) => $card->toCardArray());
+    }
+
     public function filterOptions(): array
     {
         return Cache::rememberForever(self::FILTER_CACHE_KEY, fn () => collect(self::FILTER_KEYS)

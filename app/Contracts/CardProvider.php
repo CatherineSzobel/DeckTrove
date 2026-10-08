@@ -31,6 +31,11 @@ interface CardProvider
     public function related(array $card, int $limit = 6): Collection;
 
     /**
+     * A few random cards, e.g. for the dashboard's "discover" carousel.
+     */
+    public function random(int $count): Collection;
+
+    /**
      * The options for each filter dropdown, keyed by filter name.
      * A list of values, or a value => label map.
      */

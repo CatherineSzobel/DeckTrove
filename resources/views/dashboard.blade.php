@@ -91,7 +91,6 @@
                             <div class="marquee">
                                 <div class="flex gap-4 py-4">
                                     @foreach ($randomCards as $card)
-                                    @php $card = new \App\ViewModels\CardViewModel($card, $series['magic']); @endphp
                                     <a href="{{ $card->link() }}" target="_blank" class="flex-shrink-0 card-link group">
                                         <div class="h-56 w-40 rounded-xl overflow-hidden shadow-xl hover:shadow-2xl hover:shadow-purple-500/30 transition-all transform hover:scale-110 hover:-rotate-2 cursor-pointer border-2 border-slate-700 hover:border-purple-500">
                                             <img src="{{ $card->imageSmall() }}" alt="{{ $card->name() }}" class="w-full h-full object-cover" loading="lazy">

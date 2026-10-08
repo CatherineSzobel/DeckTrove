@@ -41,7 +41,7 @@
 
         @if ($setCards->isNotEmpty())
         <div class="mt-6 border-slate-700 p-6">
-            <h3 class="text-lg text-gray-900 font-semibold mb-3">{{ $series === 'magic' ? 'More from this set' : 'More from this archetype' }}</h3>
+            <h3 class="text-lg text-gray-900 font-semibold mb-3">{{ config("series.$series.related_label") }}</h3>
 
             <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
                 @foreach ($setCards as $setCard)

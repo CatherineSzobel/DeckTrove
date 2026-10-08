@@ -10,7 +10,8 @@ use App\Services\YugiohPackService;
 use App\Services\YugiohService;
 
 /**
- * Supported card series.
+ * Supported card series. To add one, follow docs/adding-a-series.md; tests/Feature/SeriesContractTest.php
+ * checks that every series here is complete.
  *
  * - Each top-level key is a series and is used as the {series} route segment.
  * - `provider` fetches raw cards, `mapper` reads them into the fields the app shows.
@@ -23,6 +24,9 @@ return [
 
     'yugioh' => [
         'label' => 'Yu-Gi-Oh!',
+        'logo' => 'yugioh.png', // in resources/img
+        'tagline' => 'Duel your way to victory!',
+        'related_label' => 'More from this archetype',
         'provider' => YugiohService::class,
         'mapper' => YugiohCardMapper::class,
         'deck_format' => YdkFormat::class,
@@ -71,6 +75,9 @@ return [
 
     'magic' => [
         'label' => 'Magic: The Gathering',
+        'logo' => 'magic.png',
+        'tagline' => 'Cast spells and control the battlefield!',
+        'related_label' => 'More from this set',
         'provider' => MagicService::class,
         'mapper' => MagicCardMapper::class,
         'deck_format' => MagicTextFormat::class,

@@ -8,7 +8,7 @@
 
 @php
     $seriesLabels = collect(config('series'))->map(fn ($config) => $config['label'])->all();
-    $comingSoon = ['pokemon' => 'Pokémon', 'digimon' => 'Digimon'];
+    $comingSoon = collect(config('coming_soon'))->map(fn ($config) => $config['label'])->all();
 @endphp
 
 <!DOCTYPE html>

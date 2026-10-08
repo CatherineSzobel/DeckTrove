@@ -6,13 +6,22 @@ class IndexController extends Controller
 {
     public function __invoke()
     {
-        $tcgs = [
-            ['src' => 'magic.png', 'series' => 'Magic the Gathering', 'comingSoon' => false, 'link' => 'magic', 'description' => 'Cast spells and control the battlefield!'],
-            ['src' => 'yugioh.png', 'series' => 'Yu-Gi-Oh', 'comingSoon' => false, 'link' => 'yugioh', 'description' => 'Duel your way to victory!'],
-            ['src' => 'pokemon.png', 'series' => 'Pokémon', 'comingSoon' => true, 'link' => 'pokemon', 'description' => 'Catch ’em all soon!'],
-            ['src' => 'digimon.png', 'series' => 'Digimon', 'comingSoon' => true, 'link' => 'digimon', 'description' => 'Digital monsters arriving soon!'],
-        ];
+        $live = collect(config('series'))->map(fn (array $config, string $series) => [
+            'src' => $config['logo'],
+            'series' => $config['label'],
+            'comingSoon' => false,
+            'link' => $series,
+            'description' => $config['tagline'],
+        ]);
 
-        return view('index', compact('tcgs'));
+        $upcoming = collect(config('coming_soon'))->map(fn (array $config, string $series) => [
+            'src' => $config['logo'],
+            'series' => $config['label'],
+            'comingSoon' => true,
+            'link' => $series,
+            'description' => $config['tagline'],
+        ]);
+
+        return view('index', ['tcgs' => $live->merge($upcoming)->values()]);
     }
 }
