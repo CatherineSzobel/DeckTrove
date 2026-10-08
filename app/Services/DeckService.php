@@ -19,7 +19,7 @@ class DeckService
     /**
      * Create or update a deck and replace its cards.
      *
-     * @param  array  $attributes  deck_title, deck_description, image, is_public
+     * @param  array  $attributes  deck_title, deck_description, image, is_public, format (optional: absent keeps the deck's format)
      * @param  array  $counts  card counts per zone: ['main' => ['<external id>' => 2, ...], ...]
      *
      * @throws ValidationException when a card is unknown or the deck breaks the game's rules
@@ -27,6 +27,8 @@ class DeckService
     public function save(Deck $deck, array $attributes, array $counts): Deck
     {
         $rules = config("series.{$deck->game}.deck");
+        // Only an explicit `format` changes the deck's format, so a client that doesn't send it can't reset it.
+        $format = array_key_exists('format', $attributes) ? ($attributes['format'] ?: null) : $deck->format;
         $cards = $this->resolveCards($deck->game, $counts);
 
         $this->validateRules($deck->game, $counts, $cards);
@@ -37,6 +39,7 @@ class DeckService
             'name' => ($attributes['deck_title'] ?? null) ?: ($deck->name ?? 'New Deck'),
             'description' => $attributes['deck_description'] ?? null,
             'image' => $attributes['image'] ?? null,
+            'format' => $format,
             // Decks below the minimum size can't be shared yet.
             'is_public' => ($attributes['is_public'] ?? false) && $mainCount >= $rules['zones']['main']['min'],
         ]);
@@ -74,6 +77,7 @@ class DeckService
                 'name' => Str::limit('Copy of '.$original->name, 255, ''),
                 'description' => $original->description,
                 'image' => $original->image,
+                'format' => $original->format,
                 'is_public' => false,
             ]);
 

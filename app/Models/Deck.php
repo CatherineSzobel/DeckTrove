@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\DeckFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,10 +12,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Deck extends Model
 {
-    /** @use HasFactory<\Database\Factories\DeckFactory> */
+    /** @use HasFactory<DeckFactory> */
     use HasFactory;
 
-    protected $fillable = ['game', 'name', 'description', 'is_public', 'image'];
+    protected $fillable = ['game', 'name', 'description', 'is_public', 'image', 'format'];
 
     protected function casts(): array
     {

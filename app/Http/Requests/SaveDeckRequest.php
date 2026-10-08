@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 /**
  * Validates deck builder submissions (create and update).
@@ -34,13 +35,16 @@ class SaveDeckRequest extends FormRequest
 
     public function rules(): array
     {
-        $zones = array_keys(config("series.{$this->game()}.deck.zones"));
+        $deck = config("series.{$this->game()}.deck");
+        $zones = array_keys($deck['zones']);
 
         return [
             'deck_title' => ['nullable', 'string', 'max:255'],
             'deck_description' => ['nullable', 'string', 'max:2000'],
             'image' => ['nullable', 'url:https', 'max:2048'],
             'is_public' => ['boolean'],
+            // Absent or empty means Casual (Laravel turns '' into null).
+            'format' => ['nullable', 'string', Rule::in(array_keys($deck['formats']))],
             'cards' => ['present', 'array:'.implode(',', $zones)],
             'cards.*' => ['array', 'max:100'],
             'cards.*.*.id' => ['required', 'string', 'max:64', 'regex:/^[A-Za-z0-9._-]+$/'],
@@ -51,6 +55,7 @@ class SaveDeckRequest extends FormRequest
     {
         return [
             'cards.array' => 'The deck contains a zone this game does not have.',
+            'format.in' => 'Choose a format this game has.',
             'cards.*.*.id.*' => 'The deck contains an invalid card.',
         ];
     }

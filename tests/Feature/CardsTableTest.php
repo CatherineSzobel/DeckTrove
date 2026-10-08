@@ -22,7 +22,8 @@ test('the same card cannot be stored twice for a game', function () {
 });
 
 test('the migration merges existing duplicates before adding the unique index', function () {
-    $this->artisan('migrate:rollback', ['--step' => 1])->assertSuccessful();
+    // Roll back just the unique index migration, whatever migrations come after it.
+    $this->artisan('migrate:rollback', ['--path' => 'database/migrations/2026_10_08_000002_add_unique_index_to_cards_table.php'])->assertSuccessful();
 
     $deck = Deck::factory()->create(['game' => 'yugioh']);
     $keep = DB::table('cards')->insertGetId(['game' => 'yugioh', 'external_id' => '123', 'name' => 'A']);
