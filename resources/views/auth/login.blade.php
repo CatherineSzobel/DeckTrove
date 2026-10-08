@@ -27,6 +27,7 @@
 
             </div>
 
+            <p class="mt-4 text-sm"><a href="{{ route('password.request') }}" class="font-semibold leading-6 text-indigo-600 hover:text-indigo-500">Forgot your password?</a></p>
             <p class="mt-2 text-sm text-gray-600">You don't have an account? <a href="{{ route('register') }}" class="font-semibold leading-6 text-indigo-600 hover:text-indigo-500">Register</a></p>
 
             <div class="mt-6 flex items-center justify-center gap-4">

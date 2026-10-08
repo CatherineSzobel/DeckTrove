@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 
 class ProfileController extends Controller
 {
@@ -45,5 +47,42 @@ class ProfileController extends Controller
         }
 
         return redirect()->route('profile')->with('success', 'Profile updated successfully!');
+    }
+
+    public function updatePassword(Request $request)
+    {
+        // Named error bags keep this form's errors apart from the delete form, which also has a password field.
+        $validated = $request->validateWithBag('updatePassword', [
+            'current_password' => ['required', 'current_password'],
+            'password' => ['required', 'confirmed', Password::min(8)],
+        ]);
+
+        // The model's "hashed" cast hashes the password.
+        $request->user()->update(['password' => $validated['password']]);
+
+        return redirect()->route('profile.edit')->with('success', 'Password changed.');
+    }
+
+    /**
+     * Deletes the account. Decks and their cards are removed by the database's cascading deletes.
+     */
+    public function destroy(Request $request)
+    {
+        $request->validateWithBag('deleteAccount', ['password' => ['required', 'current_password']]);
+
+        $user = $request->user();
+        $avatar = $user->avatar;
+
+        Auth::logout();
+        $user->delete();
+
+        if ($avatar) {
+            Storage::disk(config('filesystems.media'))->delete($avatar);
+        }
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('index')->with('success', 'Your account has been deleted.');
     }
 }
