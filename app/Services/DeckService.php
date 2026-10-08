@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Card;
 use App\Models\Deck;
+use App\Models\DeckCard;
 use App\ViewModels\CardViewModel;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -147,26 +148,47 @@ class DeckService
     private function syncCards(Deck $deck, array $counts, Collection $cards): void
     {
         $config = config("series.{$deck->game}");
+        $now = now();
 
-        $cardIds = $cards->map(function (array $raw, $externalId) use ($deck, $config) {
-            $viewModel = new CardViewModel($raw, $config);
+        // One query for all cards, relying on the unique (game, external_id) index.
+        Card::upsert(
+            $cards->map(function (array $raw, $externalId) use ($deck, $config, $now) {
+                $viewModel = new CardViewModel($raw, $config);
 
-            return Card::updateOrCreate(
-                ['game' => $deck->game, 'external_id' => (string) $externalId],
-                ['name' => $viewModel->name(), 'image_url' => $viewModel->image()],
-            )->id;
-        });
+                return [
+                    'game' => $deck->game,
+                    'external_id' => (string) $externalId,
+                    'name' => $viewModel->name(),
+                    'image_url' => $viewModel->image(),
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+            })->values()->all(),
+            ['game', 'external_id'],
+            ['name', 'image_url', 'updated_at'],
+        );
+
+        $cardIds = Card::where('game', $deck->game)
+            ->whereIn('external_id', $cards->keys()->map(fn ($id) => (string) $id))
+            ->pluck('id', 'external_id');
 
         $deck->deckCards()->delete();
 
+        $rows = [];
+
         foreach ($counts as $zone => $zoneCounts) {
             foreach ($zoneCounts as $externalId => $count) {
-                $deck->deckCards()->create([
+                $rows[] = [
+                    'deck_id' => $deck->id,
                     'card_id' => $cardIds[(string) $externalId],
                     'zone' => $zone,
                     'count' => $count,
-                ]);
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
             }
         }
+
+        DeckCard::insert($rows);
     }
 }
