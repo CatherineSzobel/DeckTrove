@@ -9,6 +9,9 @@ use Illuminate\Support\Facades\Storage;
  */
 class YugiohCardMapper extends CardMapper
 {
+    /** Banlist statuses in YGOPRODeck's `banlist_info`, as copies allowed. */
+    private const BANLIST_LIMITS = ['Forbidden' => 0, 'Limited' => 1, 'Semi-Limited' => 2];
+
     public function image(array $card): string
     {
         return $this->hostedImage($card, 'cards')
@@ -97,5 +100,15 @@ class YugiohCardMapper extends CardMapper
                 'set_name' => $set['set_name'] ?? 'Unknown',
             ])
             ->all();
+    }
+
+    /**
+     * YGOPRODeck lists a card's status per banlist (`ban_tcg`, `ban_ocg`, ...); cards that aren't on it have no entry.
+     */
+    public function copyLimit(array $card, string $format): ?int
+    {
+        $status = data_get($card, "banlist_info.ban_$format");
+
+        return is_string($status) ? (self::BANLIST_LIMITS[$status] ?? null) : null;
     }
 }

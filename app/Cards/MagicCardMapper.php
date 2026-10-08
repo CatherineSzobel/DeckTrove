@@ -9,6 +9,9 @@ namespace App\Cards;
  */
 class MagicCardMapper extends CardMapper
 {
+    /** Scryfall legalities that limit copies; `legal` adds no limit. */
+    private const LEGALITY_LIMITS = ['banned' => 0, 'not_legal' => 0, 'restricted' => 1];
+
     public function image(array $card): string
     {
         return data_get($card, 'image_uris.normal')
@@ -79,6 +82,16 @@ class MagicCardMapper extends CardMapper
             'set_code' => $card['set'] ?? '',
             'set_name' => $card['set_name'] ?? 'Unknown',
         ]];
+    }
+
+    /**
+     * Scryfall gives one legality per format, which already accounts for set rotation (e.g. Standard).
+     */
+    public function copyLimit(array $card, string $format): ?int
+    {
+        $legality = data_get($card, "legalities.$format");
+
+        return is_string($legality) ? (self::LEGALITY_LIMITS[$legality] ?? null) : null;
     }
 
     /**

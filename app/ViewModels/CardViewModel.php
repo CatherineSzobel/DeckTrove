@@ -120,6 +120,27 @@ class CardViewModel
     }
 
     /**
+     * The most copies allowed in a format, or null when the format adds no limit.
+     */
+    public function copyLimit(string $format): ?int
+    {
+        return $this->mapper->copyLimit($this->card, $format);
+    }
+
+    /**
+     * Limits in the series' formats that limit this card, e.g. ['tcg' => 1, 'ocg' => 2].
+     *
+     * @return array<string, int>
+     */
+    public function copyLimits(): array
+    {
+        return collect(array_keys($this->config['deck']['formats'] ?? []))
+            ->mapWithKeys(fn (string $format) => [$format => $this->copyLimit($format)])
+            ->reject(fn (?int $limit) => $limit === null)
+            ->all();
+    }
+
+    /**
      * The attributes the deck builder JS reads from a card element.
      */
     public function deckBuilderData(): array

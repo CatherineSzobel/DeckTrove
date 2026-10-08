@@ -50,4 +50,10 @@ abstract class CardMapper
      * @return list<array{set_code: string, set_name: string}>
      */
     abstract public function printSets(array $card): array;
+
+    /**
+     * The most copies of a card allowed in a format (a key of the series' `deck.formats`): 0 when the card is
+     * banned or not legal there, or null when the format adds no limit beyond the normal deck rules.
+     */
+    abstract public function copyLimit(array $card, string $format): ?int;
 }
