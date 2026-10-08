@@ -54,6 +54,10 @@ Notes for Pokémon:
 - **Mapper fields**: `images.large` / `images.small`, `supertype` + `subtypes` for type/subtype, `hp` and the
   attacks for stats, `rarity`, `set.name`, `tcgplayer.prices`. `fullType()` (type + subtype) is what deck rules
   match against, so make sure it contains words like "Basic Energy".
+- **Format limits**: `copyLimit($card, $format)` returns the most copies allowed in a format (a key of
+  `deck.formats`), `0` for banned or not legal, or `null` when the format adds no limit beyond `max_copies`.
+  pokemontcg.io cards carry `legalities` like `{"standard": "Legal", "expanded": "Banned"}`. The server takes the
+  lower of `max_copies` and this limit; `unlimited_types` (e.g. "Basic Energy") only lifts `max_copies`.
 - **Deck format**: Pokémon TCG Live exports lists like `4 Pikachu SVI 63` under `Pokémon:`, `Trainer:` and
   `Energy:` headings.
 
@@ -89,6 +93,13 @@ Add an entry to `config/series.php` (and remove it from `config/coming_soon.php`
         'max_copies' => 4,
         'extra_types' => [],
         'unlimited_types' => ['Basic Energy'],
+        // Formats a deck can be built for; the mapper's copyLimit() reads each key. No format = Casual.
+        'formats' => [
+            'standard' => ['label' => 'Standard'],
+            'expanded' => ['label' => 'Expanded'],
+        ],
+        // The game's own words for a format limit (copies allowed => label), shown in the deck builder.
+        'limit_labels' => [0 => 'Banned'],
     ],
 
     'pack' => [

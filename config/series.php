@@ -59,6 +59,13 @@ return [
             'extra_types' => ['Fusion', 'Synchro', 'XYZ', 'Link'],
             // Card types that are exempt from the copy limit.
             'unlimited_types' => [],
+            // Formats a deck can be built for. Keys are what the mapper's copyLimit() looks up; no format = Casual.
+            'formats' => [
+                'tcg' => ['label' => 'TCG Advanced'],
+                'ocg' => ['label' => 'OCG'],
+            ],
+            // The game's own words for a format limit (copies allowed => label), shown in the deck builder.
+            'limit_labels' => [0 => 'Forbidden', 1 => 'Limited', 2 => 'Semi-Limited'],
         ],
 
         'pack' => [
@@ -107,6 +114,16 @@ return [
             'max_copies' => 4,
             'extra_types' => [],
             'unlimited_types' => ['Basic Land'],
+            // Commander needs singleton rules and a commander zone, so it isn't listed yet.
+            'formats' => [
+                'standard' => ['label' => 'Standard'],
+                'pioneer' => ['label' => 'Pioneer'],
+                'modern' => ['label' => 'Modern'],
+                'legacy' => ['label' => 'Legacy'],
+                'vintage' => ['label' => 'Vintage'],
+                'pauper' => ['label' => 'Pauper'],
+            ],
+            'limit_labels' => [0 => 'Not legal', 1 => 'Restricted'],
         ],
 
         'pack' => [

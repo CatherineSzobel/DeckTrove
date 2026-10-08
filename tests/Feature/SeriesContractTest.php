@@ -49,6 +49,15 @@ test('every configured series is fully set up', function () {
         }
         $check(is_int($deck['max_copies'] ?? null) && $deck['max_copies'] >= 1, "'deck.max_copies' must be a positive number");
         $check(is_array($deck['extra_types'] ?? null) && is_array($deck['unlimited_types'] ?? null), "'deck.extra_types' and 'deck.unlimited_types' must be lists");
+        $check(is_array($deck['formats'] ?? null) && $deck['formats'] !== [], "'deck.formats' must list at least one format");
+        foreach ($deck['formats'] ?? [] as $key => $format) {
+            $check(is_string($format['label'] ?? null), "format '$key' needs a 'label'");
+        }
+        $check(
+            is_array($deck['limit_labels'] ?? null) && $deck['limit_labels'] !== []
+                && collect($deck['limit_labels'])->every(fn ($label, $limit) => is_int($limit) && is_string($label)),
+            "'deck.limit_labels' must map copy limits to labels"
+        );
     }
 
     foreach (config('coming_soon') as $series => $config) {
