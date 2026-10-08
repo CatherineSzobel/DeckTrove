@@ -107,6 +107,44 @@ class MagicService implements CardProvider
         });
     }
 
+    /**
+     * Looks up cards from a deck list, by name or by set code and collector number.
+     *
+     * @param  list<array{name?: string, set?: string, collector_number?: string}>  $identifiers
+     * @return list<array|null> the matching card for each identifier (same order), or null if not found
+     */
+    public function findByIdentifiers(array $identifiers): array
+    {
+        if (! $identifiers) {
+            return [];
+        }
+
+        $found = collect(array_chunk($identifiers, self::COLLECTION_CHUNK))
+            ->flatMap(function (array $chunk) {
+                $response = $this->request(fn () => $this->scryfall()->post('/cards/collection', ['identifiers' => $chunk]));
+
+                return $this->json($response)['data'] ?? [];
+            });
+
+        return array_map(
+            fn (array $identifier) => $found->first(fn (array $card) => $this->matchesIdentifier($card, $identifier)),
+            $identifiers,
+        );
+    }
+
+    private function matchesIdentifier(array $card, array $identifier): bool
+    {
+        if (isset($identifier['set'], $identifier['collector_number'])) {
+            return strcasecmp($card['set'] ?? '', $identifier['set']) === 0
+                && strcasecmp($card['collector_number'] ?? '', $identifier['collector_number']) === 0;
+        }
+
+        // Deck lists name double-faced cards by their front face ("Delver of Secrets").
+        $names = [$card['name'] ?? '', ...explode(' // ', $card['name'] ?? '')];
+
+        return collect($names)->contains(fn ($name) => strcasecmp($name, $identifier['name'] ?? '') === 0);
+    }
+
     public function related(array $card, int $limit = 6): Collection
     {
         $setCode = $card['set'] ?? null;

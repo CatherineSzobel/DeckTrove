@@ -2,6 +2,8 @@
 
 use App\Cards\MagicCardMapper;
 use App\Cards\YugiohCardMapper;
+use App\Decks\MagicTextFormat;
+use App\Decks\YdkFormat;
 use App\Services\MagicPackService;
 use App\Services\MagicService;
 use App\Services\YugiohPackService;
@@ -12,6 +14,7 @@ use App\Services\YugiohService;
  *
  * - Each top-level key is a series and is used as the {series} route segment.
  * - `provider` fetches raw cards, `mapper` reads them into the fields the app shows.
+ * - `deck_format` imports and exports decks in a format other tools understand.
  * - `deck` holds the deck building rules, which are enforced by the server and passed to the deck builder JS.
  *
  * Only plain values belong here (no closures), so the config can be cached in production.
@@ -22,6 +25,7 @@ return [
         'label' => 'Yu-Gi-Oh!',
         'provider' => YugiohService::class,
         'mapper' => YugiohCardMapper::class,
+        'deck_format' => YdkFormat::class,
         'link_prefix' => '/yugioh',
 
         'rarity_colors' => [
@@ -69,6 +73,7 @@ return [
         'label' => 'Magic: The Gathering',
         'provider' => MagicService::class,
         'mapper' => MagicCardMapper::class,
+        'deck_format' => MagicTextFormat::class,
         'link_prefix' => '/magic',
 
         'rarity_colors' => [

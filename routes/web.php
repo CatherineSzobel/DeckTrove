@@ -3,6 +3,7 @@
 use App\Http\Controllers\CardsController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DeckController;
+use App\Http\Controllers\DeckTransferController;
 use App\Http\Controllers\IndexController;
 use App\Http\Controllers\PacksController;
 use App\Http\Controllers\PasswordResetController;
@@ -42,10 +43,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/decks/{deck}/edit', [DeckController::class, 'edit'])->can('update', 'deck')->name('decks.edit');
     Route::patch('/decks/{deck}', [DeckController::class, 'update'])->can('update', 'deck')->name('decks.update');
     Route::delete('/decks/{deck}', [DeckController::class, 'destroy'])->can('delete', 'deck')->name('decks.destroy');
+
+    // Import from other tools' formats, and copy someone's public deck (visibility checked by DeckPolicy::view)
+    Route::post('/{series}/decks/import', [DeckTransferController::class, 'import'])->middleware('throttle:10,1')->name('decks.import');
+    Route::post('/decks/{deck}/copy', [DeckTransferController::class, 'copy'])->name('decks.copy');
 });
 
 // Decks (visibility is checked by DeckPolicy::view)
 Route::get('/decks/{deck}', [DeckController::class, 'show'])->name('decks.show');
+Route::get('/decks/{deck}/export', [DeckTransferController::class, 'export'])->name('decks.export');
 Route::get('/public-deck', [DeckController::class, 'index'])->name('public-deck');
 
 // Per series

@@ -5,9 +5,11 @@ namespace App\Services;
 use App\Models\Card;
 use App\Models\Deck;
 use App\Models\DeckCard;
+use App\Models\User;
 use App\ViewModels\CardViewModel;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class DeckService
@@ -45,6 +47,42 @@ class DeckService
         });
 
         return $deck;
+    }
+
+    /**
+     * The deck's card counts per zone, in the order they were added: ['main' => ['<external id>' => 2, ...], ...].
+     */
+    public function zoneCounts(Deck $deck): array
+    {
+        $counts = [];
+
+        foreach ($deck->deckCards()->with('card')->orderBy('id')->get() as $deckCard) {
+            $counts[$deckCard->zone][$deckCard->card->external_id] = $deckCard->count;
+        }
+
+        return $counts;
+    }
+
+    /**
+     * A private copy of a deck for another user (or the same one), with the same cards.
+     */
+    public function copy(Deck $original, User $owner): Deck
+    {
+        return DB::transaction(function () use ($original, $owner) {
+            $copy = $owner->decks()->create([
+                'game' => $original->game,
+                'name' => Str::limit('Copy of '.$original->name, 255, ''),
+                'description' => $original->description,
+                'image' => $original->image,
+                'is_public' => false,
+            ]);
+
+            $copy->deckCards()->createMany(
+                $original->deckCards()->get(['card_id', 'zone', 'count'])->toArray()
+            );
+
+            return $copy;
+        });
     }
 
     /**

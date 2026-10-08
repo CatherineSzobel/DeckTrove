@@ -40,6 +40,32 @@
                 </ul>
                 @endif
 
+                @if (! $editing)
+                <details class="mb-4 p-3 bg-white rounded shadow" @if ($errors->has('list') || $errors->has('file')) open @endif>
+                    <summary class="cursor-pointer font-semibold text-gray-900">Import a deck</summary>
+
+                    <form method="POST" action="{{ route('decks.import', $game) }}" enctype="multipart/form-data" class="mt-3 space-y-3">
+                        @csrf
+                        <p class="text-sm text-gray-600">{{ app(config("series.$game.deck_format"))->importHint() }}</p>
+
+                        <div>
+                            <label for="importFile" class="block text-sm font-medium text-gray-700 mb-1">Deck file</label>
+                            <input type="file" name="file" id="importFile" accept=".ydk,.txt,.dek" class="text-sm">
+                        </div>
+
+                        <div>
+                            <label for="importList" class="block text-sm font-medium text-gray-700 mb-1">Or paste a deck list</label>
+                            <textarea name="list" id="importList" rows="5" class="w-full p-2 border rounded font-mono text-sm">{{ old('list') }}</textarea>
+                        </div>
+
+                        <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                            <x-heroicon-o-arrow-up-tray class="h-4 w-4" />
+                            Import
+                        </button>
+                    </form>
+                </details>
+                @endif
+
                 <div class="p-3 bg-white rounded shadow" id="deckCoverContainer">
                     <label for="deckTitleInput" class="sr-only">Deck title</label>
                     <input id="deckTitleInput" class="input w-full" maxlength="255" placeholder="Enter deck title..." value="{{ old('deck_title', $deck?->name) }}">

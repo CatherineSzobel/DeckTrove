@@ -11,11 +11,29 @@
                 @unless ($deck->is_public) · <span class="font-semibold">Private</span> @endunless
             </p>
 
-            @can('update', $deck)
-            <div class="mt-4 flex justify-center gap-3">
+            @php $extension = app(config("series.{$deck->game}.deck_format"))->extension(); @endphp
+            <div class="mt-4 flex flex-wrap justify-center gap-3">
+                @can('update', $deck)
                 <a href="{{ route('decks.edit', $deck) }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm">Edit deck</a>
+                @endcan
+
+                <a href="{{ route('decks.export', $deck) }}" class="inline-flex items-center gap-2 bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-md text-sm">
+                    <x-heroicon-o-arrow-down-tray class="h-4 w-4" />
+                    Export .{{ $extension }}
+                </a>
+
+                @auth
+                @cannot('update', $deck)
+                <form method="POST" action="{{ route('decks.copy', $deck) }}">
+                    @csrf
+                    <button type="submit" class="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold px-4 py-2 rounded-md text-sm">
+                        <x-heroicon-o-document-duplicate class="h-4 w-4" />
+                        Copy to my decks
+                    </button>
+                </form>
+                @endcannot
+                @endauth
             </div>
-            @endcan
         </div>
 
         @foreach ($zones as $zone => $zoneRules)
