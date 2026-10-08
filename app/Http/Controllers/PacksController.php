@@ -28,13 +28,13 @@ class PacksController extends Controller
         return view('packs.packs', compact('packs', 'series', 'currentView', 'search'));
     }
 
-    public function show(string $series, string $setCode)
+    public function show(string $series, string $setCode, ?string $slug = null)
     {
         $config = config("series.$series");
         $provider = $this->packService->for($series);
 
-        $pack = new PackViewModel($provider->find($setCode), $config['pack']);
-        $cards = $provider->cards($setCode)->map(fn ($card) => new CardViewModel((array) $card, $config));
+        $pack = new PackViewModel($provider->find($setCode, $slug), $config['pack']);
+        $cards = $provider->cards($setCode, $slug)->map(fn ($card) => new CardViewModel((array) $card, $config));
         $cardCollection = new CardCollectionViewModel($cards);
 
         return view('packs.pack', compact('pack', 'cards', 'series', 'cardCollection'));

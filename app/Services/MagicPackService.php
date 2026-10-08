@@ -33,14 +33,14 @@ class MagicPackService implements PackProvider
         );
     }
 
-    public function find(string $code): array
+    public function find(string $code, ?string $slug = null): array
     {
         $set = $this->sets()->firstWhere('code', strtolower($code));
 
         return $set ?? abort(404, 'Set not found');
     }
 
-    public function cards(string $code): Collection
+    public function cards(string $code, ?string $slug = null): Collection
     {
         return collect($this->magic->searchAll('set:'.strtolower($code).' game:paper'));
     }

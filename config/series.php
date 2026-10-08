@@ -58,6 +58,7 @@ return [
             'link_prefix' => '/yugioh',
             'code' => 'set_code',
             'name' => 'set_name',
+            'slug' => 'slug',
             'release_date' => 'tcg_date',
             'card_count' => 'num_of_cards',
             'image' => 'set_image',

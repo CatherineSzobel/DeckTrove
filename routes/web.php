@@ -46,7 +46,10 @@ Route::prefix('{series}')->group(function () {
     Route::get('/card/{id}', [CardsController::class, 'show'])->where('id', '[0-9a-fA-F-]+')->name('cards.show');
 
     Route::get('/packs', [PacksController::class, 'index'])->name('packs.index');
-    Route::get('/pack/{setCode}', [PacksController::class, 'show'])->where('setCode', '[A-Za-z0-9-]+')->name('packs.show');
+    // The optional slug picks between Yu-Gi-Oh! products that share a set code.
+    Route::get('/pack/{setCode}/{slug?}', [PacksController::class, 'show'])
+        ->where(['setCode' => '[A-Za-z0-9-]+', 'slug' => '[a-z0-9-]+'])
+        ->name('packs.show');
 
     // Guests can browse the builder; saving requires login.
     Route::get('/deck-builder', [DeckController::class, 'builder'])->name('decks.builder');

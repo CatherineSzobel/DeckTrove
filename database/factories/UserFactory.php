@@ -24,7 +24,8 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'username' => fake()->unique()->userName(),
+            // Usernames only allow letters, numbers, dashes and underscores; Faker's can contain dots.
+            'username' => str_replace('.', '_', fake()->unique()->userName()),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),

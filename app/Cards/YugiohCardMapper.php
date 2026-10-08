@@ -71,14 +71,17 @@ class YugiohCardMapper extends CardMapper
         ];
     }
 
+    /**
+     * On a pack page the card carries that pack's `printing`; elsewhere its first printing is shown.
+     */
     public function setName(array $card): ?string
     {
-        return data_get($card, 'card_sets.0.set_name');
+        return data_get($card, 'printing.set_name') ?? data_get($card, 'card_sets.0.set_name');
     }
 
     public function rarity(array $card): ?string
     {
-        return data_get($card, 'card_sets.0.set_rarity');
+        return data_get($card, 'printing.set_rarity') ?? data_get($card, 'card_sets.0.set_rarity');
     }
 
     public function price(array $card): ?string

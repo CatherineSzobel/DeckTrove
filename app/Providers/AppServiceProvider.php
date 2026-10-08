@@ -3,7 +3,6 @@
 namespace App\Providers;
 
 use App\Services\MagicService;
-use App\Services\YugiohPackService;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -19,11 +18,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->singleton(YugiohPackService::class, fn () => new YugiohPackService(
-            public_path('json/yugioh-packs.json'),
-            public_path('json/packs'),
-        ));
-
         $this->app->singleton(MagicService::class);
     }
 

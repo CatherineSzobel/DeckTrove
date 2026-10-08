@@ -84,7 +84,7 @@ php artisan key:generate
 php artisan migrate
 ```
 
-7. **Import the Yu-Gi-Oh! card data** (from the bundled JSON dump, or `--fetch` to download the latest from YGOPRODeck):
+7. **Import the Yu-Gi-Oh! cards and sets** (from the dumps in `database/data`, or `--fetch` to download the latest from YGOPRODeck):
 
 ```bash
 php artisan yugioh:import
