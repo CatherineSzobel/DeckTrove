@@ -67,6 +67,33 @@ class DeckService
     }
 
     /**
+     * Cards that break the deck's format, e.g. after a banlist change since the deck was saved. Casual decks
+     * have none. Cards that are no longer in the card data are skipped.
+     *
+     * @return array{messages: list<string>, card_ids: list<string>}
+     */
+    public function formatErrors(Deck $deck): array
+    {
+        if (! $deck->format) {
+            return ['messages' => [], 'card_ids' => []];
+        }
+
+        $config = config("series.{$deck->game}");
+        $copies = $this->totalCopies($this->zoneCounts($deck));
+        $viewModels = $this->cards->for($deck->game)
+            ->findMany(array_map('strval', array_keys($copies)))
+            ->map(fn (array $raw) => new CardViewModel($raw, $config));
+
+        $errors = $this->copyErrors($deck->game, $deck->format, $copies, $viewModels);
+
+        return [
+            'messages' => array_values($errors),
+            // Numeric ids come back as int array keys.
+            'card_ids' => array_map('strval', array_keys($errors)),
+        ];
+    }
+
+    /**
      * A private copy of a deck for another user (or the same one), with the same cards.
      */
     public function copy(Deck $original, User $owner): Deck

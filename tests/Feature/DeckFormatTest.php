@@ -1,8 +1,10 @@
 <?php
 
+use App\Models\Card;
 use App\Models\Deck;
 use App\Models\User;
 use App\Models\YugiohCard;
+use App\Services\DeckService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 
@@ -180,4 +182,52 @@ test('magic restricted and not legal cards are enforced', function () {
         ->assertSessionHasErrors(['cards' => 'Lightning Bolt is not allowed in Standard.']);
 
     $this->actingAs($user)->post(route('decks.store', 'magic'), ['cards' => $bolts])->assertSessionHasNoErrors();
+});
+
+// --- Saved decks that no longer fit their format -----------------------------------------------
+
+test('a saved deck reports cards that a banlist change made illegal', function () {
+    $user = User::factory()->create();
+    $this->actingAs($user)->post(route('decks.store', 'yugioh'), [
+        'format' => 'tcg',
+        'cards' => formatPayload(['main' => ['10000003', '10000003', '10000002']]),
+    ])->assertSessionHasNoErrors();
+    $deck = $user->decks()->sole();
+
+    expect(app(DeckService::class)->formatErrors($deck))->toBe(['messages' => [], 'card_ids' => []]);
+
+    // The next banlist limits Dark Magician.
+    $card = YugiohCard::find(10000003);
+    $card->update(['data' => [...$card->data, 'banlist_info' => ['ban_tcg' => 'Limited']]]);
+
+    expect(app(DeckService::class)->formatErrors($deck))->toBe([
+        'messages' => ['You can only have 1 copy of Dark Magician in TCG Advanced.'],
+        'card_ids' => ['10000003'],
+    ]);
+});
+
+test('casual decks have no format errors', function () {
+    $user = User::factory()->create();
+    $this->actingAs($user)->post(route('decks.store', 'yugioh'), ['cards' => formatPayload(['main' => ['10000001']])])
+        ->assertSessionHasNoErrors();
+
+    expect(app(DeckService::class)->formatErrors($user->decks()->sole()))->toBe(['messages' => [], 'card_ids' => []]);
+});
+
+test('cards that are no longer in the card data are skipped', function () {
+    $deck = Deck::factory()->create(['game' => 'yugioh', 'format' => 'tcg']);
+    $gone = Card::create(['game' => 'yugioh', 'external_id' => '99999999', 'name' => 'Removed Card']);
+    $deck->deckCards()->create(['card_id' => $gone->id, 'zone' => 'main', 'count' => 3]);
+
+    expect(app(DeckService::class)->formatErrors($deck))->toBe(['messages' => [], 'card_ids' => []]);
+});
+
+test('a format that was removed from the config is named by its key', function () {
+    $deck = Deck::factory()->create(['game' => 'yugioh', 'format' => 'tcg']);
+    $card = Card::create(['game' => 'yugioh', 'external_id' => '10000001', 'name' => 'Pot of Greed']);
+    $deck->deckCards()->create(['card_id' => $card->id, 'zone' => 'main', 'count' => 1]);
+
+    config(['series.yugioh.deck.formats' => ['ocg' => ['label' => 'OCG']]]);
+
+    expect(app(DeckService::class)->formatErrors($deck)['messages'])->toBe(['Pot of Greed is not allowed in tcg.']);
 });
