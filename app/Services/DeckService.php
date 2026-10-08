@@ -31,7 +31,7 @@ class DeckService
         $format = array_key_exists('format', $attributes) ? ($attributes['format'] ?: null) : $deck->format;
         $cards = $this->resolveCards($deck->game, $counts);
 
-        $this->validateRules($deck->game, $counts, $cards);
+        $this->validateRules($deck->game, $format, $counts, $cards);
 
         $mainCount = array_sum($counts['main'] ?? []);
 
@@ -131,7 +131,7 @@ class DeckService
         return $cards;
     }
 
-    private function validateRules(string $game, array $counts, Collection $cards): void
+    private function validateRules(string $game, ?string $format, array $counts, Collection $cards): void
     {
         $config = config("series.$game");
         $rules = $config['deck'];
@@ -141,8 +141,6 @@ class DeckService
         $viewModels = $cards->map(fn (array $raw) => new CardViewModel($raw, $config));
         $typeOf = fn (string $id) => $viewModels[$id]->fullType();
         $nameOf = fn (string $id) => $viewModels[$id]->name();
-        $matches = fn (string $type, array $needles) => collect($needles)
-            ->contains(fn ($needle) => stripos($type, $needle) !== false);
 
         foreach ($counts as $zone => $zoneCounts) {
             $zoneRules = $rules['zones'][$zone];
@@ -157,7 +155,7 @@ class DeckService
             }
 
             foreach (array_keys($zoneCounts) as $id) {
-                $isExtra = $matches($typeOf((string) $id), $rules['extra_types']);
+                $isExtra = $this->matchesAny($typeOf((string) $id), $rules['extra_types']);
 
                 // The side deck may hold anything; extra deck monsters can't go in the main deck.
                 if ($zone === 'extra' && ! $isExtra) {
@@ -168,23 +166,75 @@ class DeckService
             }
         }
 
-        $copies = collect($counts)->reduce(function (array $carry, array $zoneCounts) {
-            foreach ($zoneCounts as $id => $count) {
-                $carry[$id] = ($carry[$id] ?? 0) + $count;
-            }
-
-            return $carry;
-        }, []);
-
-        foreach ($copies as $id => $count) {
-            if ($count > $rules['max_copies'] && ! $matches($typeOf((string) $id), $rules['unlimited_types'])) {
-                $errors[] = "You can only have {$rules['max_copies']} copies of {$nameOf((string) $id)}.";
-            }
-        }
+        $errors = [...$errors, ...array_values($this->copyErrors($game, $format, $this->totalCopies($counts), $viewModels))];
 
         if ($errors) {
             throw ValidationException::withMessages(['cards' => $errors]);
         }
+    }
+
+    /**
+     * Cards with more copies than allowed: the lower of the normal limit (`max_copies`, lifted for
+     * `unlimited_types`) and, when the deck has a format, that format's limit. `unlimited_types` never lifts
+     * a format limit, so a banned Basic Land is still banned.
+     *
+     * @param  array<string, int>  $copies  copies per card across all zones, keyed by external id
+     * @param  Collection<string, CardViewModel>  $viewModels  keyed by external id; cards missing here are skipped
+     * @return array<string, string> one message per card that breaks the rules, keyed by external id
+     */
+    public function copyErrors(string $game, ?string $format, array $copies, Collection $viewModels): array
+    {
+        $rules = config("series.$game.deck");
+        // Falls back to the key if the format has since been removed from the config.
+        $formatLabel = $format ? ($rules['formats'][$format]['label'] ?? $format) : null;
+        $errors = [];
+
+        foreach ($copies as $id => $count) {
+            $card = $viewModels->get((string) $id);
+
+            if (! $card) {
+                continue;
+            }
+
+            $normal = $this->matchesAny($card->fullType(), $rules['unlimited_types']) ? null : $rules['max_copies'];
+            $limit = $format ? $card->copyLimit($format) : null;
+
+            if ($limit !== null && $count > $limit && ($normal === null || $limit < $normal)) {
+                $errors[(string) $id] = $limit === 0
+                    ? "{$card->name()} is not allowed in $formatLabel."
+                    : "You can only have $limit ".Str::plural('copy', $limit)." of {$card->name()} in $formatLabel.";
+            } elseif ($normal !== null && $count > $normal) {
+                $errors[(string) $id] = "You can only have $normal copies of {$card->name()}.";
+            }
+        }
+
+        return $errors;
+    }
+
+    /**
+     * Copies per card across every zone: ['<external id>' => 3, ...].
+     *
+     * @return array<string, int>
+     */
+    private function totalCopies(array $counts): array
+    {
+        $copies = [];
+
+        foreach ($counts as $zoneCounts) {
+            foreach ($zoneCounts as $id => $count) {
+                $copies[$id] = ($copies[$id] ?? 0) + $count;
+            }
+        }
+
+        return $copies;
+    }
+
+    /**
+     * Does the card type contain any of the needles, ignoring case? E.g. "XYZ Monster" matches "XYZ".
+     */
+    private function matchesAny(string $type, array $needles): bool
+    {
+        return collect($needles)->contains(fn ($needle) => stripos($type, $needle) !== false);
     }
 
     private function syncCards(Deck $deck, array $counts, Collection $cards): void
