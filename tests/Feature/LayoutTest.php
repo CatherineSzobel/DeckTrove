@@ -4,6 +4,8 @@ use App\Models\Deck;
 use App\Models\User;
 use App\Models\YugiohCard;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Route;
 
 uses(RefreshDatabase::class);
 
@@ -96,4 +98,36 @@ test('a skip link jumps to the main content', function () {
     $this->get(route('public-deck'))
         ->assertSee('href="#content"', false)
         ->assertSee('<main id="content"', false);
+});
+
+// --- Game switch -------------------------------------------------------------------------------
+
+test('game pages offer the same section in the other game', function (string $route, array $params, string $target) {
+    $html = $this->get(route($route, ['yugioh', ...$params]))->assertOk()->getContent();
+
+    expect($html)
+        ->toContain('data-game-switch')
+        ->toContain('href="'.route($target, 'magic').'" data-game="magic"')
+        ->toMatch('/data-game="yugioh"\s+aria-current="page"/');
+})->with([
+    'cards' => ['cards.index', [], 'cards.index'],
+    'a card' => ['cards.show', ['46986414'], 'cards.index'],
+    'packs' => ['packs.index', [], 'packs.index'],
+    'deck builder' => ['decks.builder', [], 'decks.builder'],
+]);
+
+test('pages without a game have no game switch', function () {
+    $this->get(route('public-deck'))->assertOk()->assertDontSee('data-game-switch', false);
+
+    $deck = Deck::factory()->create(['game' => 'yugioh']);
+    $this->actingAs($deck->user)->get(route('decks'))->assertOk()->assertDontSee('data-game-switch', false);
+    $this->actingAs($deck->user)->get(route('decks.edit', $deck))->assertOk()->assertDontSee('data-game-switch', false);
+});
+
+test('a page can place the game switch itself', function () {
+    Route::middleware('web')->get('/{series}/layout-default', fn () => Blade::render('<x-layout>Page body</x-layout>'));
+    Route::middleware('web')->get('/{series}/layout-without-switch', fn () => Blade::render('<x-layout :game-switch="false">Page body</x-layout>'));
+
+    $this->get('/yugioh/layout-default')->assertOk()->assertSee('data-game-switch', false);
+    $this->get('/yugioh/layout-without-switch')->assertOk()->assertSee('Page body')->assertDontSee('data-game-switch', false);
 });
