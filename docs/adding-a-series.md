@@ -122,6 +122,6 @@ checks this.
 
 - Add the logo to `resources/img` (your own artwork, not the official logo; fan content policies usually
   forbid official logos).
-- Add a trademark/fan-content line for the series to `resources/views/components/footer.blade.php`.
+- Add a trademark/fan-content line for the series to `resources/views/components/site-footer.blade.php`.
 - Add tests for the new provider, mapper and deck format. `tests/Feature/BrowsingTest.php`,
   `YugiohSetsTest.php` and `DeckTransferTest.php` show the patterns; fake external APIs with `Http::fake()`.

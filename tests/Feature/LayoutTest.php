@@ -5,6 +5,7 @@ use App\Models\User;
 use App\Models\YugiohCard;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 
 uses(RefreshDatabase::class);
@@ -155,4 +156,56 @@ test('flash messages are escaped', function () {
     $this->withSession(['success' => '<b>bold</b>'])->get(route('public-deck'))->assertOk()
         ->assertSee('&lt;b&gt;bold&lt;/b&gt;', false)
         ->assertDontSee('<b>bold</b>', false);
+});
+
+// --- Polish from the foundation review ---------------------------------------------------------
+
+/** The part of the page inside the main navigation landmark. */
+function mainNav(string $html): string
+{
+    $start = strpos($html, '<nav aria-label="Main"');
+
+    return substr($html, $start, strpos($html, '</nav>', $start) - $start);
+}
+
+test('the mobile menu is part of the main navigation and has the account links', function () {
+    expect(mainNav($this->get(route('public-deck'))->getContent()))
+        ->toContain('id="mobileMenu"')
+        ->toContain('href="'.route('register').'"');
+
+    expect(mainNav($this->actingAs(User::factory()->create())->get(route('decks'))->getContent()))
+        ->toContain('id="mobileMenu"')
+        ->toContain('href="'.route('decks').'"');
+});
+
+test('menus close with Escape and give focus back', function () {
+    $html = $this->actingAs(User::factory()->create())->get(route('decks'))->getContent();
+
+    expect($html)
+        ->toContain('x-ref="button"')
+        ->toContain('$refs.button.focus()')
+        ->toContain('@keydown.escape.window="menuOpen = false"');
+});
+
+test('the theme toggle is labelled by the state it switches', function () {
+    $this->get(route('public-deck'))->assertSee('aria-label="Dark mode"', false);
+});
+
+test('header links have a full-size touch target', function () {
+    expect($this->get(route('public-deck'))->getContent())->toMatch('/data-nav="cards"[^>]*min-h-11/');
+});
+
+test('the footer stays at the bottom of short pages', function () {
+    $this->get(route('login'))->assertSee('<main id="content" class="flex-1', false);
+});
+
+test('logged in users get a link to their decks', function () {
+    $this->actingAs(User::factory()->create())->get(route('decks'))
+        ->assertSee('href="'.route('decks').'"', false);
+});
+
+test('the dashboard has no game switch', function () {
+    Http::fake(['api.scryfall.com/cards/random' => Http::response(['id' => '00000000-0000-0000-0000-000000000001', 'name' => 'Random Magic Card'])]);
+
+    $this->actingAs(User::factory()->create())->get(route('dashboard'))->assertOk()->assertDontSee('data-game-switch', false);
 });

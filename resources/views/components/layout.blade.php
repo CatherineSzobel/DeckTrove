@@ -38,7 +38,7 @@
     <link rel="icon" href="{{ Vite::asset('resources/img/decktrove-logo.png') }}" />
 </head>
 
-<body class="min-h-full bg-canvas font-sans text-ink antialiased {{ $class }}">
+<body class="flex min-h-full flex-col bg-canvas font-sans text-ink antialiased {{ $class }}">
     <a href="#content"
         class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-xl focus:bg-accent focus:px-4 focus:py-3 focus:font-bold focus:text-white">Skip to content</a>
 
@@ -48,7 +48,7 @@
     <x-theme-toggle class="fixed right-4 top-4 z-50 bg-surface shadow-lg" />
     @endunless
 
-    <main id="content" class="{{ $class }}">
+    <main id="content" class="flex-1 {{ $class }}">
         <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
             @if ($showGameSwitch)
             <div class="mb-6 flex justify-end">
