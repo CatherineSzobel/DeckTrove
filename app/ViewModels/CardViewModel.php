@@ -109,9 +109,19 @@ class CardViewModel
         return $this->config['rarity_colors'][strtolower($this->rarity())] ?? 'text-gray-500';
     }
 
-    public function price(): string
+    public function priceValue(): ?float
     {
-        return $this->mapper->price($this->card) ?: 'N/A';
+        return $this->mapper->priceValue($this->card);
+    }
+
+    /**
+     * The price with the currency symbol, e.g. "€0.10", or "N/A".
+     */
+    public function formattedPrice(): string
+    {
+        $value = $this->priceValue();
+
+        return $value === null ? 'N/A' : config('app.currency.symbol').number_format($value, 2);
     }
 
     public function printSets(): array

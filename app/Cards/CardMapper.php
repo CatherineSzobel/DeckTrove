@@ -47,6 +47,16 @@ abstract class CardMapper
     abstract public function price(array $card): ?string;
 
     /**
+     * The price as a number in the app's currency (`config('app.currency')`), or null when the card has none.
+     */
+    public function priceValue(array $card): ?float
+    {
+        $price = $this->price($card);
+
+        return is_numeric($price) ? (float) $price : null;
+    }
+
+    /**
      * @return list<array{set_code: string, set_name: string}>
      */
     abstract public function printSets(array $card): array;

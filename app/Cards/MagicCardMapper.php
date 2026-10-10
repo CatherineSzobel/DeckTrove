@@ -71,9 +71,12 @@ class MagicCardMapper extends CardMapper
         return $card['rarity'] ?? null;
     }
 
+    /**
+     * Scryfall's Cardmarket price in euros, the currency the whole app uses.
+     */
     public function price(array $card): ?string
     {
-        return data_get($card, 'prices.usd');
+        return data_get($card, 'prices.eur');
     }
 
     public function printSets(array $card): array

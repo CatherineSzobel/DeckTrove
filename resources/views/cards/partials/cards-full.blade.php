@@ -27,7 +27,7 @@
                 <span class="{{ $card->rarityColor() }}">{{ $card->rarityLabel() }}</span>
             </div>
 
-            <div class="mt-2 font-semibold text-green-600 text-right">${{ $card->price() }}</div>
+            <div class="mt-2 font-semibold text-green-600 text-right">{{ $card->formattedPrice() }}</div>
         </div>
     </div>
     @endforeach

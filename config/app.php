@@ -123,4 +123,15 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Currency
+    |--------------------------------------------------------------------------
+    |
+    | The currency of card prices and deck stats. Every series' mapper reads Cardmarket prices, in euros.
+    |
+    */
+
+    'currency' => ['code' => 'EUR', 'symbol' => '€'],
+
 ];

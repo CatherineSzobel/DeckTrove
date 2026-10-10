@@ -25,7 +25,7 @@
         </div>
 
         <div class="flex flex-wrap gap-3 mb-4">
-            <div class="bg-slate-700 text-slate-200 px-3 py-1 rounded">Price: {{ $card->price() }}</div>
+            <div class="bg-slate-700 text-slate-200 px-3 py-1 rounded">Price: {{ $card->formattedPrice() }}</div>
 
             @if ($card->hasStats())
             <div class="bg-slate-700 text-slate-200 px-3 py-1 rounded">{{ $card->statLine() }}</div>

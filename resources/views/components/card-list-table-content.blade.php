@@ -8,5 +8,5 @@
     <td class="px-4 py-2 text-sm text-gray-800">{{ trim($card->type().' '.$card->subtype()) ?: '-' }}</td>
     <td class="px-4 py-2 text-sm {{ $card->rarityColor() }}">{{ $card->rarityLabel() }}</td>
     <td class="px-4 py-2 text-sm text-gray-800">{{ $card->setName() }}</td>
-    <td class="px-4 py-2 text-sm text-gray-800">${{ $card->price() }}</td>
+    <td class="px-4 py-2 text-sm text-gray-800">{{ $card->formattedPrice() }}</td>
 </tr>
