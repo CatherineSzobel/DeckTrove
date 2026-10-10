@@ -131,3 +131,28 @@ test('a page can place the game switch itself', function () {
     $this->get('/yugioh/layout-default')->assertOk()->assertSee('data-game-switch', false);
     $this->get('/yugioh/layout-without-switch')->assertOk()->assertSee('Page body')->assertDontSee('data-game-switch', false);
 });
+
+// --- Footer and flash messages -----------------------------------------------------------------
+
+test('the footer credits the data and links to the source', function () {
+    $this->get(route('public-deck'))->assertOk()
+        ->assertSee('DeckTrove is a showcase project built with Laravel, Tailwind CSS, Alpine.js and MySQL.')
+        ->assertSee('href="https://github.com/CatherineSzobel/DeckTrove"', false)
+        ->assertSee('Source on GitHub')
+        ->assertSee('unofficial Fan Content permitted under the Fan Content Policy')
+        ->assertSee('not affiliated with or endorsed by Konami')
+        ->assertDontSee('Project Overview')
+        ->assertDontSee('This is a showcase project.');
+});
+
+test('flash messages are shown as notices', function (string $key) {
+    $this->withSession([$key => 'Deck saved successfully!'])->get(route('public-deck'))->assertOk()
+        ->assertSee('data-flash="'.$key.'"', false)
+        ->assertSee('Deck saved successfully!');
+})->with(['success', 'warning', 'error']);
+
+test('flash messages are escaped', function () {
+    $this->withSession(['success' => '<b>bold</b>'])->get(route('public-deck'))->assertOk()
+        ->assertSee('&lt;b&gt;bold&lt;/b&gt;', false)
+        ->assertDontSee('<b>bold</b>', false);
+});

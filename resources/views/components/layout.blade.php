@@ -61,7 +61,7 @@
     </main>
 
     @unless($hideNav)
-    <x-footer />
+    <x-site-footer />
     @endunless
 </body>
 
