@@ -68,6 +68,11 @@
     }
 }
 
+/* Alpine shows these once it has started (menus stay closed while the page loads). */
+[x-cloak] {
+    display: none !important;
+}
+
 /* Pieces that repeat on nearly every screen of the redesign. Page reworks add more as they need them. */
 @layer components {
     .btn-primary {
