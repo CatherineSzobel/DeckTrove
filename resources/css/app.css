@@ -1,5 +1,12 @@
 @import 'tailwindcss';
 
+/* Self-hosted fonts, bundled by Vite (no requests to Google). */
+@import '@fontsource-variable/dm-sans';
+@import '@fontsource/barlow-condensed/600.css';
+@import '@fontsource/barlow-condensed/700.css';
+@import '@fontsource/barlow-condensed/800.css';
+@import '@fontsource-variable/jetbrains-mono';
+
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
@@ -11,9 +18,76 @@
  */
 @custom-variant dark (&:where(.dark-variant-disabled, .dark-variant-disabled *));
 
+/*
+ * Design tokens from the redesign (Claude Design canvas "DeckTrove Welcome Page", direction A).
+ * Light values here; `.dark` (the whole page) and `.dark-scope` (one element, e.g. the header) switch them below.
+ * Tailwind's gray scale is warmed to the same palette so pages that haven't been reworked yet blend in.
+ */
+@theme {
+    --font-sans: 'DM Sans Variable', ui-sans-serif, system-ui, sans-serif;
+    --font-display: 'Barlow Condensed', ui-sans-serif, system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
+
+    --color-canvas: #F6F3EE;
+    --color-surface: #FFFFFF;
+    --color-surface-2: #EEEAE3;
+    --color-line: #E2DDD4;
+    --color-line-strong: #C9C3B8;
+    --color-ink: #17181C;
+    --color-body: #4B4D55;
+    --color-muted: #6A655E;
+    --color-accent: #C8431A;
+    --color-accent-ink: #B23A12;
+    --color-warn-bg: #FBE7DF;
+    --color-warn-line: #F2C2AE;
+    --color-ok: #1D7A4C;
+    --color-ok-bg: #E2F3E9;
+    --color-ok-line: #B5DFC6;
+    --color-danger: #A82B22;
+    --color-danger-bg: #FDECEC;
+    --color-danger-line: #F3B7B7;
+
+    --color-gray-50: #FBFAF7;
+    --color-gray-100: #F6F3EE;
+    --color-gray-200: #E2DDD4;
+    --color-gray-300: #C9C3B8;
+    --color-gray-400: #A9A29A;
+    --color-gray-500: #857E76;
+    --color-gray-600: #6A655E;
+    --color-gray-700: #4A443F;
+    --color-gray-800: #2A2724;
+    --color-gray-900: #17181C;
+    --color-gray-950: #131211;
+}
+
+/* The orange focus outline used by every control in the new design. */
+@utility focus-ring {
+    &:focus-visible {
+        outline: 2px solid var(--color-accent-ink);
+        outline-offset: 2px;
+    }
+}
+
+/* Pieces that repeat on nearly every screen of the redesign. Page reworks add more as they need them. */
 @layer components {
+    .btn-primary {
+        @apply focus-ring inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-accent px-6 font-bold text-white transition hover:brightness-110;
+    }
+
+    .btn-secondary {
+        @apply focus-ring inline-flex h-12 items-center justify-center gap-2 rounded-xl border-[1.5px] border-line-strong bg-transparent px-5 font-bold text-ink transition hover:bg-surface-2;
+    }
+
+    .eyebrow {
+        @apply font-mono text-xs uppercase tracking-[0.08em] text-accent-ink;
+    }
+
+    .heading-display {
+        @apply font-display font-extrabold uppercase leading-[0.95];
+    }
+
     .input {
-        @apply rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500;
+        @apply focus-ring min-h-12 rounded-xl border-[1.5px] border-line-strong bg-canvas px-3.5 py-2.5 text-ink placeholder:text-muted;
     }
 }
 
@@ -28,23 +102,46 @@
 
 /*
  * Dark mode: toggled by the `dark` class on <html> (see resources/js/layout.js).
- * Light grays become dark and vice versa; white surfaces become dark cards.
- * Parts that are dark in both modes (navigation, tooltips, dashboard) use `slate`, which is not flipped.
+ * Tokens switch to their dark values; on old pages light grays become dark and vice versa, and white surfaces become dark cards.
+ * Parts that are dark in both modes use `.dark-scope` (the header) or `slate` (tooltips, dashboard), which is not flipped.
  */
-.dark {
+.dark,
+.dark-scope {
     color-scheme: dark;
 
-    --color-gray-50: oklch(21% 0.034 264.665);
-    --color-gray-100: oklch(13% 0.028 261.692);
-    --color-gray-200: oklch(27.8% 0.033 256.848);
-    --color-gray-300: oklch(37.3% 0.034 259.733);
-    --color-gray-400: oklch(44.6% 0.03 256.802);
-    --color-gray-500: oklch(55.1% 0.027 264.364);
-    --color-gray-600: oklch(70.7% 0.022 261.325);
-    --color-gray-700: oklch(87.2% 0.01 258.338);
-    --color-gray-800: oklch(92.8% 0.006 264.531);
-    --color-gray-900: oklch(96.7% 0.003 264.542);
-    --color-gray-950: oklch(98.5% 0.002 247.839);
+    --color-canvas: #131211;
+    --color-surface: #1C1A18;
+    --color-surface-2: #2A2724;
+    --color-line: #2E2A27;
+    --color-line-strong: #4A443F;
+    --color-ink: #F3EEE7;
+    --color-body: #CFC8BF;
+    --color-muted: #A9A29A;
+    --color-accent: #C8431A;
+    --color-accent-ink: #F0703F;
+    --color-warn-bg: rgba(240, 112, 63, 0.12);
+    --color-warn-line: rgba(240, 112, 63, 0.35);
+    --color-ok: #5BC98C;
+    --color-ok-bg: rgba(91, 201, 140, 0.12);
+    --color-ok-line: rgba(91, 201, 140, 0.35);
+    --color-danger: #F08A83;
+    --color-danger-bg: rgba(229, 98, 90, 0.12);
+    --color-danger-line: rgba(229, 98, 90, 0.40);
+}
+
+.dark {
+    /* Old pages: light grays become dark and vice versa. */
+    --color-gray-50: #1C1A18;
+    --color-gray-100: #131211;
+    --color-gray-200: #2E2A27;
+    --color-gray-300: #4A443F;
+    --color-gray-400: #5A534D;
+    --color-gray-500: #857E76;
+    --color-gray-600: #A9A29A;
+    --color-gray-700: #CFC8BF;
+    --color-gray-800: #E4DED6;
+    --color-gray-900: #F3EEE7;
+    --color-gray-950: #FAF7F2;
 
     /* `white` stays white for text on colored buttons, so white backgrounds are remapped here. */
     .bg-white,

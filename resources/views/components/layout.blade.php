@@ -12,7 +12,7 @@
 @endphp
 
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-gray-100">
+<html lang="en" class="h-full">
 
 <head>
     <meta charset="UTF-8">
@@ -36,7 +36,7 @@
     <link rel="icon" href="{{ Vite::asset('resources/img/decktrove-logo.png') }}" />
 </head>
 
-<body class="h-full text-gray-900 {{ $class }}">
+<body class="min-h-full bg-canvas font-sans text-ink antialiased {{ $class }}">
 
     @unless($hideNav)
     <header>

@@ -15,5 +15,10 @@
     },
     "overrides": {
         "shell-quote": "^1.11.0"
+    },
+    "dependencies": {
+        "@fontsource-variable/dm-sans": "^5.3.0",
+        "@fontsource-variable/jetbrains-mono": "^5.3.0",
+        "@fontsource/barlow-condensed": "^5.3.0"
     }
 }
