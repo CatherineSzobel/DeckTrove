@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Decks\DeckStats;
 use App\Http\Requests\SaveDeckRequest;
 use App\Models\Deck;
 use App\Services\CardService;
@@ -46,15 +47,17 @@ class DeckController extends Controller
         return view('decks.mydecks', compact('decks'));
     }
 
-    public function show(Deck $deck)
+    public function show(Deck $deck, DeckStats $deckStats)
     {
         Gate::authorize('view', $deck);
 
         $deck->load('user');
         $sections = $this->deckService->buildSections($deck);
         $zones = config("series.{$deck->game}.deck.zones");
+        // Rendered by the deck page redesign on frontend-rework; the current view doesn't use it yet.
+        $stats = $deckStats->fromSections($sections, config("series.{$deck->game}"));
 
-        return view('decks.deck', compact('deck', 'sections', 'zones'));
+        return view('decks.deck', compact('deck', 'sections', 'zones', 'stats'));
     }
 
     /**
