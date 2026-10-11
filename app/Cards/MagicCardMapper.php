@@ -2,6 +2,8 @@
 
 namespace App\Cards;
 
+use Illuminate\Support\Str;
+
 /**
  * Magic: The Gathering cards in the Scryfall format.
  *
@@ -11,6 +13,14 @@ class MagicCardMapper extends CardMapper
 {
     /** Scryfall legalities that limit copies; `legal` adds no limit. */
     private const LEGALITY_LIMITS = ['banned' => 0, 'not_legal' => 0, 'restricted' => 1];
+
+    /**
+     * Card types in the order that picks a non-land card's one type for deck stats, so an Artifact Creature is a
+     * Creature. Lands are checked first (see statFacets()).
+     */
+    private const STAT_TYPES = ['Creature', 'Planeswalker', 'Battle', 'Instant', 'Sorcery', 'Artifact', 'Enchantment'];
+
+    private const COLOR_NAMES = ['W' => 'White', 'U' => 'Blue', 'B' => 'Black', 'R' => 'Red', 'G' => 'Green'];
 
     public function image(array $card): string
     {
@@ -95,6 +105,42 @@ class MagicCardMapper extends CardMapper
         $legality = data_get($card, "legalities.$format");
 
         return is_string($legality) ? (self::LEGALITY_LIMITS[$legality] ?? null) : null;
+    }
+
+    /**
+     * One type per card (from the front face), the mana value with 7+ grouped, and the color. Lands only get a
+     * type, so they stay out of the mana curve and the color chart.
+     */
+    public function statFacets(array $card): array
+    {
+        $typeLine = Str::before($card['type_line'] ?? data_get($card, 'card_faces.0.type_line') ?? '', ' // ');
+
+        if ($typeLine === '') {
+            return [];
+        }
+
+        // Only the types before the dash count; subtypes (e.g. "Elf Druid") never decide the type.
+        $types = Str::before($typeLine, ' — ');
+
+        // Any land (also Artifact Land or Dryad Arbor's Land Creature) is a Land, so it stays off the curve and colors.
+        if (str_contains($types, 'Land')) {
+            return ['type' => 'Land'];
+        }
+
+        $type = collect(self::STAT_TYPES)->first(fn (string $candidate) => str_contains($types, $candidate));
+
+        $manaValue = isset($card['cmc']) ? (int) $card['cmc'] : null;
+        $colors = $card['colors'] ?? collect($card['card_faces'] ?? [])->pluck('colors')->flatten()->unique()->values()->all();
+
+        return array_filter([
+            'type' => $type,
+            'mana_value' => $manaValue === null ? null : ($manaValue >= 7 ? '7+' : (string) $manaValue),
+            'color' => match (count($colors)) {
+                0 => 'Colorless',
+                1 => self::COLOR_NAMES[$colors[0]] ?? 'Colorless',
+                default => 'Multicolor',
+            },
+        ], fn (?string $value) => $value !== null);
     }
 
     /**

@@ -124,6 +124,16 @@ class CardViewModel
         return $value === null ? 'N/A' : config('app.currency.symbol').number_format($value, 2);
     }
 
+    /**
+     * The deck stats groups this card falls into, e.g. ['category' => 'Monster', 'level' => 'Level 4'].
+     *
+     * @return array<string, string>
+     */
+    public function statFacets(): array
+    {
+        return $this->mapper->statFacets($this->card);
+    }
+
     public function printSets(): array
     {
         return $this->mapper->printSets($this->card);

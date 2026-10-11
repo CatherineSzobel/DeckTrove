@@ -66,4 +66,12 @@ abstract class CardMapper
      * banned or not legal there, or null when the format adds no limit beyond the normal deck rules.
      */
     abstract public function copyLimit(array $card, string $format): ?int;
+
+    /**
+     * The deck stats groups a card falls into, as group key => value, e.g. ['category' => 'Monster', 'level' => 'Level 4'].
+     * Keys are groups in the series' `deck.stats`; groups that don't apply to the card are left out.
+     *
+     * @return array<string, string>
+     */
+    abstract public function statFacets(array $card): array;
 }
