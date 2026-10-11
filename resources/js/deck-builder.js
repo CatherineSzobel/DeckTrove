@@ -4,7 +4,7 @@
  * themselves live in ./deckbuilder/rules.js so they match the server.
  */
 import * as deckRules from "./deckbuilder/rules.js";
-import { previewPosition } from "./deckbuilder/preview.js";
+import { cardPreview } from "./deckbuilder/preview.js";
 
 document.addEventListener("alpine:init", () => {
     window.Alpine.data("deckBuilder", () => ({
@@ -25,8 +25,7 @@ document.addEventListener("alpine:init", () => {
         nextUid: 0,
 
         // One card preview for deck cards and search results, placed next to the hovered or focused card.
-        preview: null,
-        previewPos: { left: 0, top: 0 },
+        ...cardPreview(),
 
         // Card search (results are server-rendered HTML; see resources/views/decks/partials/cards-view.blade.php).
         searchUrl: "",
@@ -132,26 +131,6 @@ document.addEventListener("alpine:init", () => {
         /** A copy of a card for the deck; `uid` keeps x-for keys unique when a card is in the deck several times. */
         copyOf(card) {
             return { ...card, uid: ++this.nextUid };
-        },
-
-        // --- Card preview --------------------------------------------------------------------------
-
-        showPreview(card, element) {
-            this.preview = card;
-
-            // Measure the preview once it shows this card, then place it beside the card.
-            this.$nextTick(() => {
-                const panel = this.$refs.preview;
-                this.previewPos = previewPosition(
-                    element.getBoundingClientRect(),
-                    { width: window.innerWidth, height: window.innerHeight },
-                    { width: panel.offsetWidth, height: panel.offsetHeight },
-                );
-            });
-        },
-
-        hidePreview() {
-            this.preview = null;
         },
 
         // --- Zones ---------------------------------------------------------------------------------

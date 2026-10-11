@@ -90,6 +90,15 @@ test('the owner can edit, others can copy, everyone can export', function () {
         ->assertSee(route('decks.copy', $deck))->assertSee(route('decks.export', $deck))->assertDontSee(route('decks.edit', $deck));
 });
 
+test('card previews use the shared panel that stays inside the window', function () {
+    $this->get(route('decks.show', deckPageDeck([darkMagicianEntry()])))
+        ->assertOk()
+        ->assertSee('data-card-preview', false)
+        ->assertSee('x-on:mouseenter="showPreview(card, $el)"', false)
+        ->assertSee('x-data="cardPreview"', false)
+        ->assertDontSee('group-hover:flex', false);
+});
+
 test('a card the source no longer has still shows on the deck page', function () {
     $this->get(route('decks.show', deckPageDeck([[['id' => 99999999, 'name' => 'Lost Card', 'lost' => true], 'main', 1]])))
         ->assertOk()->assertSee('alt="Lost Card"', false);
