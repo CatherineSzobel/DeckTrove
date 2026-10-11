@@ -55,6 +55,29 @@ test('the import stores sets and which cards were printed in them', function () 
     expect(YugiohSet::where('name', 'Legend of Blue Eyes White Dragon')->sole()->printings()->count())->toBe(2);
 });
 
+test('a set renamed upstream keeps its row, slug and printings', function () {
+    // YGOPRODeck renamed "Yu-Gi-Oh! 5D's Tag Force 5 Promotional Cards" to "... promotional cards".
+    YugiohSet::create(['code' => 'TF05', 'name' => "Yu-Gi-Oh! 5D's Tag Force 5 Promotional Cards", 'slug' => 'yu-gi-oh-5ds-tag-force-5-promotional-cards']);
+
+    $sets = dumpFile('renamed-sets', [
+        ['set_name' => "Yu-Gi-Oh! 5D's Tag Force 5 promotional cards", 'set_code' => 'TF05', 'num_of_cards' => 3, 'tcg_date' => '2010-09-30'],
+    ]);
+    $cards = dumpFile('renamed-cards', ['data' => [
+        // A card may still list the set under its old spelling.
+        YugiohCard::factory()->card(['id' => 4, 'name' => 'Tag Force Promo', 'card_sets' => [
+            ['set_name' => "Yu-Gi-Oh! 5D's Tag Force 5 Promotional Cards", 'set_code' => 'TF05-EN001', 'set_rarity' => 'Super Rare'],
+        ]]),
+    ]]);
+
+    $this->artisan('yugioh:import', ['--file' => $cards, '--sets-file' => $sets])->assertSuccessful();
+
+    $set = YugiohSet::sole();
+    expect($set->name)->toBe("Yu-Gi-Oh! 5D's Tag Force 5 promotional cards")
+        ->and($set->slug)->toBe('yu-gi-oh-5ds-tag-force-5-promotional-cards')
+        ->and($set->card_count)->toBe(3)
+        ->and($set->printings()->count())->toBe(1);
+});
+
 test('products sharing a set code are separate pack pages', function () {
     importFixture();
 
