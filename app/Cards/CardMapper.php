@@ -47,6 +47,16 @@ abstract class CardMapper
     abstract public function price(array $card): ?string;
 
     /**
+     * The price as a number in the app's currency (`config('app.currency')`), or null when the card has none.
+     */
+    public function priceValue(array $card): ?float
+    {
+        $price = $this->price($card);
+
+        return is_numeric($price) ? (float) $price : null;
+    }
+
+    /**
      * @return list<array{set_code: string, set_name: string}>
      */
     abstract public function printSets(array $card): array;
@@ -56,4 +66,12 @@ abstract class CardMapper
      * banned or not legal there, or null when the format adds no limit beyond the normal deck rules.
      */
     abstract public function copyLimit(array $card, string $format): ?int;
+
+    /**
+     * The deck stats groups a card falls into, as group key => value, e.g. ['category' => 'Monster', 'level' => 'Level 4'].
+     * Keys are groups in the series' `deck.stats`; groups that don't apply to the card are left out.
+     *
+     * @return array<string, string>
+     */
+    abstract public function statFacets(array $card): array;
 }

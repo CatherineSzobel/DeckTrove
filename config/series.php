@@ -66,6 +66,13 @@ return [
             ],
             // The game's own words for a format limit (copies allowed => label), shown in the deck builder.
             'limit_labels' => [0 => 'Forbidden', 1 => 'Limited', 2 => 'Semi-Limited'],
+            // Deck stats groups: the keys the mapper's statFacets() returns. `order` lists values to show first,
+            // in that order; other values follow in natural order.
+            'stats' => [
+                'category' => ['label' => 'Card types', 'order' => ['Monster', 'Spell', 'Trap']],
+                'level' => ['label' => 'Level / Rank'],
+                'attribute' => ['label' => 'Attribute'],
+            ],
         ],
 
         'pack' => [
@@ -124,6 +131,11 @@ return [
                 'pauper' => ['label' => 'Pauper'],
             ],
             'limit_labels' => [0 => 'Not legal', 1 => 'Restricted'],
+            'stats' => [
+                'type' => ['label' => 'Type', 'order' => ['Creature', 'Planeswalker', 'Battle', 'Instant', 'Sorcery', 'Artifact', 'Enchantment', 'Land']],
+                'mana_value' => ['label' => 'Mana curve', 'order' => ['0', '1', '2', '3', '4', '5', '6', '7+']],
+                'color' => ['label' => 'Color', 'order' => ['White', 'Blue', 'Black', 'Red', 'Green', 'Multicolor', 'Colorless']],
+            ],
         ],
 
         'pack' => [

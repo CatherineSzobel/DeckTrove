@@ -58,6 +58,14 @@ test('every configured series is fully set up', function () {
                 && collect($deck['limit_labels'])->every(fn ($label, $limit) => is_int($limit) && is_string($label)),
             "'deck.limit_labels' must map copy limits to labels"
         );
+        $check(is_array($deck['stats'] ?? null) && $deck['stats'] !== [], "'deck.stats' must list at least one group");
+        foreach ($deck['stats'] ?? [] as $key => $group) {
+            $check(is_string($group['label'] ?? null), "stats group '$key' needs a 'label'");
+            $check(
+                ! isset($group['order']) || (is_array($group['order']) && array_is_list($group['order']) && collect($group['order'])->every(fn ($value) => is_string($value))),
+                "stats group '$key' needs 'order' to be a list of strings"
+            );
+        }
     }
 
     foreach (config('coming_soon') as $series => $config) {

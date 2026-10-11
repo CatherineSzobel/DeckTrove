@@ -109,9 +109,29 @@ class CardViewModel
         return $this->config['rarity_colors'][strtolower($this->rarity())] ?? 'text-gray-500';
     }
 
-    public function price(): string
+    public function priceValue(): ?float
     {
-        return $this->mapper->price($this->card) ?: 'N/A';
+        return $this->mapper->priceValue($this->card);
+    }
+
+    /**
+     * The price with the currency symbol, e.g. "€0.10", or "N/A".
+     */
+    public function formattedPrice(): string
+    {
+        $value = $this->priceValue();
+
+        return $value === null ? 'N/A' : config('app.currency.symbol').number_format($value, 2);
+    }
+
+    /**
+     * The deck stats groups this card falls into, e.g. ['category' => 'Monster', 'level' => 'Level 4'].
+     *
+     * @return array<string, string>
+     */
+    public function statFacets(): array
+    {
+        return $this->mapper->statFacets($this->card);
     }
 
     public function printSets(): array

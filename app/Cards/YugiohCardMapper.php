@@ -111,4 +111,35 @@ class YugiohCardMapper extends CardMapper
 
         return is_string($status) ? (self::BANLIST_LIMITS[$status] ?? null) : null;
     }
+
+    /**
+     * Monster / Spell / Trap from the card type; monsters also get their Level (Rank for XYZ, Link rating for Link)
+     * and attribute.
+     */
+    public function statFacets(array $card): array
+    {
+        $type = $card['type'] ?? '';
+
+        $category = match (true) {
+            str_contains($type, 'Monster') => 'Monster',
+            str_contains($type, 'Spell') => 'Spell',
+            str_contains($type, 'Trap') => 'Trap',
+            default => null,
+        };
+
+        if ($category !== 'Monster') {
+            return $category ? ['category' => $category] : [];
+        }
+
+        $level = match (true) {
+            str_contains($type, 'Link') => isset($card['linkval']) ? "Link {$card['linkval']}" : null,
+            str_contains($type, 'XYZ') => isset($card['level']) ? "Rank {$card['level']}" : null,
+            default => isset($card['level']) ? "Level {$card['level']}" : null,
+        };
+
+        return array_filter(
+            ['category' => 'Monster', 'level' => $level, 'attribute' => $card['attribute'] ?? null],
+            fn (?string $value) => $value !== null,
+        );
+    }
 }
