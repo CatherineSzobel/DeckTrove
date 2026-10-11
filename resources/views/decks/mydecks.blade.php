@@ -56,7 +56,8 @@
                                 <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-black/50 text-white">{{ config("series.{$deck->game}.label", ucfirst($deck->game)) }}</span>
                             </div>
                             <div class="absolute right-3 top-3">
-                                <form action="{{ route('decks.destroy', $deck) }}" method="POST" data-confirm="Delete “{{ $deck->name }}”? This cannot be undone.">
+                                <form action="{{ route('decks.destroy', $deck) }}" method="POST" data-confirm="“{{ $deck->name }}” will be deleted. This cannot be undone."
+                                    data-confirm-title="Delete this deck?" data-confirm-button="Delete deck">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="rounded bg-black/50 px-2 py-1 text-red-400 font-bold hover:text-red-300" aria-label="Delete {{ $deck->name }}">✕</button>

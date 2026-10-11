@@ -172,6 +172,7 @@ class CardViewModel
             'imageSmall' => $this->imageSmall(),
             'type' => $this->fullType(),
             'description' => $this->description(),
+            'stats' => $this->hasStats() ? $this->statLine() : null,
             'price' => $this->priceValue(),
             'limits' => $this->copyLimits(),
         ];

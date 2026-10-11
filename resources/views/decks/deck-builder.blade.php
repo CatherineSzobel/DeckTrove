@@ -25,7 +25,7 @@
     </div>
     @endguest
 
-    <div x-data="deckBuilder" @guest inert @endguest
+    <div x-data="deckBuilder" @guest inert @endguest @scroll.window.passive="hidePreview()"
         class="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-8 sm:px-6 {{ auth()->guest() ? 'opacity-50' : '' }}">
 
         {{-- Deck details --}}
@@ -148,6 +148,7 @@
                         <div x-show="count(zone)" class="grid grid-cols-[repeat(auto-fill,minmax(76px,1fr))] gap-2.5">
                             <template x-for="(card, index) in zones[zone]" :key="card.uid">
                                 <button type="button" @click="removeAt(zone, index)"
+                                    @mouseenter="showPreview(card, $el)" @mouseleave="hidePreview()" @focus="showPreview(card, $el)" @blur="hidePreview()"
                                     :title="problemFor(card.id) ? problemFor(card.id) + ' Click to remove.' : 'Click to remove'"
                                     :aria-label="`Remove ${card.name} from the ${rules.zones[zone].label}` + (problemFor(card.id) ? `. ${problemFor(card.id)}` : '')"
                                     class="focus-ring relative block aspect-[59/86] rounded-md bg-surface-2 shadow-md transition-transform hover:-translate-y-0.5"
@@ -180,6 +181,18 @@
             <input type="hidden" name="image" :value="cover">
             <input type="hidden" name="format" :value="format">
         </form>
+
+        {{-- The card preview for deck cards and search results (same look as on the deck page). --}}
+        <div x-ref="preview" x-show="preview" x-cloak data-card-preview aria-hidden="true"
+            class="pointer-events-none fixed z-50 flex w-72 gap-3 rounded-[14px] border border-line-strong bg-canvas p-4 text-left shadow-2xl"
+            :style="`left: ${previewPos.left}px; top: ${previewPos.top}px`">
+            <img :src="preview?.imageSmall" alt="" class="w-20 flex-none self-start rounded-md">
+            <div class="flex min-w-0 flex-col gap-1.5">
+                <span class="heading-display text-xl text-ink" x-text="preview?.name"></span>
+                <span class="font-mono text-[11px] text-muted" x-text="preview ? [preview.type, preview.stats].filter(Boolean).join(' · ') : ''"></span>
+                <span class="line-clamp-6 text-[13px] leading-snug text-body" x-text="preview?.description || 'No description'"></span>
+            </div>
+        </div>
 
         <div x-show="showCoverPicker" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4"
             @keydown.escape.window="showCoverPicker = false" @click.self="showCoverPicker = false">

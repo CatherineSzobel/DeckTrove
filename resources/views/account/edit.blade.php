@@ -59,7 +59,8 @@
         <p class="mt-2 text-sm text-gray-600">This permanently deletes your account, your decks and your avatar. It cannot be undone.</p>
 
         <form action="{{ route('profile.destroy') }}" method="POST" class="mt-4 space-y-4"
-            data-confirm="Delete your account and all your decks? This cannot be undone.">
+            data-confirm="This deletes your account, all your decks and your avatar. It cannot be undone."
+            data-confirm-title="Delete your account?" data-confirm-button="Delete account">
             @csrf
             @method('DELETE')
 

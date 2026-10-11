@@ -132,6 +132,14 @@ test('the import panel opens again after a failed import', function () {
     expect(builderStateFrom($html)['showImport'])->toBeTrue();
 });
 
+test('deck cards and search results share one card preview', function () {
+    $html = $this->actingAs(User::factory()->create())->get(route('decks.builder', 'yugioh'))->getContent();
+
+    expect($html)->toContain('data-card-preview')
+        ->toContain('@mouseenter="showPreview(card, $el)"')
+        ->toContain('@focus="showPreview(card, $el)"');
+});
+
 test('the cover is picked from the deck in a dialog', function () {
     $this->actingAs(User::factory()->create())->get(route('decks.builder', 'yugioh'))
         ->assertSee('data-cover-picker-open', false)

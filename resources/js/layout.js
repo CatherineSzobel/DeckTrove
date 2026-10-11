@@ -3,6 +3,7 @@
  * small form helpers.
  */
 import Alpine from "alpinejs";
+import { createConfirmStore } from "./confirm.js";
 
 // Let Vite process the images referenced with Vite::asset() in Blade, so they exist in production builds.
 import.meta.glob(["../img/**"]);
@@ -33,10 +34,20 @@ function initThemeToggle() {
 }
 
 function initFormHelpers() {
-    // <form data-confirm="Are you sure?"> asks before submitting.
+    // <form data-confirm="Message" data-confirm-title="Title?" data-confirm-button="Label"> asks in the confirm dialog
+    // before submitting.
     document.querySelectorAll("form[data-confirm]").forEach((form) => {
-        form.addEventListener("submit", (event) => {
-            if (!window.confirm(form.dataset.confirm)) event.preventDefault();
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+
+            const confirmed = await window.confirmDialog({
+                title: form.dataset.confirmTitle,
+                message: form.dataset.confirm,
+                confirmLabel: form.dataset.confirmButton,
+            });
+
+            // submit() doesn't fire this listener again.
+            if (confirmed) form.submit();
         });
     });
 
@@ -48,6 +59,8 @@ function initFormHelpers() {
 
 // Started once every module script has run, so page scripts can register components in `alpine:init`.
 window.Alpine = Alpine;
+Alpine.store("confirm", createConfirmStore());
+window.confirmDialog = (options) => Alpine.store("confirm").ask(options);
 document.addEventListener("DOMContentLoaded", () => Alpine.start());
 
 document.addEventListener("DOMContentLoaded", () => {

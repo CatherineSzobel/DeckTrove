@@ -4,6 +4,7 @@
  * themselves live in ./deckbuilder/rules.js so they match the server.
  */
 import * as deckRules from "./deckbuilder/rules.js";
+import { previewPosition } from "./deckbuilder/preview.js";
 
 document.addEventListener("alpine:init", () => {
     window.Alpine.data("deckBuilder", () => ({
@@ -22,6 +23,10 @@ document.addEventListener("alpine:init", () => {
         showTooSmall: false,
         dirty: false,
         nextUid: 0,
+
+        // One card preview for deck cards and search results, placed next to the hovered or focused card.
+        preview: null,
+        previewPos: { left: 0, top: 0 },
 
         // Card search (results are server-rendered HTML; see resources/views/decks/partials/cards-view.blade.php).
         searchUrl: "",
@@ -127,6 +132,26 @@ document.addEventListener("alpine:init", () => {
         /** A copy of a card for the deck; `uid` keeps x-for keys unique when a card is in the deck several times. */
         copyOf(card) {
             return { ...card, uid: ++this.nextUid };
+        },
+
+        // --- Card preview --------------------------------------------------------------------------
+
+        showPreview(card, element) {
+            this.preview = card;
+
+            // Measure the preview once it shows this card, then place it beside the card.
+            this.$nextTick(() => {
+                const panel = this.$refs.preview;
+                this.previewPos = previewPosition(
+                    element.getBoundingClientRect(),
+                    { width: window.innerWidth, height: window.innerHeight },
+                    { width: panel.offsetWidth, height: panel.offsetHeight },
+                );
+            });
+        },
+
+        hidePreview() {
+            this.preview = null;
         },
 
         // --- Zones ---------------------------------------------------------------------------------
@@ -265,6 +290,8 @@ document.addEventListener("alpine:init", () => {
         },
 
         removeAt(zone, index) {
+            // The removed card can't send mouseleave any more.
+            this.hidePreview();
             this.zones[zone].splice(index, 1);
             this.notice = null;
             this.dirty = true;
@@ -289,13 +316,31 @@ document.addEventListener("alpine:init", () => {
             this.showCoverPicker = false;
         },
 
-        reset() {
-            if (!window.confirm("Remove all cards and the cover from this deck?")) return;
+        async reset() {
+            const confirmed = await window.confirmDialog({
+                title: "Reset this deck?",
+                message: "This removes all cards and the cover from the deck. Nothing is saved until you press Save.",
+                confirmLabel: "Reset deck",
+            });
+            if (!confirmed) return;
 
             this.zoneKeys.forEach((zone) => (this.zones[zone] = []));
             this.cover = "";
             this.notice = null;
             this.dirty = true;
+        },
+
+        /** The edit page's import replaces the deck, so it asks first. */
+        async confirmReplace(form) {
+            const confirmed = await window.confirmDialog({
+                title: "Replace this deck?",
+                message: "This replaces all cards in this deck with the imported list.",
+                confirmLabel: "Replace cards",
+            });
+            if (!confirmed) return;
+
+            this.dirty = false;
+            form.submit();
         },
 
         // --- Saving --------------------------------------------------------------------------------

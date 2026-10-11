@@ -63,6 +63,8 @@
     @unless($hideNav)
     <x-site-footer />
     @endunless
+
+    <x-confirm-dialog />
 </body>
 
 </html>

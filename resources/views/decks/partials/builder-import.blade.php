@@ -25,7 +25,7 @@
 
     <form method="POST" enctype="multipart/form-data" class="flex flex-col gap-3.5"
         action="{{ $deck ? route('decks.reimport', $deck) : route('decks.import', $game) }}"
-        @if ($deck) @submit="if (! window.confirm('This replaces all cards in this deck. Continue?')) $event.preventDefault(); else dirty = false" @endif>
+        @if ($deck) @submit.prevent="confirmReplace($el)" @endif>
         @csrf
         <div class="flex flex-wrap items-stretch gap-5">
             <div class="flex flex-[1_1_260px] flex-col gap-2">

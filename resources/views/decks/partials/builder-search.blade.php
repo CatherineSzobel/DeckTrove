@@ -42,7 +42,7 @@
         <button type="button" @click="clearSearch()" class="focus-ring py-2 font-bold text-accent-ink">Clear</button>
     </div>
 
-    <div x-ref="results" @scroll.passive="onResultsScroll($event)"
+    <div x-ref="results" @scroll.passive="hidePreview(); onResultsScroll($event)"
         class="grid max-h-[760px] grid-cols-3 content-start gap-3.5 overflow-y-auto p-1">
         @include('decks.partials.cards-view')
     </div>

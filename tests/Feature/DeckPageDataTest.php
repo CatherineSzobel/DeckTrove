@@ -20,6 +20,14 @@ test('builder cards carry what the deck builder needs', function () {
     ])->toHaveKeys(['image', 'imageSmall']);
 });
 
+test('builder cards carry the stat line for the card preview', function () {
+    $monster = new CardViewModel(['id' => 46986414, 'name' => 'Dark Magician', 'type' => 'Normal Monster', 'atk' => 2500, 'def' => 2100], config('series.yugioh'));
+    $spell = new CardViewModel(['id' => 1, 'name' => 'Pot of Greed', 'type' => 'Spell Card'], config('series.yugioh'));
+
+    expect($monster->builderCard()['stats'])->toBe('ATK: 2500 / DEF: 2100')
+        ->and($spell->builderCard()['stats'])->toBeNull();
+});
+
 test('a card the source lost still makes a builder card', function () {
     $card = new CardViewModel(['id' => 'gone', 'name' => 'Gone'], config('series.magic'));
 
