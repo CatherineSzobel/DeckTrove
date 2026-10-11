@@ -99,7 +99,7 @@ test('the dashboard loads for logged in users', function () {
 });
 
 test('the deck builder loads for guests and returns card results for infinite scroll', function () {
-    $this->get(route('decks.builder', 'yugioh'))->assertOk()->assertSee('Login Required');
+    $this->get(route('decks.builder', 'yugioh'))->assertOk()->assertSee('Log in to build decks');
 
     $this->get(route('decks.builder', ['yugioh', 'page' => 1]), ['X-Requested-With' => 'XMLHttpRequest'])
         ->assertOk()

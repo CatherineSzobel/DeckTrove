@@ -22,6 +22,13 @@ test('a card slot marks cards that break the format', function () {
         ->toContain('href="/card/1"')->toContain('>!</span>');
 });
 
+test('a hovered or focused card slot sits above its neighbours so its preview is not covered', function () {
+    $card = new CardViewModel(['id' => 1, 'name' => 'Pot of Greed'], config('series.yugioh'));
+
+    expect(Blade::render('<x-deck.card-slot :card="$card" href="/card/1" />', ['card' => $card]))
+        ->toContain('hover:z-20')->toContain('focus-visible:z-20');
+});
+
 test('the problems box lists the messages', function () {
     $html = Blade::render('<x-deck.problems title="2 cards break TCG Advanced" :messages="$m">Fix them.</x-deck.problems>', ['m' => ['A.', 'B.']]);
 

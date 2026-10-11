@@ -8,7 +8,9 @@
 
 <{{ $tag }} @if ($href) href="{{ $href }}" @endif @if ($over) title="{{ $over }}" @endif
     {{ $attributes->class([
-        'group relative block aspect-[59/86] rounded-md bg-surface-2 shadow-md transition-transform hover:-translate-y-0.5',
+        // The lift on hover gives the slot its own layer; z-20 keeps that layer (and the preview inside it) above
+        // the cards after it in the grid.
+        'group relative block aspect-[59/86] rounded-md bg-surface-2 shadow-md transition-transform hover:z-20 hover:-translate-y-0.5 focus-visible:z-20',
         'focus-ring' => $href,
         'outline-2 outline-offset-2 outline-danger' => $over,
     ]) }}>

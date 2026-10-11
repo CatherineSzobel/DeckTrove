@@ -9,13 +9,11 @@ export default defineConfig({
             input: [
                 'resources/css/app.css',
                 'resources/css/dashboard.css',
-                'resources/css/deckbuilder.css',
                 'resources/js/layout.js',
                 'resources/js/account.js',
                 'resources/js/card.js',
                 'resources/js/card-database.js',
                 'resources/js/carousel.js',
-                'resources/js/deck.js',
                 'resources/js/deck-builder.js',
                 'resources/js/deckfilter.js',
                 'resources/js/moving-carousel.js',

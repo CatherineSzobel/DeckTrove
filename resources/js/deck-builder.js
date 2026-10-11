@@ -1,262 +1,345 @@
 /**
- * Deck builder: add cards with +/- or drag and drop, search with infinite scroll, and save.
- * Used both for new decks and for editing (resources/views/decks/deck-builder.blade.php).
+ * Deck builder (resources/views/decks/deck-builder.blade.php): one Alpine component holding the whole deck.
+ * Everything on screen (counts, prices, format problems, copies and limit tags) is derived from its state; the rules
+ * themselves live in ./deckbuilder/rules.js so they match the server.
  */
-import { validatePlacement } from "./deckbuilder/rules.js";
-import { collectDeck, createDeckCard, flashInvalid, refreshSearchPool, updateCounts } from "./deckbuilder/dom.js";
-import { initFilters, appendFilterParams } from "./filter.js";
+import * as deckRules from "./deckbuilder/rules.js";
 
-const app = document.getElementById("deckApp");
+document.addEventListener("alpine:init", () => {
+    window.Alpine.data("deckBuilder", () => ({
+        rules: { zones: {}, formats: {}, limit_labels: {}, extra_types: [], unlimited_types: [] },
+        zones: {},
+        active: "main",
+        format: "",
+        cover: "",
+        title: "",
+        description: "",
+        isPublic: false,
+        currency: { symbol: "€" },
+        notice: null,
+        showImport: false,
+        showCoverPicker: false,
+        showTooSmall: false,
+        dirty: false,
+        nextUid: 0,
 
-if (app) {
-    const rules = JSON.parse(app.dataset.rules);
-    const zones = Object.keys(rules.zones).map((id) => document.getElementById(id)).filter(Boolean);
-    const searchPool = document.querySelector(".search-pool");
-    const coverPreview = document.getElementById("coverPreview");
-    const deckImageInput = document.getElementById("deckImage");
-    const saveForm = document.getElementById("saveForm");
+        // Card search (results are server-rendered HTML; see resources/views/decks/partials/cards-view.blade.php).
+        searchUrl: "",
+        search: "",
+        filters: {},
+        showFilters: false,
+        nextPage: null,
+        total: 0,
+        shown: 0,
+        loading: false,
 
-    let activeZone = document.querySelector(".deckContainer.deck-active .dropzone") ?? zones[0];
-    let dirty = false;
+        init() {
+            const state = JSON.parse(document.getElementById("deck-builder-state").textContent);
 
-    const refresh = () => {
-        updateCounts(rules);
-        refreshSearchPool(rules, activeZone);
-    };
+            this.rules = state.rules;
+            this.zones = Object.fromEntries(
+                Object.keys(state.rules.zones).map((zone) => [zone, (state.zones[zone] ?? []).map((card) => this.copyOf(card))])
+            );
+            this.active = Object.keys(state.rules.zones)[0];
+            this.format = state.format ?? "";
+            this.cover = state.cover ?? "";
+            this.title = state.title ?? "";
+            this.description = state.description ?? "";
+            this.isPublic = Boolean(state.isPublic);
+            this.currency = state.currency ?? this.currency;
+            this.showImport = Boolean(state.showImport);
 
-    const changed = () => {
-        dirty = true;
-        refresh();
-    };
-
-    // --- Zones -------------------------------------------------------------------------------
-
-    function setActiveZone(container) {
-        document.querySelectorAll(".deckContainer").forEach((c) => c.classList.toggle("deck-active", c === container));
-        activeZone = container.querySelector(".dropzone");
-        refreshSearchPool(rules, activeZone);
-    }
-
-    function addCard(zone, source) {
-        const validation = validatePlacement(rules, zone, source);
-        if (!validation.valid) return flashInvalid(zone, validation.reason);
-
-        zone.appendChild(createDeckCard(source));
-        changed();
-    }
-
-    function moveCard(card, from, to) {
-        if (from === to) return;
-
-        const validation = validatePlacement(rules, to, card, from);
-        if (!validation.valid) return flashInvalid(to, validation.reason);
-
-        to.appendChild(card);
-        changed();
-    }
-
-    document.querySelectorAll(".deckContainer").forEach((container) =>
-        container.addEventListener("click", () => setActiveZone(container))
-    );
-
-    // Clicking a card inside a deck zone removes it.
-    zones.forEach((zone) =>
-        zone.addEventListener("click", (event) => {
-            const card = event.target.closest(".card-wrapper");
-            if (!card) return;
-            card.remove();
-            changed();
-        })
-    );
-
-    // --- Search results: +/- buttons ---------------------------------------------------------
-
-    searchPool.addEventListener("click", (event) => {
-        const card = event.target.closest(".card-wrapper");
-        if (!card || !activeZone) return;
-
-        if (event.target.closest(".plus-btn")) {
-            addCard(activeZone, card);
-        } else if (event.target.closest(".minus-btn")) {
-            const copy = activeZone.querySelector(`.card-wrapper[data-card-id="${CSS.escape(card.dataset.cardId)}"]`);
-            if (copy) {
-                copy.remove();
-                changed();
-            }
-        }
-    });
-
-    // --- Drag and drop -----------------------------------------------------------------------
-
-    let dragged = null;
-
-    document.addEventListener("dragstart", (event) => {
-        dragged = event.target.closest?.(".card-wrapper") ?? null;
-        if (dragged) event.dataTransfer.effectAllowed = "copyMove";
-    });
-    document.addEventListener("dragend", () => (dragged = null));
-
-    zones.forEach((zone) => {
-        zone.addEventListener("dragover", (event) => {
-            if (!dragged) return;
-            event.preventDefault();
-            zone.classList.add("drop-hover");
-        });
-        zone.addEventListener("dragleave", () => zone.classList.remove("drop-hover"));
-        zone.addEventListener("drop", (event) => {
-            event.preventDefault();
-            zone.classList.remove("drop-hover");
-            if (!dragged) return;
-
-            const from = dragged.closest(".dropzone");
-            from ? moveCard(dragged, from, zone) : addCard(zone, dragged);
-        });
-    });
-
-    // --- Cover image -------------------------------------------------------------------------
-
-    const coverDropArea = document.getElementById("coverDropArea");
-
-    function setCover(src) {
-        coverPreview.src = src;
-        coverPreview.classList.toggle("hidden", !src);
-        deckImageInput.value = src;
-        dirty = true;
-    }
-
-    coverDropArea.addEventListener("dragover", (event) => {
-        if (!dragged) return;
-        event.preventDefault();
-        coverDropArea.classList.add("border-blue-500", "bg-blue-50");
-    });
-    coverDropArea.addEventListener("dragleave", () => coverDropArea.classList.remove("border-blue-500", "bg-blue-50"));
-    coverDropArea.addEventListener("drop", (event) => {
-        event.preventDefault();
-        coverDropArea.classList.remove("border-blue-500", "bg-blue-50");
-        if (dragged) setCover(dragged.dataset.cardImage);
-    });
-    coverPreview.addEventListener("click", () => setCover(""));
-
-    document.getElementById("resetButton").addEventListener("click", () => {
-        if (!window.confirm("Remove all cards and the cover from this deck?")) return;
-        zones.forEach((zone) => zone.replaceChildren());
-        setCover("");
-        changed();
-    });
-
-    // --- Search with infinite scroll ---------------------------------------------------------
-
-    const searchInput = document.getElementById("searchInput");
-    const spinner = document.getElementById("loadingSpinner");
-    const resultCount = document.getElementById("result-count");
-    let nextPage = app.dataset.nextPage ? Number(app.dataset.nextPage) : null;
-    let loading = false;
-
-    async function loadPage(page, { replace = false } = {}) {
-        if (loading) return;
-        loading = true;
-        spinner.classList.remove("hidden");
-
-        const params = new URLSearchParams({ page });
-        if (searchInput.value.trim()) params.set("search", searchInput.value.trim());
-        appendFilterParams(params);
-
-        try {
-            const response = await fetch(`${app.dataset.searchUrl}?${params}`, {
-                headers: { "X-Requested-With": "XMLHttpRequest" },
+            ["title", "description", "format", "cover", "isPublic"].forEach((key) => this.$watch(key, () => (this.dirty = true)));
+            window.addEventListener("beforeunload", (event) => {
+                if (this.dirty) event.preventDefault();
             });
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
-            const template = document.createElement("template");
-            template.innerHTML = await response.text();
+            this.initSearch(state);
+        },
 
-            if (replace) searchPool.replaceChildren();
-            searchPool.append(template.content);
+        // --- Search --------------------------------------------------------------------------------
 
-            nextPage = response.headers.get("X-Next-Page") ? Number(response.headers.get("X-Next-Page")) : null;
-            if (replace && resultCount) {
-                const total = Number(response.headers.get("X-Total") || 0);
-                resultCount.textContent = total ? `${total.toLocaleString()} cards found` : "No cards found";
+        initSearch(state) {
+            const params = new URLSearchParams(window.location.search);
+
+            this.searchUrl = state.searchUrl;
+            this.nextPage = state.nextPage;
+            this.total = state.total;
+            this.search = params.get("search") ?? "";
+            this.filters = Object.fromEntries((state.filters ?? []).map((key) => [key, params.get(key) ?? ""]));
+            // Open the filters straight away when the page was loaded with filters applied.
+            this.showFilters = Object.values(this.filters).some(Boolean);
+            this.$nextTick(() => (this.shown = this.countResults()));
+        },
+
+        countResults() {
+            return this.$refs.results?.querySelectorAll("[data-card-id]").length ?? 0;
+        },
+
+        get resultSummary() {
+            return this.total ? `Showing ${this.shown} of ${this.total.toLocaleString()} cards` : "No cards found";
+        },
+
+        runSearch() {
+            this.$refs.results.scrollTop = 0;
+            this.loadPage(1, { replace: true });
+        },
+
+        clearSearch() {
+            this.search = "";
+            Object.keys(this.filters).forEach((key) => (this.filters[key] = ""));
+            this.runSearch();
+        },
+
+        onResultsScroll(event) {
+            const list = event.target;
+            if (this.nextPage && list.scrollTop + list.clientHeight >= list.scrollHeight - 150) this.loadPage(this.nextPage);
+        },
+
+        async loadPage(page, { replace = false } = {}) {
+            if (this.loading) return;
+            this.loading = true;
+
+            const params = new URLSearchParams({ page });
+            if (this.search.trim()) params.set("search", this.search.trim());
+            Object.entries(this.filters).forEach(([key, value]) => value && params.set(key, value));
+
+            try {
+                const response = await fetch(`${this.searchUrl}?${params}`, { headers: { "X-Requested-With": "XMLHttpRequest" } });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                // Alpine picks up the new results (and their x-data) as soon as they are in the page.
+                const template = document.createElement("template");
+                template.innerHTML = await response.text();
+                replace ? this.$refs.results.replaceChildren(template.content) : this.$refs.results.append(template.content);
+
+                this.nextPage = Number(response.headers.get("X-Next-Page")) || null;
+                if (replace) this.total = Number(response.headers.get("X-Total") || 0);
+                this.shown = this.countResults();
+            } catch (error) {
+                console.error("Error loading cards:", error);
+                this.notice = "The card search failed. Please try again.";
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        /** A copy of a card for the deck; `uid` keeps x-for keys unique when a card is in the deck several times. */
+        copyOf(card) {
+            return { ...card, uid: ++this.nextUid };
+        },
+
+        // --- Zones ---------------------------------------------------------------------------------
+
+        get zoneKeys() {
+            return Object.keys(this.rules.zones);
+        },
+
+        count(zone) {
+            return this.zones[zone]?.length ?? 0;
+        },
+
+        range(zone) {
+            const { min, max } = this.rules.zones[zone];
+            return min > 0 ? `${min}–${max}` : `max ${max}`;
+        },
+
+        isShort(zone) {
+            return this.count(zone) < this.rules.zones[zone].min;
+        },
+
+        progress(zone) {
+            const { min, max } = this.rules.zones[zone];
+            return Math.round(Math.min(this.count(zone) / (min || max), 1) * 100);
+        },
+
+        zoneHint(zone) {
+            const { min, max } = this.rules.zones[zone];
+
+            if (this.isShort(zone)) return `Needs ${min - this.count(zone)} more cards before it can be shared publicly.`;
+            if (zone === "main") return `Ready to share — up to ${max} cards.`;
+            if (zone === "extra" && this.rules.extra_types.length) return `${this.rules.extra_types.join(", ")} monsters only.`;
+
+            return `Optional — up to ${max} cards.`;
+        },
+
+        // --- Prices --------------------------------------------------------------------------------
+
+        euro(value) {
+            return `${this.currency.symbol}${value.toFixed(2)}`;
+        },
+
+        zonePrice(zone) {
+            return deckRules.deckPrice({ [zone]: this.zones[zone] ?? [] });
+        },
+
+        get deckPrice() {
+            return deckRules.deckPrice(this.zones);
+        },
+
+        get unpricedHint() {
+            const count = deckRules.unpricedCount(this.zones);
+            return count ? `${count} ${count === 1 ? "card" : "cards"} unpriced` : "Cardmarket prices";
+        },
+
+        // --- Format --------------------------------------------------------------------------------
+
+        get formatLabel() {
+            return this.format ? (this.rules.formats[this.format]?.label ?? this.format) : "Casual";
+        },
+
+        get formatHint() {
+            return this.format
+                ? `${this.formatLabel} banlist applies on top of the normal deck rules.`
+                : "No banlist. Only the normal deck rules apply.";
+        },
+
+        get problems() {
+            return deckRules.formatProblems(this.rules, this.zones, this.format);
+        },
+
+        get problemsTitle() {
+            const count = this.problems.length;
+            return `${count} ${count === 1 ? "card breaks" : "cards break"} ${this.formatLabel}`;
+        },
+
+        problemFor(id) {
+            return this.problems.find((problem) => problem.id === id)?.message ?? null;
+        },
+
+        // --- Cards in the search results -----------------------------------------------------------
+
+        copiesOf(card) {
+            return deckRules.copiesOf(this.zones, card.id);
+        },
+
+        copiesLabel(card) {
+            const allowed = deckRules.allowedCopies(this.rules, card, this.format);
+            return allowed === Infinity ? `×${this.copiesOf(card)}` : `${this.copiesOf(card)}/${allowed}`;
+        },
+
+        isOverLimit(card) {
+            return this.copiesOf(card) > deckRules.allowedCopies(this.rules, card, this.format);
+        },
+
+        /** The current format's limit for a card, or null when the format doesn't limit it. */
+        limitOf(card) {
+            const limit = this.format ? card.limits?.[this.format] : undefined;
+            return limit === undefined ? null : limit;
+        },
+
+        /** The format's limit in the game's words ("Limited · 1"), or null. */
+        limitTag(card) {
+            const limit = this.limitOf(card);
+            if (limit === null) return null;
+
+            const label = this.rules.limit_labels[limit] ?? "";
+            return limit > 0 ? `${label} · ${limit}` : label;
+        },
+
+        canRemove(card) {
+            return (this.zones[this.active] ?? []).some((copy) => copy.id === card.id);
+        },
+
+        add(card) {
+            const error = deckRules.placementError(this.rules, this.zones, this.active, card, this.format);
+            if (error) {
+                this.notice = error;
+                return;
             }
 
-            refreshSearchPool(rules, activeZone);
-        } catch (error) {
-            console.error("Error loading cards:", error);
-        } finally {
-            spinner.classList.add("hidden");
-            loading = false;
-        }
-    }
+            this.zones[this.active].push(this.copyOf(card));
+            this.notice = null;
+            this.dirty = true;
+        },
 
-    const newSearch = () => {
-        searchPool.scrollTop = 0;
-        loadPage(1, { replace: true });
-    };
+        /** Removes the last copy of the card from the active zone. */
+        removeOne(card) {
+            const list = this.zones[this.active];
+            const index = list.findLastIndex((copy) => copy.id === card.id);
+            if (index === -1) return;
 
-    searchInput.addEventListener("keydown", (event) => {
-        if (event.key !== "Enter") return;
-        event.preventDefault();
-        newSearch();
-    });
+            list.splice(index, 1);
+            this.notice = null;
+            this.dirty = true;
+        },
 
-    searchPool.addEventListener("scroll", () => {
-        const nearBottom = searchPool.scrollTop + searchPool.clientHeight >= searchPool.scrollHeight - 150;
-        if (nearBottom && nextPage) loadPage(nextPage);
-    });
+        removeAt(zone, index) {
+            this.zones[zone].splice(index, 1);
+            this.notice = null;
+            this.dirty = true;
+        },
 
-    initFilters({
-        selects: document.querySelectorAll(".filter-select"),
-        button: document.getElementById("filter-button"),
-        details: document.getElementById("filterDetails"),
-        clearButton: document.getElementById("clear-filter-button"),
-        onChange: newSearch,
-    });
+        setCover(card) {
+            this.cover = card.image;
+        },
 
-    // --- Saving ------------------------------------------------------------------------------
+        clearCover() {
+            this.cover = "";
+            this.showCoverPicker = false;
+        },
 
-    const modal = document.getElementById("deckWarningModal");
-    const isPublicCheckbox = document.getElementById("isPublicCheckbox");
-    isPublicCheckbox.addEventListener("change", () => (dirty = true));
-    ["deckTitleInput", "deckDescInput"].forEach((id) =>
-        document.getElementById(id).addEventListener("input", () => (dirty = true))
-    );
+        /** The cards the cover picker offers: each card in the deck once. */
+        get coverChoices() {
+            return deckRules.uniqueCards(this.zones);
+        },
 
-    function submitDeck(isPublic) {
-        document.getElementById("cards").value = JSON.stringify(collectDeck(rules));
-        document.getElementById("deckTitle").value = document.getElementById("deckTitleInput").value.trim();
-        document.getElementById("deckDescription").value = document.getElementById("deckDescInput").value.trim();
-        document.getElementById("isPublic").value = isPublic ? "1" : "0";
+        pickCover(card) {
+            this.setCover(card);
+            this.showCoverPicker = false;
+        },
 
-        const button = saveForm.querySelector('[type="submit"]');
-        button.disabled = true;
-        button.textContent = "Saving...";
+        reset() {
+            if (!window.confirm("Remove all cards and the cover from this deck?")) return;
 
-        dirty = false;
-        saveForm.submit();
-    }
+            this.zoneKeys.forEach((zone) => (this.zones[zone] = []));
+            this.cover = "";
+            this.notice = null;
+            this.dirty = true;
+        },
 
-    saveForm.addEventListener("submit", (event) => {
-        event.preventDefault();
+        // --- Saving --------------------------------------------------------------------------------
 
-        const mainCount = document.getElementById("main")?.children.length ?? 0;
-        if (isPublicCheckbox.checked && mainCount < rules.zones.main.min) {
-            modal.classList.remove("hidden");
-            return;
-        }
+        get mainMin() {
+            return this.rules.zones.main?.min ?? 0;
+        },
 
-        submitDeck(isPublicCheckbox.checked);
-    });
+        get publicReady() {
+            return this.count("main") >= this.mainMin;
+        },
 
-    document.getElementById("cancelSaveBtn").addEventListener("click", () => modal.classList.add("hidden"));
-    document.getElementById("confirmSaveBtn").addEventListener("click", () => {
-        modal.classList.add("hidden");
-        isPublicCheckbox.checked = false;
-        submitDeck(false);
-    });
+        get publicHint() {
+            return this.publicReady ? "Main deck is big enough" : `Needs ${this.mainMin}+ main deck cards`;
+        },
 
-    window.addEventListener("beforeunload", (event) => {
-        if (dirty) event.preventDefault();
-    });
+        get cardsPayload() {
+            return deckRules.payload(this.zones);
+        },
 
-    refresh();
-}
+        save() {
+            if (this.problems.length) {
+                this.notice = `This deck breaks ${this.formatLabel}. Remove the marked cards, or switch the format to Casual.`;
+                return;
+            }
+
+            if (this.isPublic && !this.publicReady) {
+                this.showTooSmall = true;
+                return;
+            }
+
+            this.submit();
+        },
+
+        savePrivate() {
+            this.isPublic = false;
+            this.showTooSmall = false;
+            this.submit();
+        },
+
+        submit() {
+            this.dirty = false;
+            // Wait for Alpine to write the hidden inputs before the browser reads them.
+            this.$nextTick(() => this.$refs.saveForm.submit());
+        },
+    }));
+});

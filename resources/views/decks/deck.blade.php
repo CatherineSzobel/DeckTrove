@@ -1,83 +1,142 @@
-<x-layout :title="$deck->name" :js="['resources/js/deck.js']">
-    <div class="max-w-6xl mx-auto px-4 py-10">
-        <div class="text-center mb-8">
-            <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900">{{ $deck->name }}</h1>
-            @if ($deck->description)
-            <p class="text-sm md:text-base text-gray-500 mt-2">{{ $deck->description }}</p>
+{{-- A saved deck: header with format and price, format problems, the zones and the deck stats sidebar. --}}
+@php
+    $series = config("series.{$deck->game}");
+    $format = $deck->format;
+    $formatLabel = $format ? ($series['deck']['formats'][$format]['label'] ?? $format) : null;
+    $overMessages = array_combine($formatErrors['card_ids'], $formatErrors['messages']);
+    $isOwner = auth()->user()?->can('update', $deck) ?? false;
+    $extension = app($series['deck_format'])->extension();
+    $euro = fn (float $value) => $stats->currency['symbol'].number_format($value, 2);
+
+    // The first stats group (e.g. Monster / Spell / Trap) as chips for the main deck.
+    $firstGroup = array_key_first($series['deck']['stats']);
+    $chips = collect($stats->zone('main')['groups'][$firstGroup]['values'] ?? [])->filter();
+@endphp
+
+<x-layout :title="$deck->name">
+    <div class="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6">
+        <nav aria-label="Breadcrumb" class="flex flex-wrap items-center gap-2 text-sm text-muted">
+            @if ($isOwner)
+            <a href="{{ route('decks') }}" class="focus-ring text-body hover:text-ink">My decks</a>
+            @else
+            <a href="{{ route('public-deck') }}" class="focus-ring text-body hover:text-ink">Public decks</a>
             @endif
-            <p class="text-sm text-gray-500 mt-2">
-                {{ config("series.{$deck->game}.label") }} · by {{ $deck->user->username }} ·
-                <span class="font-semibold text-amber-500">{{ $deck->card_count }}</span> cards
-                @unless ($deck->is_public) · <span class="font-semibold">Private</span> @endunless
-            </p>
+            <span aria-hidden="true">/</span>
+            <span aria-current="page" class="text-ink">{{ $deck->name }}</span>
+        </nav>
 
-            @php $extension = app(config("series.{$deck->game}.deck_format"))->extension(); @endphp
-            <div class="mt-4 flex flex-wrap justify-center gap-3">
-                @can('update', $deck)
-                <a href="{{ route('decks.edit', $deck) }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm">Edit deck</a>
-                @endcan
+        <section class="flex flex-wrap items-center gap-10 rounded-3xl border border-line bg-surface p-6 sm:p-8">
+            <div class="relative h-[210px] w-[220px] flex-none" aria-hidden="true">
+                <div class="absolute left-[22px] top-[34px] aspect-[59/86] w-[120px] -rotate-12 rounded-lg bg-surface-2 shadow-lg"></div>
+                <div class="absolute left-[82px] top-[34px] aspect-[59/86] w-[120px] rotate-[10deg] rounded-lg bg-surface-2 shadow-lg"></div>
+                @if ($deck->image)
+                <img src="{{ $deck->image }}" alt="" class="absolute left-[52px] top-3 aspect-[59/86] w-[120px] rounded-lg object-cover shadow-xl">
+                @else
+                <div class="absolute left-[52px] top-3 aspect-[59/86] w-[120px] rounded-lg border border-line-strong bg-canvas shadow-xl"></div>
+                @endif
+            </div>
 
-                <a href="{{ route('decks.export', $deck) }}" class="inline-flex items-center gap-2 bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-md text-sm">
-                    <x-heroicon-o-arrow-down-tray class="h-4 w-4" />
-                    Export .{{ $extension }}
+            <div class="flex min-w-0 flex-[1_1_420px] flex-col gap-4">
+                <p class="eyebrow">{{ $series['label'] }} deck · by {{ $deck->user->username }}</p>
+                <div class="flex flex-wrap items-center gap-4">
+                    <h1 class="heading-display text-[clamp(44px,5vw,68px)] text-ink">{{ $deck->name }}</h1>
+                    <x-deck.format-badge :format="$format" :label="$formatLabel" :problems="count($formatErrors['messages'])" />
+                </div>
+                @if ($deck->description)
+                <p class="max-w-[44rem] text-[17px] leading-relaxed text-body">{{ $deck->description }}</p>
+                @endif
+
+                <div class="flex flex-wrap gap-2.5">
+                    <span class="inline-flex items-baseline gap-2 rounded-[10px] border border-line bg-canvas px-3 py-2 text-[13px] text-body">
+                        <span class="font-mono text-base font-bold text-accent-ink">{{ $deck->card_count ?? collect($sections)->sum(fn ($cards) => $cards->count()) }}</span>cards
+                    </span>
+                    @foreach ($chips as $value => $count)
+                    <span class="inline-flex items-baseline gap-2 rounded-[10px] border border-line bg-canvas px-3 py-2 text-[13px] text-body">
+                        <span class="font-mono text-base font-bold text-ink">{{ $count }}</span>{{ Str::plural(strtolower($value), $count) }}
+                    </span>
+                    @endforeach
+                    <span data-chip="price" @if ($stats->missingPrices) title="{{ $stats->missingPrices }} {{ Str::plural('card', $stats->missingPrices) }} have no price" @endif
+                        class="inline-flex items-baseline gap-2 rounded-[10px] border border-warn-line bg-canvas px-3 py-2 text-[13px] text-body">
+                        <span class="font-mono text-base font-bold text-ink">{{ $euro($stats->price) }}</span>deck price
+                    </span>
+                </div>
+            </div>
+
+            <div class="flex min-w-[200px] flex-[0_1_auto] flex-col gap-2.5">
+                @if ($isOwner)
+                <a href="{{ route('decks.edit', $deck) }}" class="btn-primary">
+                    <x-heroicon-o-pencil-square class="h-5 w-5" aria-hidden="true" />
+                    Edit deck
                 </a>
-
+                @else
                 @auth
-                @cannot('update', $deck)
                 <form method="POST" action="{{ route('decks.copy', $deck) }}">
                     @csrf
-                    <button type="submit" class="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold px-4 py-2 rounded-md text-sm">
-                        <x-heroicon-o-document-duplicate class="h-4 w-4" />
+                    <button type="submit" class="btn-primary w-full">
+                        <x-heroicon-o-document-duplicate class="h-5 w-5" aria-hidden="true" />
                         Copy to my decks
                     </button>
                 </form>
-                @endcannot
                 @endauth
-            </div>
-        </div>
-
-        @foreach ($zones as $zone => $zoneRules)
-        @continue(empty($sections[$zone]) || $sections[$zone]->isEmpty())
-
-        <section class="mb-10">
-            <button type="button" data-zone-toggle="{{ $zone }}" aria-expanded="true" aria-controls="{{ $zone }}-cards"
-                class="w-full flex items-center justify-between bg-gray-100 p-3 rounded-lg shadow-sm hover:bg-gray-200">
-                <h2 class="text-2xl font-bold text-gray-800">{{ $zoneRules['label'] }}</h2>
-                <span class="flex items-center space-x-2">
-                    <span class="text-gray-500 text-sm">{{ $sections[$zone]->count() }} cards</span>
-                    <span data-toggle-icon class="px-2 py-1 bg-gray-200 rounded text-sm text-gray-700" aria-hidden="true">−</span>
-                </span>
-            </button>
-
-            <div id="{{ $zone }}-cards" class="mt-4 grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2">
-                @foreach ($sections[$zone] as $card)
-                <div class="relative group inline-block">
-                    <a href="{{ $card->link() }}" target="_blank" rel="noopener noreferrer">
-                        <img src="{{ $card->imageSmall() }}" alt="{{ $card->name() }}" loading="lazy"
-                            class="w-20 h-auto rounded-sm shadow-sm cursor-pointer transition-transform duration-200 hover:scale-105">
-                    </a>
-
-                    <div class="absolute z-50 hidden group-hover:block w-80 p-4 bg-slate-900 text-white rounded-lg shadow-lg border border-slate-700 -top-2 left-full ml-2 pointer-events-none">
-                        <div class="flex space-x-3">
-                            <img src="{{ $card->imageSmall() }}" alt="" class="w-24 h-auto rounded-sm border border-slate-600">
-                            <div class="flex-1">
-                                <h3 class="font-bold text-lg">{{ $card->name() }}</h3>
-                                <p class="text-sm text-slate-300 mt-1">{{ trim($card->type().' '.$card->subtype()) }}</p>
-                                @if ($card->hasStats())
-                                <p class="text-sm mt-1">{{ $card->statLine() }}</p>
-                                @endif
-                                <p class="text-xs mt-2 text-slate-200 line-clamp-6">{{ $card->description() ?: 'No description' }}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                @endforeach
+                @endif
+                <a href="{{ route('decks.export', $deck) }}" class="btn-secondary">
+                    <x-heroicon-o-arrow-down-tray class="h-5 w-5" aria-hidden="true" />
+                    Export .{{ $extension }}
+                </a>
+                @unless ($deck->is_public)
+                <span class="text-center text-xs text-muted">Private: only you can see this deck</span>
+                @endunless
             </div>
         </section>
-        @endforeach
 
-        @if (collect($sections)->every(fn ($cards) => $cards->isEmpty()))
-        <div class="mt-12 text-center text-gray-500">No cards in this deck yet.</div>
+        @if ($formatErrors['messages'])
+        <x-deck.problems :title="'This deck no longer fits '.$formatLabel" :messages="$formatErrors['messages']">
+            @if ($isOwner)
+            <a href="{{ route('decks.edit', $deck) }}" class="focus-ring font-bold text-accent-ink">Edit the deck</a> to fix it, or switch it to Casual.
+            @else
+            The owner can fix it or switch it to Casual.
+            @endif
+        </x-deck.problems>
         @endif
+
+        <div class="flex flex-wrap items-start gap-6">
+            <div class="flex min-w-0 flex-[999_1_640px] flex-col gap-8">
+                @foreach ($zones as $zone => $zoneRules)
+                @continue(empty($sections[$zone]) || $sections[$zone]->isEmpty())
+
+                <section x-data="{ open: true }" class="flex flex-col gap-4">
+                    <button type="button" @click="open = !open" :aria-expanded="open" aria-controls="{{ $zone }}-cards"
+                        class="focus-ring flex min-h-14 w-full items-center justify-between gap-3 rounded-[14px] border border-line bg-surface px-5 text-ink">
+                        <h2 class="heading-display text-[26px]">{{ $zoneRules['label'] }}</h2>
+                        <span class="flex items-center gap-3">
+                            <span class="font-mono text-sm font-bold">{{ $sections[$zone]->count() }} cards<span class="font-medium text-muted"> · {{ $euro($stats->zone($zone)['price']) }}</span></span>
+                            <x-heroicon-o-chevron-up class="h-5 w-5 transition-transform" x-bind:class="open || 'rotate-180'" aria-hidden="true" />
+                        </span>
+                    </button>
+
+                    <div id="{{ $zone }}-cards" x-show="open" class="grid grid-cols-[repeat(auto-fill,minmax(88px,1fr))] gap-3">
+                        @foreach ($sections[$zone] as $card)
+                        <x-deck.card-slot :card="$card" :href="$card->link()" :over="$overMessages[$card->id()] ?? null">
+                            <span class="pointer-events-none absolute left-full top-0 z-30 ml-2 hidden w-72 gap-3 rounded-[14px] border border-line-strong bg-canvas p-4 text-left shadow-2xl group-hover:flex group-focus-visible:flex">
+                                <img src="{{ $card->imageSmall() }}" alt="" class="w-20 flex-none self-start rounded-md">
+                                <span class="flex min-w-0 flex-col gap-1.5">
+                                    <span class="heading-display text-xl text-ink">{{ $card->name() }}</span>
+                                    <span class="font-mono text-[11px] text-muted">{{ $card->fullType() }}@if ($card->hasStats()) · {{ $card->statLine() }}@endif</span>
+                                    <span class="line-clamp-6 text-[13px] leading-snug text-body">{{ $card->description() ?: 'No description' }}</span>
+                                </span>
+                            </span>
+                        </x-deck.card-slot>
+                        @endforeach
+                    </div>
+                </section>
+                @endforeach
+
+                @if (collect($sections)->every(fn ($cards) => $cards->isEmpty()))
+                <p class="rounded-2xl border-2 border-dashed border-line-strong p-10 text-center text-muted">No cards in this deck yet.</p>
+                @endif
+            </div>
+
+            @include('decks.partials.stats-sidebar')
+        </div>
     </div>
 </x-layout>

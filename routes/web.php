@@ -46,6 +46,7 @@ Route::middleware('auth')->group(function () {
 
     // Import from other tools' formats, and copy someone's public deck (visibility checked by DeckPolicy::view)
     Route::post('/{series}/decks/import', [DeckTransferController::class, 'import'])->middleware('throttle:10,1')->name('decks.import');
+    Route::post('/decks/{deck}/import', [DeckTransferController::class, 'reimport'])->can('update', 'deck')->middleware('throttle:10,1')->name('decks.reimport');
     Route::post('/decks/{deck}/copy', [DeckTransferController::class, 'copy'])->name('decks.copy');
 });
 

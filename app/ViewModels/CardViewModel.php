@@ -161,16 +161,19 @@ class CardViewModel
     }
 
     /**
-     * The attributes the deck builder JS reads from a card element.
+     * Everything the deck builder (resources/js/deck-builder.js) needs about a card, as one JSON-ready array.
      */
-    public function deckBuilderData(): array
+    public function builderCard(): array
     {
         return [
-            'data-card-id' => $this->id(),
-            'data-card-name' => $this->name(),
-            'data-card-image' => $this->image(),
-            'data-card-type' => $this->fullType(),
-            'data-card-desc' => $this->description(),
+            'id' => $this->id(),
+            'name' => $this->name(),
+            'image' => $this->image(),
+            'imageSmall' => $this->imageSmall(),
+            'type' => $this->fullType(),
+            'description' => $this->description(),
+            'price' => $this->priceValue(),
+            'limits' => $this->copyLimits(),
         ];
     }
 }

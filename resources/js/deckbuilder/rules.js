@@ -1,46 +1,98 @@
 /**
- * Deck building rules. The rules object comes from config/series.php (`deck` key) via the
- * #deckApp data-rules attribute, so the server and the builder always agree:
- *   { zones: { main: { label, min, max }, ... }, max_copies, extra_types, unlimited_types }
+ * Deck building rules for the deck builder, mirroring the server (DeckService::validateRules() and copyErrors()) so
+ * the builder refuses exactly what the server would, with the same messages. Pure functions: no DOM, no Alpine.
+ *
+ * - `rules` is the series' `deck` config (zones, max_copies, extra_types, unlimited_types, formats, limit_labels).
+ * - `zones` maps a zone key to its cards, one entry per copy. A card is CardViewModel::builderCard():
+ *   { id, name, type, price, limits, ... }.
+ * - `format` is a key of rules.formats, or "" for Casual.
  */
 
-const matchesAny = (type, needles) =>
+export const matchesAny = (type, needles) =>
     needles.some((needle) => type.toLowerCase().includes(needle.toLowerCase()));
 
-/** Copies of a card across every zone of the deck. */
-export function countCopies(cardId) {
-    return document.querySelectorAll(`.dropzone .card-wrapper[data-card-id="${CSS.escape(cardId)}"]`).length;
+const allCards = (zones) => Object.values(zones).flat();
+
+/** Copies of a card across every zone. */
+export function copiesOf(zones, id) {
+    return allCards(zones).filter((card) => card.id === id).length;
 }
 
-/**
- * Can `card` be placed in `zone`? `fromZone` is set when the card is being moved out of a zone,
- * so it doesn't count against limits twice.
- */
-export function validatePlacement(rules, zone, card, fromZone = null) {
-    const zoneRules = rules.zones[zone?.id];
-    if (!zoneRules) return { valid: false, reason: "Select a deck zone first." };
+const normalLimit = (rules, card) => (matchesAny(card.type, rules.unlimited_types) ? Infinity : rules.max_copies);
 
-    if (zone.children.length >= zoneRules.max) {
-        return { valid: false, reason: `${zoneRules.label} cannot have more than ${zoneRules.max} cards.` };
+/** The lower of the normal limit and the format limit; unlimited_types only lifts the normal limit. */
+export function allowedCopies(rules, card, format) {
+    const limit = format ? card.limits?.[format] : undefined;
+
+    return limit === undefined || limit === null ? normalLimit(rules, card) : Math.min(normalLimit(rules, card), limit);
+}
+
+/** Why a card can't have another copy, worded like the server. */
+export function copyMessage(rules, card, format) {
+    const allowed = allowedCopies(rules, card, format);
+
+    if (format && allowed < normalLimit(rules, card)) {
+        const label = rules.formats?.[format]?.label ?? format;
+
+        return allowed === 0
+            ? `${card.name} is not allowed in ${label}.`
+            : `You can only have ${allowed} ${allowed === 1 ? "copy" : "copies"} of ${card.name} in ${label}.`;
     }
 
-    const type = card.dataset.cardType || "";
-    const copies = countCopies(card.dataset.cardId) - (fromZone ? 1 : 0);
+    return `You can only have ${rules.max_copies} copies of ${card.name}.`;
+}
 
-    if (copies >= rules.max_copies && !matchesAny(type, rules.unlimited_types)) {
-        return { valid: false, reason: `You can only have ${rules.max_copies} copies of a card.` };
+/** Why `card` can't be added to `zone`, or null when it can. Same order of checks as the server. */
+export function placementError(rules, zones, zone, card, format) {
+    const zoneRules = rules.zones[zone];
+    if (!zoneRules) return "Select a deck zone first.";
+
+    if ((zones[zone]?.length ?? 0) >= zoneRules.max) {
+        return `${zoneRules.label} cannot have more than ${zoneRules.max} cards.`;
     }
 
     if (rules.extra_types.length) {
-        const isExtra = matchesAny(type, rules.extra_types);
-
-        if (zone.id === "extra" && !isExtra) {
-            return { valid: false, reason: `Only ${rules.extra_types.join(", ")} monsters belong in the ${zoneRules.label}.` };
-        }
-        if (zone.id === "main" && isExtra) {
-            return { valid: false, reason: `${rules.extra_types.join(", ")} monsters belong in the Extra Deck.` };
-        }
+        const isExtra = matchesAny(card.type, rules.extra_types);
+        // The side deck may hold anything.
+        if (zone === "extra" && !isExtra) return `${card.name} does not belong in the ${zoneRules.label}.`;
+        if (zone === "main" && isExtra) return `${card.name} belongs in the Extra Deck.`;
     }
 
-    return { valid: true };
+    if (copiesOf(zones, card.id) >= allowedCopies(rules, card, format)) return copyMessage(rules, card, format);
+
+    return null;
+}
+
+/** Cards with more copies than allowed (all zones together), once each: [{ id, message }]. */
+export function formatProblems(rules, zones, format) {
+    const unique = new Map();
+    allCards(zones).forEach((card) => unique.set(card.id, card));
+
+    return [...unique.values()]
+        .filter((card) => copiesOf(zones, card.id) > allowedCopies(rules, card, format))
+        .map((card) => ({ id: card.id, message: copyMessage(rules, card, format) }));
+}
+
+/** Each card in the deck once, in deck order (zone by zone), e.g. to pick a cover from. */
+export function uniqueCards(zones) {
+    const unique = new Map();
+    allCards(zones).forEach((card) => unique.has(card.id) || unique.set(card.id, card));
+
+    return [...unique.values()];
+}
+
+/** The price of every copy; cards without a price add nothing (see unpricedCount). */
+export function deckPrice(zones) {
+    return allCards(zones).reduce((sum, card) => sum + (card.price ?? 0), 0);
+}
+
+export function unpricedCount(zones) {
+    return allCards(zones).filter((card) => card.price === null || card.price === undefined).length;
+}
+
+/** The save form's `cards` field: { zone: [{ id }, ...] } (see SaveDeckRequest). */
+export function payload(zones) {
+    return Object.fromEntries(
+        Object.entries(zones).map(([zone, cards]) => [zone, cards.map((card) => ({ id: card.id }))])
+    );
 }
