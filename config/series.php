@@ -67,9 +67,13 @@ return [
             // The game's own words for a format limit (copies allowed => label), shown in the deck builder.
             'limit_labels' => [0 => 'Forbidden', 1 => 'Limited', 2 => 'Semi-Limited'],
             // Deck stats groups: the keys the mapper's statFacets() returns. `order` lists values to show first,
-            // in that order; other values follow in natural order.
+            // in that order; other values follow in natural order. `colors` (optional) colours the deck page charts.
             'stats' => [
-                'category' => ['label' => 'Card types', 'order' => ['Monster', 'Spell', 'Trap']],
+                'category' => [
+                    'label' => 'Card types',
+                    'order' => ['Monster', 'Spell', 'Trap'],
+                    'colors' => ['Monster' => '#B8652F', 'Spell' => '#1C8C7E', 'Trap' => '#A63D7E'],
+                ],
                 'level' => ['label' => 'Level / Rank'],
                 'attribute' => ['label' => 'Attribute'],
             ],
@@ -132,9 +136,23 @@ return [
             ],
             'limit_labels' => [0 => 'Not legal', 1 => 'Restricted'],
             'stats' => [
-                'type' => ['label' => 'Type', 'order' => ['Creature', 'Planeswalker', 'Battle', 'Instant', 'Sorcery', 'Artifact', 'Enchantment', 'Land']],
+                'type' => [
+                    'label' => 'Type',
+                    'order' => ['Creature', 'Planeswalker', 'Battle', 'Instant', 'Sorcery', 'Artifact', 'Enchantment', 'Land'],
+                    'colors' => [
+                        'Creature' => '#3E7A4A', 'Planeswalker' => '#8A5A9E', 'Battle' => '#9C6B3A', 'Instant' => '#2F6DB0',
+                        'Sorcery' => '#B5432F', 'Artifact' => '#6B7280', 'Enchantment' => '#9C8A5A', 'Land' => '#7A5C3A',
+                    ],
+                ],
                 'mana_value' => ['label' => 'Mana curve', 'order' => ['0', '1', '2', '3', '4', '5', '6', '7+']],
-                'color' => ['label' => 'Color', 'order' => ['White', 'Blue', 'Black', 'Red', 'Green', 'Multicolor', 'Colorless']],
+                'color' => [
+                    'label' => 'Color',
+                    'order' => ['White', 'Blue', 'Black', 'Red', 'Green', 'Multicolor', 'Colorless'],
+                    'colors' => [
+                        'White' => '#C9B98A', 'Blue' => '#2F6DB0', 'Black' => '#4A443F', 'Red' => '#B5432F',
+                        'Green' => '#3E7A4A', 'Multicolor' => '#B8902F', 'Colorless' => '#857E76',
+                    ],
+                ],
             ],
         ],
 

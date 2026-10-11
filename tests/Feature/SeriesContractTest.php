@@ -65,6 +65,10 @@ test('every configured series is fully set up', function () {
                 ! isset($group['order']) || (is_array($group['order']) && array_is_list($group['order']) && collect($group['order'])->every(fn ($value) => is_string($value))),
                 "stats group '$key' needs 'order' to be a list of strings"
             );
+            $check(
+                ! isset($group['colors']) || (is_array($group['colors']) && collect($group['colors'])->every(fn ($hex, $value) => is_string($value) && is_string($hex) && preg_match('/^#[0-9A-Fa-f]{6}$/', $hex))),
+                "stats group '$key' needs 'colors' to map values to #rrggbb"
+            );
         }
     }
 

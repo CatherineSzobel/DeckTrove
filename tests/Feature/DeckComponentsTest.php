@@ -1,0 +1,30 @@
+<?php
+
+use App\ViewModels\CardViewModel;
+use Illuminate\Support\Facades\Blade;
+
+test('the format badge shows casual, legal and broken decks', function () {
+    expect(Blade::render('<x-deck.format-badge :format="null" />'))->toContain('Casual')->toContain('bg-surface-2');
+    expect(Blade::render('<x-deck.format-badge format="tcg" label="TCG Advanced" :problems="0" />'))
+        ->toContain('TCG Advanced')->toContain('Legal in TCG Advanced.')->toContain('text-ok');
+    expect(Blade::render('<x-deck.format-badge format="tcg" label="TCG Advanced" :problems="2" />'))
+        ->toContain('This deck no longer fits TCG Advanced.')->toContain('text-danger');
+});
+
+test('a card slot marks cards that break the format', function () {
+    $card = new CardViewModel(['id' => 1, 'name' => 'Pot of Greed'], config('series.yugioh'));
+
+    $plain = Blade::render('<x-deck.card-slot :card="$card" />', ['card' => $card]);
+    $over = Blade::render('<x-deck.card-slot :card="$card" over="Pot of Greed is not allowed in TCG Advanced." href="/card/1" />', ['card' => $card]);
+
+    expect($plain)->toContain('alt="Pot of Greed"')->not->toContain('outline-danger');
+    expect($over)->toContain('outline-danger')->toContain('title="Pot of Greed is not allowed in TCG Advanced."')
+        ->toContain('href="/card/1"')->toContain('>!</span>');
+});
+
+test('the problems box lists the messages', function () {
+    $html = Blade::render('<x-deck.problems title="2 cards break TCG Advanced" :messages="$m">Fix them.</x-deck.problems>', ['m' => ['A.', 'B.']]);
+
+    expect($html)->toContain('role="alert"')->toContain('2 cards break TCG Advanced')
+        ->toContain('<li>A.</li>')->toContain('<li>B.</li>')->toContain('Fix them.');
+});

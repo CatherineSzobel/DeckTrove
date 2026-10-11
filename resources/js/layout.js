@@ -46,8 +46,9 @@ function initFormHelpers() {
     });
 }
 
+// Started once every module script has run, so page scripts can register components in `alpine:init`.
 window.Alpine = Alpine;
-Alpine.start();
+document.addEventListener("DOMContentLoaded", () => Alpine.start());
 
 document.addEventListener("DOMContentLoaded", () => {
     initThemeToggle();
