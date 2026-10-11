@@ -10,6 +10,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 
 /**
  * Imports Yu-Gi-Oh! sets, cards and which cards were printed in which set.
@@ -53,10 +54,12 @@ class ImportYugiohCards extends Command
 
     private function importSets(array $sets): void
     {
-        $rows = array_map(fn (array $set) => YugiohSet::attributesFrom($set), $sets);
+        // The slug identifies a set: YGOPRODeck sometimes renames one (e.g. only the case changes), which must update
+        // the existing row and keep its pack page URL rather than add a second set with the same slug.
+        $rows = collect($sets)->map(fn (array $set) => YugiohSet::attributesFrom($set))->keyBy('slug')->values()->all();
 
         foreach (array_chunk($rows, 500) as $chunk) {
-            YugiohSet::upsert($chunk, ['name'], ['code', 'slug', 'card_count', 'released_at', 'image_url']);
+            YugiohSet::upsert($chunk, ['slug'], ['code', 'name', 'card_count', 'released_at', 'image_url']);
         }
 
         $this->info('Imported '.count($sets).' sets.');
@@ -88,13 +91,14 @@ class ImportYugiohCards extends Command
      */
     private function importPrintings(array $cards): void
     {
-        $setIds = YugiohSet::pluck('id', 'name');
+        // Matched by slug, so a card that still lists a set under an older spelling of its name finds it.
+        $setIds = YugiohSet::pluck('id', 'slug');
         $rows = [];
         $skipped = 0;
 
         foreach ($cards as $card) {
             foreach ($card['card_sets'] ?? [] as $printing) {
-                $setId = $setIds[$printing['set_name'] ?? ''] ?? null;
+                $setId = $setIds[Str::slug($printing['set_name'] ?? '')] ?? null;
 
                 if (! $setId) {
                     $skipped++;
