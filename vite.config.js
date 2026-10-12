@@ -16,13 +16,16 @@ export default defineConfig({
                 'resources/js/carousel.js',
                 'resources/js/deck-builder.js',
                 'resources/js/deck-page.js',
-                'resources/js/deckfilter.js',
                 'resources/js/moving-carousel.js',
-                'resources/js/mydecks.js',
                 'resources/js/pack.js',
             ],
             refresh: true,
         }),
         tailwindcss(),
     ],
+    // Its own port, so it can run next to job-tracker (which needs 5173)
+    server: {
+        port: 5180,
+        strictPort: true,
+    },
 });
