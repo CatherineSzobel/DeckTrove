@@ -42,22 +42,26 @@ class DeckController extends Controller
 
     public function mine(Request $request)
     {
-        $decks = $request->user()->decks()->withCardCount()->latest()->get();
+        $decks = $request->user()->decks()->withCardCount()->withCount('likes')->latest()->get();
 
         return view('decks.mydecks', compact('decks'));
     }
 
-    public function show(Deck $deck, DeckStats $deckStats)
+    public function show(Request $request, Deck $deck, DeckStats $deckStats)
     {
         Gate::authorize('view', $deck);
 
-        $deck->load('user');
+        $deck->load('user')->loadCount('likes');
         $sections = $this->deckService->buildSections($deck);
         $zones = config("series.{$deck->game}.deck.zones");
         // Rendered by the deck page redesign on frontend-rework; the current view doesn't use it yet.
         $stats = $deckStats->fromSections($sections, config("series.{$deck->game}"));
 
-        return view('decks.deck', compact('deck', 'sections', 'zones', 'stats'));
+        // For the like button (frontend-rework): your own deck and guests can't like.
+        $liked = $request->user() !== null && $deck->likes()->where('user_id', $request->user()->id)->exists();
+        $canLike = Gate::allows('like', $deck);
+
+        return view('decks.deck', compact('deck', 'sections', 'zones', 'stats', 'liked', 'canLike'));
     }
 
     /**

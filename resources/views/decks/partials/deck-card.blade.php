@@ -26,7 +26,14 @@
         </a>
 
         <div class="px-5 pb-5 flex items-center justify-between text-xs text-gray-500">
-            <span>By {{ $deck->user->username ?? 'Unknown' }}</span>
+            <span>
+                By
+                @if ($deck->user)
+                <a href="{{ route('users.show', $deck->user) }}" class="hover:underline">{{ $deck->user->username }}</a>
+                @else
+                Unknown
+                @endif
+            </span>
 
             <div class="flex items-center gap-3">
                 <span class="text-gray-700 group-hover:text-gray-900 font-medium transition">View →</span>

@@ -6,7 +6,7 @@
             <p class="text-sm md:text-base text-gray-500 mt-2">{{ $deck->description }}</p>
             @endif
             <p class="text-sm text-gray-500 mt-2">
-                {{ config("series.{$deck->game}.label") }} · by {{ $deck->user->username }} ·
+                {{ config("series.{$deck->game}.label") }} · by <a href="{{ route('users.show', $deck->user) }}" class="font-semibold hover:underline">{{ $deck->user->username }}</a> ·
                 <span class="font-semibold text-amber-500">{{ $deck->card_count }}</span> cards
                 @unless ($deck->is_public) · <span class="font-semibold">Private</span> @endunless
             </p>
