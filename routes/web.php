@@ -51,8 +51,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/decks/{deck}/copy', [DeckTransferController::class, 'copy'])->name('decks.copy');
 
     // Likes on public decks (DeckPolicy::like: not your own deck; someone else's private deck is a 404)
-    Route::post('/decks/{deck}/like', [DeckLikeController::class, 'store'])->can('like', 'deck')->middleware('throttle:30,1')->name('decks.like');
-    Route::delete('/decks/{deck}/like', [DeckLikeController::class, 'destroy'])->can('view', 'deck')->middleware('throttle:30,1')->name('decks.unlike');
+    Route::post('/decks/{deck}/like', [DeckLikeController::class, 'store'])->can('like', 'deck')->middleware('throttle:likes')->name('decks.like');
+    Route::delete('/decks/{deck}/like', [DeckLikeController::class, 'destroy'])->can('view', 'deck')->middleware('throttle:likes')->name('decks.unlike');
 });
 
 // Decks (visibility is checked by DeckPolicy::view)

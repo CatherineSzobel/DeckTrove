@@ -117,3 +117,21 @@ test('guests are sent to log in', function () {
     $this->postJson(route('decks.like', $deck))->assertUnauthorized();
     $this->deleteJson(route('decks.unlike', $deck))->assertUnauthorized();
 });
+
+test('likes have their own rate limit, separate from imports', function () {
+    $deck = Deck::factory()->public()->create();
+    $user = User::factory()->create();
+
+    foreach (range(1, 10) as $attempt) {
+        $this->actingAs($user)->postJson(route('decks.like', $deck))->assertOk();
+    }
+
+    // Imports allow 10 a minute; liking must not use up that budget.
+    expect($this->actingAs($user)->post(route('decks.import', 'yugioh'))->status())->not->toBe(429);
+
+    foreach (range(11, 30) as $attempt) {
+        $this->actingAs($user)->postJson(route('decks.like', $deck))->assertOk();
+    }
+
+    $this->actingAs($user)->postJson(route('decks.like', $deck))->assertTooManyRequests();
+});
