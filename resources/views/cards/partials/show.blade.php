@@ -36,7 +36,7 @@
 
         <div class="mb-4">
             <h3 class="text-lg font-semibold mb-2 text-gray-900">Printings</h3>
-            <x-print-list :sets="$card->printSets()" :series="$series" id="prints-{{ $card->id() ?? 'default' }}" />
+            <x-print-list :packs="$card->printPacks($series)" list-id="more-prints-{{ $card->id() ?? 'default' }}" />
         </div>
 
         @if ($setCards->isNotEmpty())

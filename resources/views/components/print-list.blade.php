@@ -1,20 +1,6 @@
-@props(['sets', 'series'])
+@props(['packs', 'listId'])
 
-@php
-    // One entry per set. A print code looks like "LOB-EN001"; the pack code is the part before the dash.
-    // Several products can share a pack code, so the set name's slug is part of the link.
-    $packs = collect($sets)
-        ->map(fn ($set) => [
-            'pack_code' => explode('-', $set['set_code'] ?? '')[0],
-            'set_name' => $set['set_name'] ?? 'Unknown',
-        ])
-        ->filter(fn ($set) => $set['pack_code'] !== '')
-        ->unique('set_name')
-        ->map(fn ($set) => $set + ['url' => route('packs.show', [$series, $set['pack_code'], Str::slug($set['set_name'])])])
-        ->values();
-
-    $listId = 'more-prints-'.($attributes->get('id') ?? 'default');
-@endphp
+{{-- The sets a card was printed in (CardViewModel::printPacks()): the first four, the rest behind "Show more". --}}
 
 <div class="mb-4">
     @if ($packs->isNotEmpty())

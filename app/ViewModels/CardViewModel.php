@@ -3,6 +3,8 @@
 namespace App\ViewModels;
 
 use App\Cards\CardMapper;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 /**
  * Presents a raw card from any series, using that series' mapper and config from config/series.php.
@@ -137,6 +139,26 @@ class CardViewModel
     public function printSets(): array
     {
         return $this->mapper->printSets($this->card);
+    }
+
+    /**
+     * The sets this card was printed in, once each, with a link to the pack page. A print code looks like
+     * "LOB-EN001"; the pack code is the part before the dash, and the set name's slug picks between products that
+     * share a pack code.
+     *
+     * @return Collection<int, array{set_name: string, url: string}>
+     */
+    public function printPacks(string $series): Collection
+    {
+        return collect($this->printSets())
+            ->map(fn (array $set) => ['code' => explode('-', $set['set_code'] ?? '')[0], 'set_name' => $set['set_name'] ?? 'Unknown'])
+            ->filter(fn (array $set) => $set['code'] !== '')
+            ->unique('set_name')
+            ->map(fn (array $set) => [
+                'set_name' => $set['set_name'],
+                'url' => route('packs.show', [$series, $set['code'], Str::slug($set['set_name'])]),
+            ])
+            ->values();
     }
 
     /**
