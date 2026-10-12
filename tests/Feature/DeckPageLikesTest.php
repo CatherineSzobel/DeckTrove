@@ -52,3 +52,30 @@ test('usernames on the deck page and the public list link to the profile', funct
     $this->get(route('decks.show', $deck))->assertSee('href="'.$profile.'"', false);
     $this->get(route('public-deck'))->assertSee('href="'.$profile.'"', false);
 });
+
+test('the deck page shows a like button above Copy for other players', function () {
+    $deck = Deck::factory()->public()->create(['game' => 'yugioh']);
+    DeckLike::factory()->count(2)->for($deck)->create();
+
+    $html = $this->actingAs(User::factory()->create())->get(route('decks.show', $deck))->getContent();
+
+    expect($html)
+        ->toContain('action="'.route('decks.like', $deck).'"')
+        ->toContain('aria-pressed="false"')
+        ->and(strpos($html, route('decks.like', $deck)))->toBeLessThan(strpos($html, route('decks.copy', $deck)));
+});
+
+test('owners see how many players liked their deck, guests are asked to log in', function () {
+    $deck = Deck::factory()->public()->create(['game' => 'yugioh']);
+    DeckLike::factory()->count(2)->for($deck)->create();
+
+    $this->actingAs($deck->user)->get(route('decks.show', $deck))
+        ->assertSee('2 players liked this deck')
+        ->assertDontSee('action="'.route('decks.like', $deck).'"', false);
+
+    auth()->logout();
+
+    $this->get(route('decks.show', $deck))
+        ->assertSee('Log in to like')
+        ->assertSee('href="'.route('login').'"', false);
+});

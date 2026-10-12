@@ -69,6 +69,8 @@
                     Edit deck
                 </a>
                 @else
+                {{-- Other players toggle their like; guests get a link to log in. --}}
+                <x-deck.like-button :deck="$deck" :liked="$liked" :count="$deck->likes_count" size="lg" />
                 @auth
                 <form method="POST" action="{{ route('decks.copy', $deck) }}">
                     @csrf
@@ -83,6 +85,9 @@
                     <x-heroicon-o-arrow-down-tray class="h-5 w-5" aria-hidden="true" />
                     Export .{{ $extension }}
                 </a>
+                @if ($isOwner && $deck->is_public)
+                <x-deck.like-button :deck="$deck" :liked="false" :count="$deck->likes_count" size="lg" />
+                @endif
                 @unless ($deck->is_public)
                 <span class="text-center text-xs text-muted">Private: only you can see this deck</span>
                 @endunless
