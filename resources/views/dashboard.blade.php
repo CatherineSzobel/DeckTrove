@@ -1,16 +1,3 @@
-@php
-    $series = config('series');
-    $defaultSeries = session('series', array_key_first($series));
-    $quickLinks = [
-        ...collect($series)->map(fn ($config, $key) => [
-            'href' => route('cards.index', $key),
-            'title' => $config['label'].' cards',
-            'class' => 'bg-slate-800 border border-slate-700 hover:border-purple-500',
-        ])->values()->all(),
-        ['href' => route('public-deck'), 'title' => 'Public Decks', 'class' => 'bg-slate-800 border border-slate-700 hover:border-red-500'],
-        ['href' => route('decks.builder', $defaultSeries), 'title' => 'Deck Builder', 'class' => 'bg-slate-800 border border-slate-700 hover:border-amber-500'],
-    ];
-@endphp
 
 <x-layout title="Dashboard" :js="['resources/js/moving-carousel.js']" :css="['resources/css/dashboard.css']">
     <div class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-4 md:p-8 rounded-lg">
@@ -31,7 +18,7 @@
                                 <select id="tcgFilter" name="tcg" data-autosubmit
                                     class="bg-slate-800/80 text-white rounded-xl px-4 py-2.5 border border-slate-700 hover:border-amber-400 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 transition-all cursor-pointer">
                                     <option value="">All TCGs</option>
-                                    @foreach ($series as $key => $config)
+                                    @foreach (config('series') as $key => $config)
                                     <option value="{{ $key }}" @selected($selectedTcg === $key)>{{ $config['label'] }}</option>
                                     @endforeach
                                 </select>
@@ -53,7 +40,7 @@
                                     </div>
                                     <h3 class="text-white font-semibold truncate group-hover:text-amber-400 transition-colors text-lg">{{ $deck->name }}</h3>
                                     <div class="flex items-center justify-between mt-2">
-                                        <p class="text-slate-400 text-sm">{{ $series[$deck->game]['label'] ?? ucfirst($deck->game) }}</p>
+                                        <p class="text-slate-400 text-sm">{{ $deck->series_label }}</p>
                                         <span class="bg-slate-700/50 text-amber-400 text-xs font-medium px-2.5 py-1 rounded-full">{{ $deck->card_count }} cards</span>
                                     </div>
                                 </div>
@@ -63,7 +50,7 @@
                         @else
                         <div class="text-center py-16">
                             <p class="text-slate-400 text-lg mb-6">No decks yet. Start building your collection!</p>
-                            <a href="{{ route('decks.builder', $defaultSeries) }}"
+                            <a href="{{ route('decks.builder', $builderSeries) }}"
                                 class="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-900 font-semibold px-8 py-3 rounded-xl transition-all transform hover:scale-105 shadow-lg hover:shadow-amber-500/50">
                                 <x-heroicon-o-plus class="w-5 h-5" />
                                 Create Your First Deck
@@ -77,7 +64,7 @@
                         <div class="flex flex-wrap gap-4 justify-start">
                             @foreach ($deckCounts as $key => $count)
                             <div class="flex-1 min-w-[90px] bg-slate-800/80 p-3 rounded-xl border border-slate-600/30 hover:border-amber-400/50 transition-all flex flex-col items-center text-center">
-                                <p class="text-slate-400 text-sm mb-1">{{ $key === 'total' ? 'Total' : $series[$key]['label'] }}</p>
+                                <p class="text-slate-400 text-sm mb-1">{{ $key === 'total' ? 'Total' : config("series.$key.label") }}</p>
                                 <p class="text-amber-400 font-bold text-2xl">{{ $count }}</p>
                             </div>
                             @endforeach

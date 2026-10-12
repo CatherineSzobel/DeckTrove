@@ -22,6 +22,23 @@ class DashboardService
     }
 
     /**
+     * The dashboard's shortcuts: each series' cards, public decks and the deck builder.
+     *
+     * @return list<array{href: string, title: string}>
+     */
+    public function quickLinks(string $builderSeries): array
+    {
+        return [
+            ...collect(config('series'))
+                ->map(fn (array $config, string $series) => ['href' => route('cards.index', $series), 'title' => $config['label'].' cards'])
+                ->values()
+                ->all(),
+            ['href' => route('public-deck'), 'title' => 'Public Decks'],
+            ['href' => route('decks.builder', $builderSeries), 'title' => 'Deck Builder'],
+        ];
+    }
+
+    /**
      * Deck counts for every supported series, plus a total.
      *
      * @return array<string, int>
