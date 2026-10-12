@@ -115,26 +115,21 @@
             @include('decks.partials.deck-card', ['trending' => $filters['sort'] === 'trending'])
         </div>
         @elseif ($filters['liked'] && ! $filters['q'] && ! $filters['game'])
-        <section class="flex flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-line-strong p-10 text-center">
-            <x-heroicon-o-heart class="h-8 w-8 text-accent-ink" aria-hidden="true" />
-            <h2 class="heading-display text-[30px] text-ink">You haven’t liked any decks yet</h2>
-            <p class="max-w-[32rem] text-[15px] text-muted">Tap the heart on a deck to keep it here. Only you can see which decks you liked.</p>
-            <a href="{{ route('public-deck', ['sort' => 'trending']) }}" class="btn-primary">See trending decks</a>
-        </section>
+        <x-empty-state title="You haven’t liked any decks yet">
+            <x-slot:icon><x-heroicon-o-heart class="h-8 w-8 text-accent-ink" aria-hidden="true" /></x-slot:icon>
+            Tap the heart on a deck to keep it here. Only you can see which decks you liked.
+            <x-slot:actions><a href="{{ route('public-deck', ['sort' => 'trending']) }}" class="btn-primary">See trending decks</a></x-slot:actions>
+        </x-empty-state>
         @elseif ($filtering)
-        <section class="flex flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-line-strong p-10 text-center">
-            <h2 class="heading-display text-[30px] text-ink">No decks match</h2>
-            <p class="max-w-[32rem] text-[15px] text-muted">Try another search or format, or clear the filters to see every public deck.</p>
-            <a href="{{ route('public-deck', ['sort' => $filters['sort']]) }}" class="btn-secondary">Clear filters</a>
-        </section>
+        <x-empty-state title="No decks match">
+            Try another search or format, or clear the filters to see every public deck.
+            <x-slot:actions><a href="{{ route('public-deck', ['sort' => $filters['sort']]) }}" class="btn-secondary">Clear filters</a></x-slot:actions>
+        </x-empty-state>
         @else
-        <section class="flex flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-line-strong p-10 text-center">
-            <h2 class="heading-display text-[30px] text-ink">No public decks yet</h2>
-            <p class="max-w-[32rem] text-[15px] text-muted">Decks show up here once their owners make them public.</p>
-            @auth
-            <a href="{{ route('decks') }}" class="btn-secondary">Go to my decks</a>
-            @endauth
-        </section>
+        <x-empty-state title="No public decks yet">
+            Decks show up here once their owners make them public.
+            <x-slot:actions>@auth<a href="{{ route('decks') }}" class="btn-secondary">Go to my decks</a>@endauth</x-slot:actions>
+        </x-empty-state>
         @endif
     </div>
 </x-layout>

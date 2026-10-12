@@ -35,3 +35,18 @@ test('the problems box lists the messages', function () {
     expect($html)->toContain('role="alert"')->toContain('2 cards break TCG Advanced')
         ->toContain('<li>A.</li>')->toContain('<li>B.</li>')->toContain('Fix them.');
 });
+
+test('the empty state shows a title, an optional line and optional actions', function () {
+    $full = Blade::render('<x-empty-state title="No decks match" heading="h3">Try another search.<x-slot:actions><a href="/decks">Go</a></x-slot:actions></x-empty-state>');
+
+    expect($full)
+        ->toContain('border-dashed')
+        ->toMatch('/<h3[^>]*>No decks match<\/h3>/')
+        ->toContain('Try another search.')
+        ->toContain('<a href="/decks">Go</a>');
+
+    expect(Blade::render('<x-empty-state title="Nothing here" x-show="open" />'))
+        ->toMatch('/<h2[^>]*>Nothing here<\/h2>/')
+        ->toContain('x-show="open"')
+        ->not->toContain('<p');
+});
