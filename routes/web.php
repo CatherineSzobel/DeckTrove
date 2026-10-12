@@ -9,6 +9,7 @@ use App\Http\Controllers\IndexController;
 use App\Http\Controllers\PacksController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PublicProfileController;
 use App\Http\Controllers\RegisterUserController;
 use App\Http\Controllers\SessionController;
 use Illuminate\Support\Facades\Route;
@@ -58,6 +59,7 @@ Route::middleware('auth')->group(function () {
 Route::get('/decks/{deck}', [DeckController::class, 'show'])->name('decks.show');
 Route::get('/decks/{deck}/export', [DeckTransferController::class, 'export'])->name('decks.export');
 Route::get('/public-deck', [DeckController::class, 'index'])->name('public-deck');
+Route::get('/u/{user:username}', PublicProfileController::class)->name('users.show');
 
 // Per series
 Route::prefix('{series}')->group(function () {

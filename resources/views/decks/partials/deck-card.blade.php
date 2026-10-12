@@ -42,5 +42,5 @@
 </div>
 
 @if ($decks->hasPages())
-<div class="mt-10 flex justify-center">{{ $decks->withPath(route('public-deck'))->links() }}</div>
+<div class="mt-10 flex justify-center">{{ $decks->withPath($decksPath ?? route('public-deck'))->links() }}</div>
 @endif
