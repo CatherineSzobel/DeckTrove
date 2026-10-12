@@ -60,6 +60,16 @@ class Deck extends Model
         return Attribute::get(fn ($value) => (int) ($value ?? $this->deckCards()->sum('count')));
     }
 
+    /**
+     * "Casual" for a deck without a format, otherwise the format's label from the series config.
+     */
+    protected function formatLabel(): Attribute
+    {
+        return Attribute::get(fn () => $this->format
+            ? config("series.{$this->game}.deck.formats.{$this->format}.label", $this->format)
+            : 'Casual');
+    }
+
     public function scopeWithCardCount($query)
     {
         return $query->withSum('deckCards as card_count', 'count');
