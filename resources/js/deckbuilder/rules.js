@@ -96,3 +96,25 @@ export function payload(zones) {
         Object.entries(zones).map(([zone, cards]) => [zone, cards.map((card) => ({ id: card.id }))])
     );
 }
+
+/** The accessible name of a card in a zone, which removes it when clicked; with its format problem when it has one. */
+export function removeLabel(cardName, zoneLabel, problem) {
+    return `Remove ${cardName} from the ${zoneLabel}` + (problem ? `. ${problem}` : "");
+}
+
+/** The tooltip of a card in a zone. */
+export function removeTitle(problem) {
+    return problem ? `${problem} Click to remove.` : "Click to remove";
+}
+
+/** What an empty zone says: the active zone takes cards from the search, others have to be chosen first. */
+export function emptyZoneHint(isActive) {
+    return isActive ? "Use + on a card in the search to add it here." : "Choose “Add cards here”, then use + in the search.";
+}
+
+/** The colour of a format limit tag: red when forbidden, amber at 1, blue above; none without a limit. */
+export function limitTone(limit) {
+    if (limit === null || limit === undefined) return "";
+
+    return limit === 0 ? "text-danger" : limit === 1 ? "text-amber-300" : "text-sky-300";
+}

@@ -14,7 +14,7 @@
             :class="isOverLimit(card) ? 'text-danger' : 'text-ink'"></span>
         <span x-show="limitTag(card)" x-cloak x-text="limitTag(card)"
             class="dark-scope absolute inset-x-1.5 bottom-1.5 truncate rounded bg-canvas/90 px-1 py-1 text-center font-mono text-[10px] font-bold uppercase tracking-[0.04em]"
-            :class="{ 'text-danger': limitOf(card) === 0, 'text-amber-300': limitOf(card) === 1, 'text-sky-300': limitOf(card) >= 2 }"></span>
+            :class="limitTone(card)"></span>
     </button>
 
     <span class="truncate text-center text-[11px] text-muted" title="{{ $card->fullType() }}">{{ $card->name() }}</span>

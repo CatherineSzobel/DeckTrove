@@ -149,8 +149,7 @@
                             <template x-for="(card, index) in zones[zone]" :key="card.uid">
                                 <button type="button" @click="removeAt(zone, index)"
                                     @mouseenter="showPreview(card, $el)" @mouseleave="hidePreview()" @focus="showPreview(card, $el)" @blur="hidePreview()"
-                                    :title="problemFor(card.id) ? problemFor(card.id) + ' Click to remove.' : 'Click to remove'"
-                                    :aria-label="`Remove ${card.name} from the ${rules.zones[zone].label}` + (problemFor(card.id) ? `. ${problemFor(card.id)}` : '')"
+                                    :title="removeTitle(card)" :aria-label="removeLabel(zone, card)"
                                     class="focus-ring relative block aspect-[59/86] rounded-md bg-surface-2 shadow-md transition-transform hover:-translate-y-0.5"
                                     :class="problemFor(card.id) && 'outline-2 outline-offset-2 outline-danger'">
                                     <img :src="card.imageSmall" :alt="card.name" loading="lazy" class="h-full w-full rounded-md object-cover">
@@ -160,7 +159,7 @@
                             </template>
                         </div>
                         <div x-show="!count(zone)" class="flex min-h-[120px] items-center justify-center rounded-xl border-2 border-dashed border-line-strong p-4 text-center text-sm text-muted"
-                            x-text="active === zone ? 'Use + on a card in the search to add it here.' : 'Choose “Add cards here”, then use + in the search.'"></div>
+                            x-text="emptyZoneHint(zone)"></div>
                     </section>
                 </template>
             </div>

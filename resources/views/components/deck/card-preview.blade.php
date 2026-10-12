@@ -9,7 +9,7 @@
     <img :src="preview?.imageSmall" alt="" class="w-20 flex-none self-start rounded-md">
     <div class="flex min-w-0 flex-col gap-1.5">
         <span class="heading-display text-xl text-ink" x-text="preview?.name"></span>
-        <span class="font-mono text-[11px] text-muted" x-text="preview ? [preview.type, preview.stats].filter(Boolean).join(' · ') : ''"></span>
+        <span class="font-mono text-[11px] text-muted" x-text="previewLine()"></span>
         <span class="line-clamp-6 text-[13px] leading-snug text-body" x-text="preview?.description || 'No description'"></span>
     </div>
 </div>

@@ -4,9 +4,13 @@ import {
     copiesOf,
     copyMessage,
     deckPrice,
+    emptyZoneHint,
     formatProblems,
+    limitTone,
     payload,
     placementError,
+    removeLabel,
+    removeTitle,
     uniqueCards,
     unpricedCount,
 } from "./rules.js";
@@ -153,5 +157,24 @@ describe("copiesOf and payload", () => {
 
         expect(copiesOf(zones, "1")).toBe(2);
         expect(payload(zones)).toEqual({ main: [{ id: "1" }, { id: "1" }], extra: [], side: [{ id: "2" }] });
+    });
+});
+
+describe("zone texts", () => {
+    test("a card in a zone is named for removal, with its problem when it has one", () => {
+        expect(removeLabel("Dark Magician", "Main Deck", null)).toBe("Remove Dark Magician from the Main Deck");
+        expect(removeLabel("Pot of Greed", "Main Deck", "Pot of Greed is not allowed in TCG Advanced."))
+            .toBe("Remove Pot of Greed from the Main Deck. Pot of Greed is not allowed in TCG Advanced.");
+        expect(removeTitle(null)).toBe("Click to remove");
+        expect(removeTitle("Too many copies.")).toBe("Too many copies. Click to remove.");
+    });
+
+    test("an empty zone explains how to add cards, depending on whether it's the active one", () => {
+        expect(emptyZoneHint(true)).toBe("Use + on a card in the search to add it here.");
+        expect(emptyZoneHint(false)).toBe("Choose “Add cards here”, then use + in the search.");
+    });
+
+    test("limit tags are red when forbidden, amber at one and blue above", () => {
+        expect([limitTone(0), limitTone(1), limitTone(2), limitTone(null)]).toEqual(["text-danger", "text-amber-300", "text-sky-300", ""]);
     });
 });

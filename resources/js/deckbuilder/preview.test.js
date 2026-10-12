@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { previewPosition } from "./preview.js";
+import { previewMeta, previewPosition } from "./preview.js";
 
 const viewport = { width: 1200, height: 800 };
 const size = { width: 288, height: 200 };
@@ -17,5 +17,13 @@ describe("previewPosition", () => {
     test("stays inside the window at the top and the bottom", () => {
         expect(previewPosition(rect(100, -50), viewport, size).top).toBe(8);
         expect(previewPosition(rect(100, 750), viewport, size).top).toBe(592);
+    });
+});
+
+describe("previewMeta", () => {
+    test("joins the type and the stats that are there", () => {
+        expect(previewMeta({ type: "Effect Monster", stats: "ATK 2500 / DEF 2100" })).toBe("Effect Monster · ATK 2500 / DEF 2100");
+        expect(previewMeta({ type: "Spell Card", stats: "" })).toBe("Spell Card");
+        expect(previewMeta(null)).toBe("");
     });
 });

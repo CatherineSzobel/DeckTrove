@@ -211,6 +211,20 @@ document.addEventListener("alpine:init", () => {
             return this.problems.find((problem) => problem.id === id)?.message ?? null;
         },
 
+        // --- Texts for cards in a zone ------------------------------------------------------------
+
+        removeLabel(zone, card) {
+            return deckRules.removeLabel(card.name, this.rules.zones[zone].label, this.problemFor(card.id));
+        },
+
+        removeTitle(card) {
+            return deckRules.removeTitle(this.problemFor(card.id));
+        },
+
+        emptyZoneHint(zone) {
+            return deckRules.emptyZoneHint(this.active === zone);
+        },
+
         // --- Cards in the search results -----------------------------------------------------------
 
         copiesOf(card) {
@@ -239,6 +253,10 @@ document.addEventListener("alpine:init", () => {
 
             const label = this.rules.limit_labels[limit] ?? "";
             return limit > 0 ? `${label} · ${limit}` : label;
+        },
+
+        limitTone(card) {
+            return deckRules.limitTone(this.limitOf(card));
         },
 
         canRemove(card) {

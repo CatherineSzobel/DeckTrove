@@ -32,6 +32,11 @@ export function cardPreview() {
         hidePreview() {
             this.preview = null;
         },
+
+        // A method, not a getter: the deck builder spreads this object into its own, which would freeze a getter.
+        previewLine() {
+            return previewMeta(this.preview);
+        },
     };
 }
 
@@ -41,4 +46,9 @@ export function previewPosition(rect, viewport, size, gap = 8) {
     const top = Math.min(Math.max(gap, rect.top), Math.max(gap, viewport.height - size.height - gap));
 
     return { left, top };
+}
+
+/** The preview's type line, e.g. "Effect Monster · ATK 2500 / DEF 2100"; empty without a card. */
+export function previewMeta(card) {
+    return card ? [card.type, card.stats].filter(Boolean).join(" · ") : "";
 }
