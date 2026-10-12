@@ -95,6 +95,15 @@
         @apply focus-ring min-h-12 rounded-xl border-[1.5px] border-line-strong bg-canvas px-3.5 py-2.5 text-ink placeholder:text-muted;
     }
 
+    /* One option in a segmented control (series, sort, zone). The selected one has aria-current or aria-pressed="true". */
+    .segment {
+        @apply focus-ring flex min-h-10 items-center justify-center whitespace-nowrap rounded-[9px] px-3.5 text-sm font-medium text-muted hover:text-ink aria-pressed:bg-surface-2 aria-pressed:font-bold aria-pressed:text-ink;
+
+        &[aria-current] {
+            @apply bg-surface-2 font-bold text-ink;
+        }
+    }
+
     /* Like buttons (x-deck.like-button). The liked look follows aria-pressed, which only the toggle has. */
     .btn-like {
         @apply focus-ring relative z-10 rounded-xl border-[1.5px] border-line-strong font-bold transition hover:bg-surface-2 aria-pressed:border-accent-ink aria-pressed:bg-warn-bg aria-pressed:text-accent-ink;

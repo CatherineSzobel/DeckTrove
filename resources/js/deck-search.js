@@ -15,6 +15,11 @@ export function deckSearch(decks) {
             return (this.series === "all" || deck.game === this.series) && deck.text.includes(query);
         },
 
+        /** The series switch's aria-pressed value for a series ("all" included). */
+        pressed(series) {
+            return String(this.series === series);
+        },
+
         /** How many cards match, for the count and the "no matches" box. */
         get shown() {
             return decks.filter((deck, index) => this.matches(index)).length;

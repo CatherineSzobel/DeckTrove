@@ -4,11 +4,13 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class User extends Authenticatable
 {
@@ -53,6 +55,14 @@ class User extends Authenticatable
     public function likes(): HasMany
     {
         return $this->hasMany(DeckLike::class);
+    }
+
+    /**
+     * The first letter of the username, uppercased (accents included), shown when there's no avatar.
+     */
+    protected function initial(): Attribute
+    {
+        return Attribute::get(fn () => Str::upper(Str::substr((string) $this->username, 0, 1)));
     }
 
     public function avatarUrl(): ?string

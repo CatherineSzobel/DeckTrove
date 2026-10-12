@@ -35,6 +35,26 @@ final readonly class DeckStatsResult implements JsonSerializable
     }
 
     /**
+     * A price in the stats currency, e.g. "€84.20".
+     */
+    public function money(float $value): string
+    {
+        return $this->currency['symbol'].number_format($value, 2);
+    }
+
+    /**
+     * The main deck's counts in the first stats group (e.g. Monster / Spell / Trap), for the deck page's chips.
+     *
+     * @return array<string|int, int>
+     */
+    public function headlineCounts(): array
+    {
+        $groups = $this->zone('main')['groups'] ?? [];
+
+        return array_filter(reset($groups)['values'] ?? []);
+    }
+
+    /**
      * How many cards in a zone have a value in a group, e.g. groupCount('main', 'category', 'Monster').
      */
     public function groupCount(string $zone, string $group, string $value): int

@@ -2,22 +2,6 @@
     Public decks: search, series, format, sort and "Liked by me" are plain links and a GET form (see PublicDeckQuery for
     what the server accepts), so every state has its own URL and the page works without JS.
 --}}
-@php
-    $current = array_filter([
-        'q' => $filters['q'],
-        'sort' => $filters['sort'],
-        'game' => $filters['game'],
-        'format' => $filters['format'],
-        'liked' => $filters['liked'] ? 1 : null,
-    ], fn ($value) => $value !== null);
-
-    // The page's URL with some filters changed; null removes one. Changing anything starts again at page one.
-    $url = fn (array $changes) => route('public-deck', array_filter(array_merge($current, $changes), fn ($value) => $value !== null));
-
-    $filtering = $filters['q'] || $filters['game'] || $filters['format'] || $filters['liked'];
-    $sortNote = ['newest' => 'newest first', 'liked' => 'most liked first', 'trending' => 'most likes this week first'][$filters['sort']];
-    $segment = fn (bool $active) => $active ? 'bg-surface-2 font-bold text-ink' : 'font-medium text-muted hover:text-ink';
-@endphp
 
 <x-layout title="Public decks">
     <div class="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-8 sm:px-6">
@@ -30,11 +14,9 @@
 
             <div class="flex flex-wrap items-center gap-3">
                 <nav aria-label="Series" class="inline-flex flex-wrap gap-1 rounded-xl border border-line bg-surface p-1">
-                    <a href="{{ $url(['game' => null, 'format' => null]) }}" data-game="all" @if (! $filters['game']) aria-current="true" @endif
-                        class="focus-ring flex min-h-10 items-center rounded-[9px] px-3.5 text-sm {{ $segment(! $filters['game']) }}">All series</a>
+                    <a href="{{ $query->url(['game' => null, 'format' => null]) }}" data-game="all" @if (! $filters['game']) aria-current="true" @endif class="segment">All series</a>
                     @foreach (config('series') as $key => $config)
-                    <a href="{{ $url(['game' => $key, 'format' => null]) }}" data-game="{{ $key }}" @if ($filters['game'] === $key) aria-current="true" @endif
-                        class="focus-ring flex min-h-10 items-center rounded-[9px] px-3.5 text-sm {{ $segment($filters['game'] === $key) }}">{{ $config['label'] }}</a>
+                    <a href="{{ $query->url(['game' => $key, 'format' => null]) }}" data-game="{{ $key }}" @if ($filters['game'] === $key) aria-current="true" @endif class="segment">{{ $config['label'] }}</a>
                     @endforeach
                 </nav>
 
@@ -67,8 +49,8 @@
 
             <nav aria-label="Sort decks" class="inline-flex gap-1 rounded-xl border border-line bg-canvas p-1 max-sm:w-full">
                 @foreach ($sorts as $key => $label)
-                <a href="{{ $url(['sort' => $key]) }}" data-sort="{{ $key }}" @if ($filters['sort'] === $key) aria-current="true" @endif
-                    class="focus-ring flex min-h-10 items-center justify-center whitespace-nowrap rounded-[9px] px-3.5 text-sm max-sm:flex-1 {{ $segment($filters['sort'] === $key) }}">{{ $label }}</a>
+                <a href="{{ $query->url(['sort' => $key]) }}" data-sort="{{ $key }}" @if ($filters['sort'] === $key) aria-current="true" @endif
+                    class="segment max-sm:flex-1">{{ $label }}</a>
                 @endforeach
             </nav>
 
@@ -85,7 +67,7 @@
             @endif
 
             @auth
-            <a href="{{ $url(['liked' => $filters['liked'] ? null : 1]) }}" @if ($filters['liked']) aria-current="true" @endif
+            <a href="{{ $query->url(['liked' => $filters['liked'] ? null : 1]) }}" @if ($filters['liked']) aria-current="true" @endif
                 @class([
                     'focus-ring inline-flex h-12 items-center gap-2 rounded-xl border-[1.5px] px-5 font-bold transition',
                     'border-accent-ink bg-warn-bg text-accent-ink' => $filters['liked'],
@@ -103,9 +85,9 @@
 
         <div class="flex min-h-11 flex-wrap items-center justify-between gap-3">
             <p class="text-sm text-muted" aria-live="polite">
-                <span class="font-mono font-bold text-ink">{{ $decks->total() }} {{ Str::plural('deck', $decks->total()) }}</span> · {{ $sortNote }}
+                <span class="font-mono font-bold text-ink">{{ $decks->total() }} {{ Str::plural('deck', $decks->total()) }}</span> · {{ $query->sortNote() }}
             </p>
-            @if ($filtering)
+            @if ($query->isFiltering())
             <a href="{{ route('public-deck', ['sort' => $filters['sort']]) }}" class="focus-ring rounded-sm text-sm font-bold text-accent-ink">Clear filters</a>
             @endif
         </div>
@@ -120,7 +102,7 @@
             Tap the heart on a deck to keep it here. Only you can see which decks you liked.
             <x-slot:actions><a href="{{ route('public-deck', ['sort' => 'trending']) }}" class="btn-primary">See trending decks</a></x-slot:actions>
         </x-empty-state>
-        @elseif ($filtering)
+        @elseif ($query->isFiltering())
         <x-empty-state title="No decks match">
             Try another search or format, or clear the filters to see every public deck.
             <x-slot:actions><a href="{{ route('public-deck', ['sort' => $filters['sort']]) }}" class="btn-secondary">Clear filters</a></x-slot:actions>

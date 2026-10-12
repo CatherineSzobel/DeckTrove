@@ -176,3 +176,22 @@ test('the deck page gets the deck stats', function () {
             && $stats->groupCount('main', 'category', 'Monster') === 3
             && abs($stats->price - 0.30) < 0.0001);
 });
+
+test('prices are shown in the stats currency with two decimals', function () {
+    $stats = app(DeckStats::class)->fromSections(['main' => collect()], config('series.yugioh'));
+
+    expect($stats->money(84.2))->toBe('€84.20')
+        ->and($stats->money(1234.5))->toBe('€1,234.50');
+});
+
+test('the headline counts are the main deck in the first stats group', function () {
+    $sections = ['main' => collect([
+        ...statsCards('yugioh', ['id' => 1, 'type' => 'Normal Monster', 'level' => 4, 'attribute' => 'DARK'], 3),
+        ...statsCards('yugioh', ['id' => 3, 'type' => 'Spell Card'], 2),
+    ])];
+
+    $stats = app(DeckStats::class)->fromSections($sections, config('series.yugioh'));
+
+    expect($stats->headlineCounts())->toBe(['Monster' => 3, 'Spell' => 2])
+        ->and(app(DeckStats::class)->fromSections(['main' => collect()], config('series.yugioh'))->headlineCounts())->toBe([]);
+});

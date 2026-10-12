@@ -17,6 +17,9 @@ class PublicDeckQuery
 {
     public const SORTS = ['newest' => 'Newest', 'liked' => 'Most liked', 'trending' => 'Trending'];
 
+    /** How each sort reads after the result count, e.g. "12 decks · most liked first". */
+    public const SORT_NOTES = ['newest' => 'newest first', 'liked' => 'most liked first', 'trending' => 'most likes this week first'];
+
     private const SEARCH_LENGTH = 100;
 
     private ?User $owner = null;
@@ -86,6 +89,49 @@ class PublicDeckQuery
             'format' => $this->format,
             'liked' => $this->liked,
         ];
+    }
+
+    /**
+     * The applied filters as query parameters, with some changed: links for the page's controls, e.g.
+     * route('public-deck', $query->queryWith(['sort' => 'liked'])). Null removes a filter; `page` is never kept, so
+     * any change starts again at page one.
+     *
+     * @return array<string, string|int>
+     */
+    public function queryWith(array $changes = []): array
+    {
+        $current = [
+            'q' => $this->search,
+            'sort' => $this->sort,
+            'game' => $this->game,
+            'format' => $this->format,
+            'liked' => $this->liked ? 1 : null,
+        ];
+
+        return array_filter(array_merge($current, $changes), fn ($value) => $value !== null);
+    }
+
+    /**
+     * A link to this list with some filters changed: the public deck page, or the owner's profile for forUser().
+     */
+    public function url(array $changes = []): string
+    {
+        return $this->owner
+            ? route('users.show', [$this->owner, ...$this->queryWith($changes)])
+            : route('public-deck', $this->queryWith($changes));
+    }
+
+    /**
+     * Whether anything narrows the list (search, series, format or liked); the sort doesn't count.
+     */
+    public function isFiltering(): bool
+    {
+        return $this->search !== null || $this->game !== null || $this->format !== null || $this->liked;
+    }
+
+    public function sortNote(): string
+    {
+        return self::SORT_NOTES[$this->sort];
     }
 
     /**

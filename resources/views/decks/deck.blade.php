@@ -1,17 +1,4 @@
 {{-- A saved deck: header with format and price, format problems, the zones and the deck stats sidebar. --}}
-@php
-    $series = config("series.{$deck->game}");
-    $format = $deck->format;
-    $formatLabel = $format ? ($series['deck']['formats'][$format]['label'] ?? $format) : null;
-    $overMessages = array_combine($formatErrors['card_ids'], $formatErrors['messages']);
-    $isOwner = auth()->user()?->can('update', $deck) ?? false;
-    $extension = app($series['deck_format'])->extension();
-    $euro = fn (float $value) => $stats->currency['symbol'].number_format($value, 2);
-
-    // The first stats group (e.g. Monster / Spell / Trap) as chips for the main deck.
-    $firstGroup = array_key_first($series['deck']['stats']);
-    $chips = collect($stats->zone('main')['groups'][$firstGroup]['values'] ?? [])->filter();
-@endphp
 
 <x-layout :title="$deck->name" :js="['resources/js/deck-page.js']">
     <div x-data="cardPreview" @scroll.window.passive="hidePreview()" class="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6">
@@ -37,28 +24,22 @@
             </div>
 
             <div class="flex min-w-0 flex-[1_1_420px] flex-col gap-4">
-                <p class="eyebrow">{{ $series['label'] }} deck · by <a href="{{ route('users.show', $deck->user) }}" class="focus-ring rounded-sm underline underline-offset-4 hover:text-ink">{{ $deck->user->username }}</a></p>
+                <p class="eyebrow">{{ $deck->series_label }} deck · by <a href="{{ route('users.show', $deck->user) }}" class="focus-ring rounded-sm underline underline-offset-4 hover:text-ink">{{ $deck->user->username }}</a></p>
                 <div class="flex flex-wrap items-center gap-4">
                     <h1 class="heading-display text-[clamp(44px,5vw,68px)] text-ink">{{ $deck->name }}</h1>
-                    <x-deck.format-badge :format="$format" :label="$formatLabel" :problems="count($formatErrors['messages'])" />
+                    <x-deck.format-badge :format="$deck->format" :label="$deck->format_label" :problems="count($formatErrors['messages'])" />
                 </div>
                 @if ($deck->description)
                 <p class="max-w-[44rem] text-[17px] leading-relaxed text-body">{{ $deck->description }}</p>
                 @endif
 
                 <div class="flex flex-wrap gap-2.5">
-                    <span class="inline-flex items-baseline gap-2 rounded-[10px] border border-line bg-canvas px-3 py-2 text-[13px] text-body">
-                        <span class="font-mono text-base font-bold text-accent-ink">{{ $deck->card_count ?? collect($sections)->sum(fn ($cards) => $cards->count()) }}</span>cards
-                    </span>
-                    @foreach ($chips as $value => $count)
-                    <span class="inline-flex items-baseline gap-2 rounded-[10px] border border-line bg-canvas px-3 py-2 text-[13px] text-body">
-                        <span class="font-mono text-base font-bold text-ink">{{ $count }}</span>{{ Str::plural(strtolower($value), $count) }}
-                    </span>
+                    <x-stat-chip :value="$deck->card_count" label="cards" accent inset />
+                    @foreach ($stats->headlineCounts() as $value => $count)
+                    <x-stat-chip :value="$count" :label="Str::plural(strtolower($value), $count)" inset />
                     @endforeach
-                    <span data-chip="price" @if ($stats->missingPrices) title="{{ $stats->missingPrices }} {{ Str::plural('card', $stats->missingPrices) }} have no price" @endif
-                        class="inline-flex items-baseline gap-2 rounded-[10px] border border-warn-line bg-canvas px-3 py-2 text-[13px] text-body">
-                        <span class="font-mono text-base font-bold text-ink">{{ $euro($stats->price) }}</span>deck price
-                    </span>
+                    <x-stat-chip :value="$stats->money($stats->price)" label="deck price" warn inset data-chip="price"
+                        :title="$stats->missingPrices ? $stats->missingPrices.' '.Str::plural('card', $stats->missingPrices).' have no price' : null" />
                 </div>
             </div>
 
@@ -83,7 +64,7 @@
                 @endif
                 <a href="{{ route('decks.export', $deck) }}" class="btn-secondary">
                     <x-heroicon-o-arrow-down-tray class="h-5 w-5" aria-hidden="true" />
-                    Export .{{ $extension }}
+                    Export .{{ $exportExtension }}
                 </a>
                 @if ($isOwner && $deck->is_public)
                 <x-deck.like-button :deck="$deck" :liked="false" :count="$deck->likes_count" size="lg" />
@@ -95,7 +76,7 @@
         </section>
 
         @if ($formatErrors['messages'])
-        <x-deck.problems :title="'This deck no longer fits '.$formatLabel" :messages="$formatErrors['messages']">
+        <x-deck.problems :title="'This deck no longer fits '.$deck->format_label" :messages="$formatErrors['messages']">
             @if ($isOwner)
             <a href="{{ route('decks.edit', $deck) }}" class="focus-ring font-bold text-accent-ink">Edit the deck</a> to fix it, or switch it to Casual.
             @else
@@ -114,14 +95,14 @@
                         class="focus-ring flex min-h-14 w-full items-center justify-between gap-3 rounded-[14px] border border-line bg-surface px-5 text-ink">
                         <h2 class="heading-display text-[26px]">{{ $zoneRules['label'] }}</h2>
                         <span class="flex items-center gap-3">
-                            <span class="font-mono text-sm font-bold">{{ $sections[$zone]->count() }} cards<span class="font-medium text-muted"> · {{ $euro($stats->zone($zone)['price']) }}</span></span>
+                            <span class="font-mono text-sm font-bold">{{ $sections[$zone]->count() }} cards<span class="font-medium text-muted"> · {{ $stats->money($stats->zone($zone)['price']) }}</span></span>
                             <x-heroicon-o-chevron-up class="h-5 w-5 transition-transform" x-bind:class="open || 'rotate-180'" aria-hidden="true" />
                         </span>
                     </button>
 
                     <div id="{{ $zone }}-cards" x-show="open" class="grid grid-cols-[repeat(auto-fill,minmax(88px,1fr))] gap-3">
                         @foreach ($sections[$zone] as $card)
-                        <x-deck.card-slot :card="$card" :href="$card->link()" :over="$overMessages[$card->id()] ?? null"
+                        <x-deck.card-slot :card="$card" :href="$card->link()" :over="$cardProblems[$card->id()] ?? null"
                             :x-data="'{ card: '.Js::from($card->builderCard()).' }'"
                             x-on:mouseenter="showPreview(card, $el)" x-on:mouseleave="hidePreview()"
                             x-on:focus="showPreview(card, $el)" x-on:blur="hidePreview()" />

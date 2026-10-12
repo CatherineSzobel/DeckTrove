@@ -3,7 +3,7 @@
     group: the first as a stacked bar, mana curve and Level / Rank as columns, the rest as bars.
 --}}
 @php
-    $groups = $series['deck']['stats'];
+    $groups = config("series.{$deck->game}.deck.stats");
     $columnGroups = ['mana_value', 'level'];
     // Short column labels: "Level 4" → "4", "Rank 4" → "R4", "Link 2" → "L2".
     $short = fn ($value) => preg_replace(['/^Level /', '/^Rank /', '/^Link /'], ['', 'R', 'L'], (string) $value);
@@ -23,9 +23,8 @@
     <div id="deck-stats-body" :class="open ? 'flex' : 'hidden lg:flex'" class="hidden flex-col gap-5 lg:flex">
         <div role="group" aria-label="Zone" class="flex gap-1 rounded-xl border border-line bg-canvas p-1">
             @foreach ($stats->zones as $key => $zoneStats)
-            <button type="button" @click="zone = '{{ $key }}'" :aria-pressed="zone === '{{ $key }}'"
-                :class="zone === '{{ $key }}' ? 'bg-surface-2 font-bold text-ink' : 'font-medium text-muted hover:text-ink'"
-                class="focus-ring min-h-10 flex-1 rounded-[9px] text-sm">{{ Str::before($zoneStats['label'], ' ') === 'Main' || count($stats->zones) > 2 ? Str::before($zoneStats['label'], ' ') : $zoneStats['label'] }}</button>
+            <button type="button" @click="zone = '{{ $key }}'" aria-pressed="{{ $loop->first ? 'true' : 'false' }}" :aria-pressed="(zone === '{{ $key }}').toString()"
+                class="segment flex-1 px-2">{{ Str::before($zoneStats['label'], ' ') === 'Main' || count($stats->zones) > 2 ? Str::before($zoneStats['label'], ' ') : $zoneStats['label'] }}</button>
             @endforeach
         </div>
 
@@ -96,7 +95,7 @@
 
             <div class="flex justify-between gap-3 border-t border-line pt-3.5 text-[13px] text-muted">
                 <span>{{ $zoneStats['label'] }} price</span>
-                <span class="font-mono font-bold text-ink">{{ $euro($zoneStats['price']) }}</span>
+                <span class="font-mono font-bold text-ink">{{ $stats->money($zoneStats['price']) }}</span>
             </div>
         </div>
         @endforeach

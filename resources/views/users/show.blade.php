@@ -2,12 +2,6 @@
     A user's public profile: who they are, what they shared and the likes it got. Never the email, never private decks
     (also not for the owner, who edits their account at /profile). Sort and series are plain links.
 --}}
-@php
-    $current = array_filter(['sort' => $filters['sort'], 'game' => $filters['game']], fn ($value) => $value !== null);
-    $url = fn (array $changes) => route('users.show', [$user, ...array_filter(array_merge($current, $changes), fn ($value) => $value !== null)]);
-    $segment = fn (bool $active) => $active ? 'bg-surface-2 font-bold text-ink' : 'font-medium text-muted hover:text-ink';
-    $avatar = $user->avatarUrl();
-@endphp
 
 <x-layout :title="$user->username">
     <div class="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6">
@@ -26,11 +20,7 @@
                 </div>
 
                 <div class="flex flex-col gap-4 px-6 pb-6">
-                    @if ($avatar)
-                    <img src="{{ $avatar }}" alt="" class="relative -mt-12 h-24 w-24 rounded-full border-4 border-surface object-cover">
-                    @else
-                    <span aria-hidden="true" class="relative -mt-12 flex h-24 w-24 items-center justify-center rounded-full border-4 border-surface bg-accent font-display text-[42px] font-extrabold text-white">{{ Str::upper(Str::substr($user->username, 0, 1)) }}</span>
-                    @endif
+                    <x-avatar :user="$user" class="relative -mt-12 h-24 w-24 border-4 border-surface font-display text-[42px] font-extrabold" />
 
                     <div class="flex flex-col gap-2">
                         <p class="eyebrow">Player · joined {{ $user->created_at->format('F Y') }}</p>
@@ -42,14 +32,8 @@
                     @endif
 
                     <div class="flex flex-wrap gap-2.5">
-                        <span class="inline-flex items-baseline gap-2 rounded-[10px] border border-line bg-canvas px-3 py-2 text-[13px] text-body">
-                            <b class="font-mono text-base text-accent-ink">{{ $stats['public_decks'] }}</b>
-                            public {{ Str::plural('deck', $stats['public_decks']) }}
-                        </span>
-                        <span class="inline-flex items-baseline gap-2 rounded-[10px] border border-line bg-canvas px-3 py-2 text-[13px] text-body">
-                            <b class="font-mono text-base text-ink">{{ $stats['likes_received'] }}</b>
-                            {{ Str::plural('like', $stats['likes_received']) }} received
-                        </span>
+                        <x-stat-chip :value="$stats['public_decks']" :label="'public '.Str::plural('deck', $stats['public_decks'])" accent inset />
+                        <x-stat-chip :value="$stats['likes_received']" :label="Str::plural('like', $stats['likes_received']).' received'" inset />
                     </div>
 
                     @if ($isOwner)
@@ -72,17 +56,15 @@
                     @if ($stats['public_decks'] > 0)
                     <div class="flex flex-wrap gap-2.5">
                         <nav aria-label="Series" class="inline-flex gap-1 rounded-xl border border-line bg-surface p-1">
-                            <a href="{{ $url(['game' => null]) }}" data-game="all" @if (! $filters['game']) aria-current="true" @endif
-                                class="focus-ring flex min-h-10 items-center rounded-[9px] px-3.5 text-sm {{ $segment(! $filters['game']) }}">All</a>
+                            <a href="{{ $query->url(['game' => null]) }}" data-game="all" @if (! $filters['game']) aria-current="true" @endif class="segment">All</a>
                             @foreach (config('series') as $key => $config)
-                            <a href="{{ $url(['game' => $key]) }}" data-game="{{ $key }}" @if ($filters['game'] === $key) aria-current="true" @endif
-                                class="focus-ring flex min-h-10 items-center rounded-[9px] px-3.5 text-sm {{ $segment($filters['game'] === $key) }}">{{ $config['label'] }}</a>
+                            <a href="{{ $query->url(['game' => $key]) }}" data-game="{{ $key }}" @if ($filters['game'] === $key) aria-current="true" @endif class="segment">{{ $config['label'] }}</a>
                             @endforeach
                         </nav>
                         <nav aria-label="Sort decks" class="inline-flex gap-1 rounded-xl border border-line bg-surface p-1 max-sm:w-full">
                             @foreach ($sorts as $key => $label)
-                            <a href="{{ $url(['sort' => $key]) }}" data-sort="{{ $key }}" @if ($filters['sort'] === $key) aria-current="true" @endif
-                                class="focus-ring flex min-h-10 items-center justify-center whitespace-nowrap rounded-[9px] px-3.5 text-sm max-sm:flex-1 {{ $segment($filters['sort'] === $key) }}">{{ $label }}</a>
+                            <a href="{{ $query->url(['sort' => $key]) }}" data-sort="{{ $key }}" @if ($filters['sort'] === $key) aria-current="true" @endif
+                                class="segment max-sm:flex-1">{{ $label }}</a>
                             @endforeach
                         </nav>
                     </div>
@@ -98,7 +80,7 @@
                 ])
                 @elseif ($stats['public_decks'] > 0)
                 <x-empty-state title="No decks in this series" heading="h3">
-                    <x-slot:actions><a href="{{ $url(['game' => null]) }}" class="btn-secondary">Show all series</a></x-slot:actions>
+                    <x-slot:actions><a href="{{ $query->url(['game' => null]) }}" class="btn-secondary">Show all series</a></x-slot:actions>
                 </x-empty-state>
                 @elseif ($isOwner)
                 <x-empty-state title="You haven’t shared a deck yet" heading="h3">

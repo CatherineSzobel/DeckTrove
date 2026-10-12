@@ -110,3 +110,14 @@ test('the owner card shows visibility and the edit and delete actions', function
         ->toContain('Public')
         ->toContain('data-like="own"');
 });
+
+test('an avatar shows the picture, or the initial when there is none', function () {
+    $withPicture = User::factory()->make(['username' => 'émilie', 'avatar' => 'avatars/emilie.png']);
+    $without = User::factory()->make(['username' => 'émilie']);
+
+    expect($without->initial)->toBe('É')
+        ->and(Blade::render('<x-avatar :user="$user" class="h-7 w-7" />', ['user' => $withPicture]))
+        ->toContain('<img')->toContain('avatars/emilie.png')->toContain('h-7 w-7')
+        ->and(Blade::render('<x-avatar :user="$user" class="h-7 w-7" />', ['user' => $without]))
+        ->toContain('>É</span>')->toContain('bg-accent')->not->toContain('<img');
+});

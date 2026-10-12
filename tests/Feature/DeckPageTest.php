@@ -109,3 +109,14 @@ test('a deck without cards says so in the empty state box', function () {
 
     expect($html)->toMatch('/<h2 class="heading-display[^"]*">No cards in this deck yet<\/h2>/');
 });
+
+test('the controller hands the deck page its owner check, export extension and card problems', function () {
+    $deck = deckPageDeck([darkMagicianEntry(), potOfGreedEntry()], 'tcg');
+
+    $this->actingAs($deck->user)->get(route('decks.show', $deck))
+        ->assertViewHas('isOwner', true)
+        ->assertViewHas('exportExtension', 'ydk')
+        ->assertViewHas('cardProblems', ['55144522' => 'Pot of Greed is not allowed in TCG Advanced.']);
+
+    $this->actingAs(User::factory()->create())->get(route('decks.show', $deck))->assertViewHas('isOwner', false);
+});

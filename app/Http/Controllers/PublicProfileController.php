@@ -27,6 +27,7 @@ class PublicProfileController extends Controller
                     ->count(),
             ],
             'isOwner' => $request->user()?->is($user) ?? false,
+            'query' => $query,
             'filters' => $query->filters(),
             'sorts' => PublicDeckQuery::SORTS,
         ]);

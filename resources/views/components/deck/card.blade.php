@@ -6,13 +6,6 @@
     adds the visibility and the Edit / Delete actions. `trending` shows the "+N this week" chip.
     Expects card_count and likes_count loaded; liked_by_viewer and recent_likes_count when available.
 --}}
-@php
-    $seriesLabel = config("series.{$deck->game}.label", ucfirst($deck->game));
-    $likes = (int) ($deck->likes_count ?? 0);
-    $recent = (int) ($deck->recent_likes_count ?? 0);
-    $formatTitle = $deck->format ? "Built for {$deck->format_label}." : 'No format: only the normal deck rules apply.';
-    $author = $deck->user;
-@endphp
 
 <article {{ $attributes->class('relative flex flex-col overflow-hidden rounded-[18px] border border-line bg-surface transition hover:-translate-y-0.5 hover:border-accent focus-within:border-accent') }}>
     <div class="relative flex h-[190px] items-center justify-center border-b border-line bg-canvas">
@@ -26,25 +19,23 @@
             @endif
         </div>
 
-        @if ($trending && $recent > 0)
+        @if ($trending && $deck->recent_likes_count > 0)
         <span class="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-[10px] border border-warn-line bg-surface px-2.5 py-1.5 font-mono text-xs font-bold text-accent-ink">
             <x-heroicon-o-arrow-trending-up class="h-4 w-4" aria-hidden="true" />
-            +{{ $recent }} this week
+            +{{ $deck->recent_likes_count }} this week
         </span>
         @endif
-        <span class="absolute right-3 top-3 inline-flex items-baseline gap-1.5 rounded-[10px] border border-line bg-surface px-2.5 py-1.5 text-xs text-body">
-            <b class="font-mono text-sm text-ink">{{ (int) $deck->card_count }}</b>cards
-        </span>
+        <x-stat-chip :value="(int) $deck->card_count" label="cards" size="sm" class="absolute right-3 top-3" />
     </div>
 
     <div class="flex flex-1 flex-col gap-3 p-5">
-        <p class="eyebrow">{{ $seriesLabel }} deck</p>
+        <p class="eyebrow">{{ $deck->series_label }} deck</p>
         <{{ $heading }} class="heading-display truncate text-[28px] text-ink">
             <a href="{{ route('decks.show', $deck) }}" class="focus-ring rounded-sm after:absolute after:inset-0 after:rounded-[18px] after:content-['']">{{ $deck->name }}</a>
         </{{ $heading }}>
 
         <div class="flex flex-wrap gap-2">
-            <span title="{{ $formatTitle }}" class="inline-flex h-[30px] items-center rounded-full border border-line bg-surface-2 px-3 font-mono text-xs font-bold uppercase tracking-[0.04em] text-body">{{ $deck->format_label }}</span>
+            <span title="{{ $deck->format_title }}" class="inline-flex h-[30px] items-center rounded-full border border-line bg-surface-2 px-3 font-mono text-xs font-bold uppercase tracking-[0.04em] text-body">{{ $deck->format_label }}</span>
             @if ($variant === 'owner')
             <span @class([
                 'inline-flex h-[30px] items-center gap-1.5 rounded-full border px-3 font-mono text-xs font-bold uppercase tracking-[0.04em]',
@@ -63,14 +54,10 @@
         <p class="line-clamp-3 text-[15px] leading-relaxed text-body">{{ $deck->description ?: 'No description provided.' }}</p>
 
         <div class="mt-auto flex items-center justify-between gap-3 border-t border-line pt-3 text-sm">
-            @if ($variant === 'public' && $author)
-            <a href="{{ route('users.show', $author) }}" class="focus-ring relative z-10 inline-flex min-h-11 min-w-0 items-center gap-2 rounded-sm text-body hover:text-ink hover:underline">
-                @if ($author->avatarUrl())
-                <img src="{{ $author->avatarUrl() }}" alt="" class="h-7 w-7 flex-none rounded-full object-cover">
-                @else
-                <span aria-hidden="true" class="flex h-7 w-7 flex-none items-center justify-center rounded-full bg-accent text-xs font-bold text-white">{{ Str::upper(Str::substr($author->username, 0, 1)) }}</span>
-                @endif
-                <span class="truncate"><span class="sr-only">by </span>{{ $author->username }}</span>
+            @if ($variant === 'public' && $deck->user)
+            <a href="{{ route('users.show', $deck->user) }}" class="focus-ring relative z-10 inline-flex min-h-11 min-w-0 items-center gap-2 rounded-sm text-body hover:text-ink hover:underline">
+                <x-avatar :user="$deck->user" class="h-7 w-7 flex-none text-xs font-bold" />
+                <span class="truncate"><span class="sr-only">by </span>{{ $deck->user->username }}</span>
             </a>
             @elseif ($variant === 'profile')
             <span aria-hidden="true" class="inline-flex items-center gap-1.5 font-bold text-accent-ink">
@@ -96,7 +83,7 @@
             @endif
 
             @if ($variant !== 'owner' || $deck->is_public)
-            <x-deck.like-button :deck="$deck" :liked="(bool) ($deck->liked_by_viewer ?? false)" :count="$likes" />
+            <x-deck.like-button :deck="$deck" :liked="(bool) $deck->liked_by_viewer" :count="(int) $deck->likes_count" />
             @endif
         </div>
     </div>

@@ -50,3 +50,18 @@ test('the empty state shows a title, an optional line and optional actions', fun
         ->toContain('x-show="open"')
         ->not->toContain('<p');
 });
+
+test('a stat chip shows a number with its label', function () {
+    $plain = Blade::render('<x-stat-chip :value="12" label="decks" />');
+    expect($plain)
+        ->toMatch('/<b class="font-mono text-base text-ink">12<\/b>\s*decks/')
+        ->toContain('border-line')->toContain('bg-surface');
+
+    expect(Blade::render('<x-stat-chip value="€84.20" label="deck price" accent warn inset title="2 cards have no price" />'))
+        ->toContain('text-accent-ink')->toContain('border-warn-line')->toContain('bg-canvas')
+        ->toContain('title="2 cards have no price"');
+
+    expect(Blade::render('<x-stat-chip :value="40" label="cards" size="sm" class="absolute right-3 top-3" />'))
+        ->toContain('text-xs')->toContain('absolute right-3 top-3')
+        ->toMatch('/<b class="font-mono text-sm text-ink">40<\/b>\s*cards/');
+});

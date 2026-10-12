@@ -70,6 +70,24 @@ class Deck extends Model
             : 'Casual');
     }
 
+    /**
+     * The series' name, e.g. "Yu-Gi-Oh!".
+     */
+    protected function seriesLabel(): Attribute
+    {
+        return Attribute::get(fn () => config("series.{$this->game}.label", ucfirst((string) $this->game)));
+    }
+
+    /**
+     * A tooltip for the format badge: what the deck's format means.
+     */
+    protected function formatTitle(): Attribute
+    {
+        return Attribute::get(fn () => $this->format
+            ? "Built for {$this->format_label}."
+            : 'No format: only the normal deck rules apply.');
+    }
+
     public function scopeWithCardCount($query)
     {
         return $query->withSum('deckCards as card_count', 'count');

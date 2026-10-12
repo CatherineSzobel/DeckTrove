@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 
 class DeckController extends Controller
 {
@@ -36,17 +37,36 @@ class DeckController extends Controller
 
         return view('decks.public-deck', [
             'decks' => $decks,
+            'query' => $query,
             'filters' => $query->filters(),
             'sorts' => PublicDeckQuery::SORTS,
             'formats' => $query->formatOptions(),
         ]);
     }
 
+    /**
+     * The signed-in user's decks, all on one page: the stat chips, and per card what the in-place search looks at.
+     */
     public function mine(Request $request)
     {
         $decks = $request->user()->decks()->withCardCount()->withCount('likes')->latest()->get();
+        $public = $decks->where('is_public', true);
 
-        return view('decks.mydecks', compact('decks'));
+        return view('decks.mydecks', [
+            'decks' => $decks,
+            'stats' => [
+                'decks' => $decks->count(),
+                'series' => collect(config('series'))->map(fn ($config, $series) => $decks->where('game', $series)->count())->all(),
+                'public' => $public->count(),
+                'likes_received' => (int) $public->sum('likes_count'),
+            ],
+            // In the grid's order, for deckSearch (resources/js/deck-search.js).
+            'searchData' => $decks->map(fn (Deck $deck) => [
+                'game' => $deck->game,
+                'text' => Str::lower(trim($deck->name.' '.$deck->description)),
+            ])->values()->all(),
+            'builderSeries' => session('series', array_key_first(config('series'))),
+        ]);
     }
 
     public function show(Request $request, Deck $deck, DeckStats $deckStats)
@@ -59,11 +79,20 @@ class DeckController extends Controller
         $stats = $deckStats->fromSections($sections, config("series.{$deck->game}"));
         $formatErrors = $this->deckService->formatErrors($deck);
 
-        // For the like button (not rendered yet): your own deck and guests can't like.
-        $liked = $request->user() !== null && $deck->likes()->where('user_id', $request->user()->id)->exists();
-        $canLike = Gate::allows('like', $deck);
-
-        return view('decks.deck', compact('deck', 'sections', 'zones', 'stats', 'formatErrors', 'liked', 'canLike'));
+        return view('decks.deck', [
+            'deck' => $deck,
+            'sections' => $sections,
+            'zones' => $zones,
+            'stats' => $stats,
+            'formatErrors' => $formatErrors,
+            // The message for each card that breaks the format, by external id, for its red outline.
+            'cardProblems' => array_combine($formatErrors['card_ids'], $formatErrors['messages']),
+            'isOwner' => Gate::allows('update', $deck),
+            'exportExtension' => app(config("series.{$deck->game}.deck_format"))->extension(),
+            // Your own deck and guests can't like.
+            'liked' => $request->user() !== null && $deck->likes()->where('user_id', $request->user()->id)->exists(),
+            'canLike' => Gate::allows('like', $deck),
+        ]);
     }
 
     /**

@@ -1,9 +1,11 @@
 <?php
 
+use App\Decks\PublicDeckQuery;
 use App\Models\Deck;
 use App\Models\DeckLike;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
 use Illuminate\Testing\TestResponse;
 
 uses(RefreshDatabase::class);
@@ -171,4 +173,54 @@ test("a deck's format label is Casual without a format, else the config label", 
     expect(Deck::factory()->make(['game' => 'yugioh', 'format' => null])->format_label)->toBe('Casual')
         ->and(Deck::factory()->make(['game' => 'yugioh', 'format' => 'tcg'])->format_label)->toBe('TCG Advanced')
         ->and(Deck::factory()->make(['game' => 'magic', 'format' => 'pauper'])->format_label)->toBe('Pauper');
+});
+
+/** A PublicDeckQuery for the given query string, as seen by $viewer (a guest when null). */
+function publicDeckQuery(array $params, ?User $viewer = null): PublicDeckQuery
+{
+    $request = Request::create('/public-deck', 'GET', $params);
+    $request->setUserResolver(fn () => $viewer);
+
+    return PublicDeckQuery::fromRequest($request);
+}
+
+test('queryWith keeps the applied filters, applies changes and drops removed ones and the page', function () {
+    $query = publicDeckQuery(['q' => 'dragon', 'sort' => 'liked', 'game' => 'yugioh', 'format' => 'tcg', 'page' => 3]);
+
+    expect($query->queryWith(['sort' => 'trending']))->toBe(['q' => 'dragon', 'sort' => 'trending', 'game' => 'yugioh', 'format' => 'tcg'])
+        ->and($query->queryWith(['game' => 'magic', 'format' => null]))->toBe(['q' => 'dragon', 'sort' => 'liked', 'game' => 'magic'])
+        ->and(publicDeckQuery(['liked' => 1], User::factory()->create())->queryWith())->toBe(['sort' => 'newest', 'liked' => 1]);
+});
+
+test('isFiltering and sortNote describe the applied filters', function () {
+    expect(publicDeckQuery(['sort' => 'trending'])->isFiltering())->toBeFalse()
+        ->and(publicDeckQuery(['q' => 'burn'])->isFiltering())->toBeTrue()
+        ->and(publicDeckQuery(['game' => 'magic'])->isFiltering())->toBeTrue()
+        ->and(publicDeckQuery(['sort' => 'trending'])->sortNote())->toBe('most likes this week first')
+        ->and(publicDeckQuery([])->sortNote())->toBe('newest first');
+});
+
+test("a profile's query only carries the sort and the series", function () {
+    $query = publicDeckQuery(['q' => 'burn', 'sort' => 'liked', 'game' => 'magic', 'format' => 'modern'])->forUser(User::factory()->create());
+
+    expect($query->queryWith())->toBe(['sort' => 'liked', 'game' => 'magic'])
+        ->and($query->isFiltering())->toBeTrue();
+});
+
+test('url links to the page the query is for, with the changed filters', function () {
+    $user = User::factory()->create(['username' => 'deckmaster']);
+    $query = publicDeckQuery(['q' => 'burn', 'sort' => 'liked', 'game' => 'magic']);
+
+    expect($query->url(['sort' => 'trending']))->toBe(route('public-deck', ['q' => 'burn', 'sort' => 'trending', 'game' => 'magic']))
+        ->and($query->forUser($user)->url(['game' => null]))->toBe(route('users.show', [$user, 'sort' => 'liked']));
+});
+
+test('a deck knows its series label and a tooltip for its format', function () {
+    $casual = Deck::factory()->make(['game' => 'yugioh', 'format' => null]);
+    $tcg = Deck::factory()->make(['game' => 'yugioh', 'format' => 'tcg']);
+
+    expect($casual->series_label)->toBe('Yu-Gi-Oh!')
+        ->and(Deck::factory()->make(['game' => 'magic'])->series_label)->toBe('Magic: The Gathering')
+        ->and($casual->format_title)->toBe('No format: only the normal deck rules apply.')
+        ->and($tcg->format_title)->toBe('Built for TCG Advanced.');
 });

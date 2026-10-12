@@ -25,14 +25,14 @@
 @endif
 @else
 <form method="POST" action="{{ route('decks.like', $deck) }}" data-like="toggle"
-    x-data="likeButton({ liked: @js((bool) $liked), count: @js($count), url: @js(route('decks.like', $deck)) })"
+    x-data="likeButton({ liked: @js((bool) $liked), count: @js($count), url: @js(route('decks.like', $deck)), name: @js($deck->name) })"
     @submit.prevent="toggle($el)" {{ $attributes->class(['relative z-10', 'w-full' => $size === 'lg']) }}>
     @csrf
     <input type="hidden" name="_method" value="{{ $liked ? 'DELETE' : 'POST' }}" :value="liked ? 'DELETE' : 'POST'">
     <button type="submit" class="group btn-like btn-like-{{ $size }}"
         aria-pressed="{{ $liked ? 'true' : 'false' }}" :aria-pressed="liked.toString()" :aria-busy="busy.toString()"
         aria-label="{{ $liked ? 'Unlike' : 'Like' }} {{ $deck->name }}, {{ $count }} {{ Str::plural('like', $count) }}"
-        :aria-label="(liked ? 'Unlike ' : 'Like ') + @js($deck->name) + ', ' + count + (count === 1 ? ' like' : ' likes')">
+        :aria-label="label">
         <x-deck.like-label :label="$liked ? 'Liked' : 'Like'" :count="$count" :size="$size" live />
     </button>
 </form>

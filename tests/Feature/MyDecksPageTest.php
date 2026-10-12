@@ -55,3 +55,17 @@ test('without decks, the page offers to build the first one', function () {
         ->assertSee('Create your first deck')
         ->assertDontSee('x-model="q"', false);
 });
+
+test('the controller hands My decks its stats and search data', function () {
+    $user = User::factory()->create();
+    $shared = Deck::factory()->public()->for($user)->create(['game' => 'yugioh', 'name' => 'Dragon Rush', 'description' => 'Big DRAGONS', 'created_at' => now()->subDay()]);
+    Deck::factory()->for($user)->create(['game' => 'magic', 'name' => 'Burn', 'description' => null]);
+    DeckLike::factory()->count(2)->for($shared)->create();
+
+    $this->actingAs($user)->get(route('decks'))
+        ->assertViewHas('stats', ['decks' => 2, 'series' => ['yugioh' => 1, 'magic' => 1], 'public' => 1, 'likes_received' => 2])
+        ->assertViewHas('searchData', [
+            ['game' => 'magic', 'text' => 'burn'],
+            ['game' => 'yugioh', 'text' => 'dragon rush big dragons'],
+        ]);
+});

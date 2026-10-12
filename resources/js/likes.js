@@ -23,12 +23,20 @@ export async function sendLike(url, liked, { fetch = globalThis.fetch, token = c
     return response.json();
 }
 
-/** Alpine component: x-data="likeButton({ liked, count, url })", with @submit.prevent="toggle($el)" on the form. */
-export function likeButton({ liked = false, count = 0, url, send = sendLike }) {
+/**
+ * Alpine component: x-data="likeButton({ liked, count, url, name })", with @submit.prevent="toggle($el)" on the
+ * form. `name` is the deck's name, for the button's accessible label.
+ */
+export function likeButton({ liked = false, count = 0, url, name = "", send = sendLike }) {
     return {
         liked,
         count,
         busy: false,
+
+        /** e.g. "Like Burn, 3 likes" or "Unlike Burn, 1 like". */
+        get label() {
+            return `${this.liked ? "Unlike" : "Like"} ${name}, ${this.count} ${this.count === 1 ? "like" : "likes"}`;
+        },
 
         async toggle(form) {
             if (this.busy) return;

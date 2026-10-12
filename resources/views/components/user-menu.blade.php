@@ -1,17 +1,11 @@
 @props(['user'])
 
 {{-- The header's account button: the user's avatar (or initial) opening a small menu. --}}
-@php $avatar = $user->avatarUrl(); @endphp
-
 <div x-data="{ open: false }" @click.outside="open = false" @keydown.escape.window="if (open) { open = false; $refs.button.focus() }" class="relative">
     <button type="button" x-ref="button" @click="open = ! open" :aria-expanded="open.toString()" aria-expanded="false" aria-haspopup="true"
         aria-controls="userMenu" aria-label="Account menu"
         class="focus-ring flex h-11 items-center gap-2 rounded-full border border-line pl-1.5 pr-2.5 text-ink">
-        @if ($avatar)
-        <img src="{{ $avatar }}" alt="" class="h-8 w-8 rounded-full object-cover">
-        @else
-        <span class="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-sm font-bold text-white">{{ Str::upper(Str::substr($user->username, 0, 1)) }}</span>
-        @endif
+        <x-avatar :user="$user" class="h-8 w-8 text-sm font-bold" />
         <x-heroicon-o-chevron-down class="h-4 w-4" />
     </button>
 

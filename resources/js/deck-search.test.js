@@ -31,6 +31,14 @@ describe("deck search", () => {
         expect(search.matches(0)).toBe(true);
     });
 
+    test("tells the series switch which button is pressed, as an aria-pressed value", () => {
+        const search = deckSearch(decks);
+
+        expect([search.pressed("all"), search.pressed("magic")]).toEqual(["true", "false"]);
+        search.series = "magic";
+        expect([search.pressed("all"), search.pressed("magic")]).toEqual(["false", "true"]);
+    });
+
     test("combines the search with the series", () => {
         const search = deckSearch(decks);
         search.q = "red";

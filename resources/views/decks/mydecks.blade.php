@@ -2,16 +2,6 @@
     The signed-in user's decks: stats, then all decks as owner cards (x-deck.card variant "owner"). Everything fits on
     one page, so search and the series switch filter the cards in place with Alpine.
 --}}
-@php
-    $builderSeries = session('series', array_key_first(config('series')));
-    $publicDecks = $decks->where('is_public', true);
-    $likesReceived = (int) $publicDecks->sum('likes_count');
-    // What the in-place filter looks at, per card in the grid's order.
-    $filterData = $decks->values()->map(fn ($deck) => [
-        'game' => $deck->game,
-        'text' => Str::lower($deck->name.' '.$deck->description),
-    ]);
-@endphp
 
 <x-layout title="My decks">
     <div class="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-8 sm:px-6">
@@ -35,24 +25,12 @@
         </div>
 
         <div class="flex flex-wrap gap-2.5">
-            <span class="inline-flex items-baseline gap-2 rounded-[10px] border border-line bg-surface px-3 py-2 text-[13px] text-body">
-                <b class="font-mono text-base text-accent-ink">{{ $decks->count() }}</b>
-                {{ Str::plural('deck', $decks->count()) }}
-            </span>
-            @foreach (config('series') as $key => $config)
-            <span class="inline-flex items-baseline gap-2 rounded-[10px] border border-line bg-surface px-3 py-2 text-[13px] text-body">
-                <b class="font-mono text-base text-ink">{{ $decks->where('game', $key)->count() }}</b>
-                {{ $config['label'] }}
-            </span>
+            <x-stat-chip :value="$stats['decks']" :label="Str::plural('deck', $stats['decks'])" accent />
+            @foreach ($stats['series'] as $series => $count)
+            <x-stat-chip :value="$count" :label="config('series.'.$series.'.label')" />
             @endforeach
-            <span class="inline-flex items-baseline gap-2 rounded-[10px] border border-line bg-surface px-3 py-2 text-[13px] text-body">
-                <b class="font-mono text-base text-ink">{{ $publicDecks->count() }}</b>
-                public
-            </span>
-            <span class="inline-flex items-baseline gap-2 rounded-[10px] border border-line bg-surface px-3 py-2 text-[13px] text-body">
-                <b class="font-mono text-base text-ink">{{ $likesReceived }}</b>
-                {{ Str::plural('like', $likesReceived) }} received
-            </span>
+            <x-stat-chip :value="$stats['public']" label="public" />
+            <x-stat-chip :value="$stats['likes_received']" :label="Str::plural('like', $stats['likes_received']).' received'" />
         </div>
 
         @if ($decks->isEmpty())
@@ -64,7 +42,7 @@
             </x-slot:actions>
         </x-empty-state>
         @else
-        <div x-data="deckSearch(@js($filterData))" class="flex flex-col gap-6">
+        <div x-data="deckSearch(@js($searchData))" class="flex flex-col gap-6">
             <div class="flex flex-wrap items-center gap-3 rounded-[18px] border border-line bg-surface p-4">
                 <div class="relative min-w-0 flex-[1_1_320px]">
                     <label for="my-deck-search" class="sr-only">Search your decks</label>
@@ -73,13 +51,9 @@
                 </div>
 
                 <div role="group" aria-label="Series" class="inline-flex flex-wrap gap-1 rounded-xl border border-line bg-canvas p-1">
-                    <button type="button" @click="series = 'all'" :aria-pressed="(series === 'all').toString()" aria-pressed="true"
-                        :class="series === 'all' ? 'bg-surface-2 font-bold text-ink' : 'font-medium text-muted hover:text-ink'"
-                        class="focus-ring min-h-10 rounded-[9px] px-3.5 text-sm">All</button>
+                    <button type="button" @click="series = 'all'" aria-pressed="true" :aria-pressed="pressed('all')" class="segment">All</button>
                     @foreach (config('series') as $key => $config)
-                    <button type="button" @click="series = @js($key)" :aria-pressed="(series === @js($key)).toString()" aria-pressed="false"
-                        :class="series === @js($key) ? 'bg-surface-2 font-bold text-ink' : 'font-medium text-muted hover:text-ink'"
-                        class="focus-ring min-h-10 rounded-[9px] px-3.5 text-sm">{{ $config['label'] }}</button>
+                    <button type="button" @click="series = @js($key)" aria-pressed="false" :aria-pressed="pressed(@js($key))" class="segment">{{ $config['label'] }}</button>
                     @endforeach
                 </div>
             </div>

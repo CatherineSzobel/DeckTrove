@@ -57,6 +57,14 @@ describe("like button", () => {
         expect(button).toMatchObject({ liked: false, count: 2, busy: false });
     });
 
+    test("names the button after the deck, its state and the count", () => {
+        const button = likeButton({ liked: false, count: 3, url: "/decks/7/like", name: "Burn" });
+        expect(button.label).toBe("Like Burn, 3 likes");
+
+        Object.assign(button, { liked: true, count: 1 });
+        expect(button.label).toBe("Unlike Burn, 1 like");
+    });
+
     test("ignores clicks while a request is on its way", async () => {
         let finish;
         const send = vi.fn(() => new Promise((resolve) => (finish = resolve)));
