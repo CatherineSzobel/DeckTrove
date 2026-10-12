@@ -37,7 +37,7 @@
             </div>
 
             <div class="flex min-w-0 flex-[1_1_420px] flex-col gap-4">
-                <p class="eyebrow">{{ $series['label'] }} deck · by {{ $deck->user->username }}</p>
+                <p class="eyebrow">{{ $series['label'] }} deck · by <a href="{{ route('users.show', $deck->user) }}" class="focus-ring rounded-sm underline underline-offset-4 hover:text-ink">{{ $deck->user->username }}</a></p>
                 <div class="flex flex-wrap items-center gap-4">
                     <h1 class="heading-display text-[clamp(44px,5vw,68px)] text-ink">{{ $deck->name }}</h1>
                     <x-deck.format-badge :format="$format" :label="$formatLabel" :problems="count($formatErrors['messages'])" />

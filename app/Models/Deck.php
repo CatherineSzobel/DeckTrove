@@ -42,6 +42,11 @@ class Deck extends Model
         return $this->hasMany(DeckCard::class);
     }
 
+    public function likes(): HasMany
+    {
+        return $this->hasMany(DeckLike::class);
+    }
+
     public function scopePublic($query)
     {
         return $query->where('is_public', true);
@@ -53,6 +58,16 @@ class Deck extends Model
     protected function cardCount(): Attribute
     {
         return Attribute::get(fn ($value) => (int) ($value ?? $this->deckCards()->sum('count')));
+    }
+
+    /**
+     * "Casual" for a deck without a format, otherwise the format's label from the series config.
+     */
+    protected function formatLabel(): Attribute
+    {
+        return Attribute::get(fn () => $this->format
+            ? config("series.{$this->game}.deck.formats.{$this->format}.label", $this->format)
+            : 'Casual');
     }
 
     public function scopeWithCardCount($query)

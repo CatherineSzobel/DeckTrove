@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Decks\DeckStats;
+use App\Decks\PublicDeckQuery;
 use App\Http\Requests\SaveDeckRequest;
 use App\Models\Deck;
 use App\Services\CardService;
@@ -21,45 +22,48 @@ class DeckController extends Controller
     ) {}
 
     /**
-     * Public decks, optionally filtered by game. AJAX requests get just the deck grid.
+     * Public decks: search, game and format filters, your liked decks, and three sort orders (see PublicDeckQuery).
+     * AJAX requests get just the deck grid.
      */
     public function index(Request $request)
     {
-        $game = $request->query('game');
-
-        $decks = Deck::public()
-            ->with('user')
-            ->withCardCount()
-            ->when(array_key_exists((string) $game, config('series')), fn ($query) => $query->where('game', $game))
-            ->latest()
-            ->paginate(18)
-            ->withQueryString();
+        $query = PublicDeckQuery::fromRequest($request);
+        $decks = $query->paginate(18);
 
         if ($request->ajax()) {
             return response()->json(['html' => view('decks.partials.deck-card', compact('decks'))->render()]);
         }
 
-        return view('decks.public-deck', compact('decks'));
+        return view('decks.public-deck', [
+            'decks' => $decks,
+            'filters' => $query->filters(),
+            'sorts' => PublicDeckQuery::SORTS,
+            'formats' => $query->formatOptions(),
+        ]);
     }
 
     public function mine(Request $request)
     {
-        $decks = $request->user()->decks()->withCardCount()->latest()->get();
+        $decks = $request->user()->decks()->withCardCount()->withCount('likes')->latest()->get();
 
         return view('decks.mydecks', compact('decks'));
     }
 
-    public function show(Deck $deck, DeckStats $deckStats)
+    public function show(Request $request, Deck $deck, DeckStats $deckStats)
     {
         Gate::authorize('view', $deck);
 
-        $deck->load('user');
+        $deck->load('user')->loadCount('likes');
         $sections = $this->deckService->buildSections($deck);
         $zones = config("series.{$deck->game}.deck.zones");
         $stats = $deckStats->fromSections($sections, config("series.{$deck->game}"));
         $formatErrors = $this->deckService->formatErrors($deck);
 
-        return view('decks.deck', compact('deck', 'sections', 'zones', 'stats', 'formatErrors'));
+        // For the like button (not rendered yet): your own deck and guests can't like.
+        $liked = $request->user() !== null && $deck->likes()->where('user_id', $request->user()->id)->exists();
+        $canLike = Gate::allows('like', $deck);
+
+        return view('decks.deck', compact('deck', 'sections', 'zones', 'stats', 'formatErrors', 'liked', 'canLike'));
     }
 
     /**

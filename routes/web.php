@@ -3,11 +3,13 @@
 use App\Http\Controllers\CardsController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DeckController;
+use App\Http\Controllers\DeckLikeController;
 use App\Http\Controllers\DeckTransferController;
 use App\Http\Controllers\IndexController;
 use App\Http\Controllers\PacksController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PublicProfileController;
 use App\Http\Controllers\RegisterUserController;
 use App\Http\Controllers\SessionController;
 use Illuminate\Support\Facades\Route;
@@ -48,12 +50,17 @@ Route::middleware('auth')->group(function () {
     Route::post('/{series}/decks/import', [DeckTransferController::class, 'import'])->middleware('throttle:10,1')->name('decks.import');
     Route::post('/decks/{deck}/import', [DeckTransferController::class, 'reimport'])->can('update', 'deck')->middleware('throttle:10,1')->name('decks.reimport');
     Route::post('/decks/{deck}/copy', [DeckTransferController::class, 'copy'])->name('decks.copy');
+
+    // Likes on public decks (DeckPolicy::like: not your own deck; someone else's private deck is a 404)
+    Route::post('/decks/{deck}/like', [DeckLikeController::class, 'store'])->can('like', 'deck')->middleware('throttle:likes')->name('decks.like');
+    Route::delete('/decks/{deck}/like', [DeckLikeController::class, 'destroy'])->can('view', 'deck')->middleware('throttle:likes')->name('decks.unlike');
 });
 
 // Decks (visibility is checked by DeckPolicy::view)
 Route::get('/decks/{deck}', [DeckController::class, 'show'])->name('decks.show');
 Route::get('/decks/{deck}/export', [DeckTransferController::class, 'export'])->name('decks.export');
 Route::get('/public-deck', [DeckController::class, 'index'])->name('public-deck');
+Route::get('/u/{user:username}', PublicProfileController::class)->name('users.show');
 
 // Per series
 Route::prefix('{series}')->group(function () {

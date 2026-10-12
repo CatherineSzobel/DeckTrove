@@ -50,6 +50,11 @@ class User extends Authenticatable
         return $this->hasMany(Deck::class);
     }
 
+    public function likes(): HasMany
+    {
+        return $this->hasMany(DeckLike::class);
+    }
+
     public function avatarUrl(): ?string
     {
         return $this->avatar ? Storage::disk(config('filesystems.media'))->url($this->avatar) : null;

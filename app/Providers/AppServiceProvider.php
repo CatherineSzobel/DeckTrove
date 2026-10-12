@@ -33,6 +33,10 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('login', fn (Request $request) => Limit::perMinute(5)
             ->by(Str::lower((string) $request->input('username')).'|'.$request->ip()));
 
+        // Liking and unliking, per user. Named so it keeps its own counter: plain `throttle:N,M` routes all share one
+        // counter per user (e.g. with deck imports).
+        RateLimiter::for('likes', fn (Request $request) => Limit::perMinute(30)->by($request->user()->id));
+
         // The series the visitor is browsing, used by the navigation links.
         View::composer('components.layout', function ($view) {
             $series = request()->route('series') ?? session('series');
