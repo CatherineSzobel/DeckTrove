@@ -1,123 +1,102 @@
-@php $defaultSeries = session('series', array_key_first(config('series'))); @endphp
+{{--
+    The signed-in user's decks: stats, then all decks as owner cards (x-deck.card variant "owner"). Everything fits on
+    one page, so search and the series switch filter the cards in place with Alpine.
+--}}
+@php
+    $builderSeries = session('series', array_key_first(config('series')));
+    $publicDecks = $decks->where('is_public', true);
+    $likesReceived = (int) $publicDecks->sum('likes_count');
+    // What the in-place filter looks at, per card in the grid's order.
+    $filterData = $decks->values()->map(fn ($deck) => [
+        'game' => $deck->game,
+        'text' => Str::lower($deck->name.' '.$deck->description),
+    ]);
+@endphp
 
-<x-layout title="My decks" :js="['resources/js/mydecks.js']">
-    <div class="max-w-7xl mx-auto px-4 py-10">
-        <div class="flex items-center justify-between mb-6">
-            <div>
-                <h1 class="text-3xl font-extrabold text-gray-900">My Decks</h1>
-                <p class="text-sm text-slate-500 mt-1">Manage and preview all your decks</p>
+<x-layout title="My decks">
+    <div class="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-8 sm:px-6">
+        <div class="flex flex-wrap items-end justify-between gap-6 pb-2">
+            <div class="flex max-w-[40rem] flex-col gap-3">
+                <p class="eyebrow">Your collection</p>
+                <h1 class="heading-display text-[clamp(44px,6vw,72px)] text-ink">My decks</h1>
+                <p class="text-[17px] leading-relaxed text-body">Build, tune and share your decks.</p>
             </div>
 
-            <div class="flex items-center gap-4">
-                <div class="text-sm text-slate-600 mr-2">Total decks</div>
-                <div class="bg-amber-400 text-slate-900 font-semibold px-3 py-1 rounded-md">{{ $decks->count() }}</div>
+            <div class="flex flex-wrap items-center gap-3">
+                <a href="{{ route('users.show', auth()->user()) }}" class="btn-secondary">
+                    <x-heroicon-o-user-circle class="h-5 w-5" aria-hidden="true" />
+                    Public profile
+                </a>
+                <a href="{{ route('decks.builder', $builderSeries) }}" class="btn-primary">
+                    <x-heroicon-o-plus class="h-5 w-5" aria-hidden="true" />
+                    New deck
+                </a>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
-            <div class="lg:col-span-3">
-                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
-                    <div class="flex items-center gap-3 w-full md:w-2/3">
-                        <input id="deckSearch" type="search" placeholder="Search decks by name or description..." aria-label="Search decks"
-                            class="w-full px-4 py-2 rounded-md bg-slate-800 border border-slate-700 text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-400" />
-                    </div>
+        <div class="flex flex-wrap gap-2.5">
+            <span class="inline-flex items-baseline gap-2 rounded-[10px] border border-line bg-surface px-3 py-2 text-[13px] text-body">
+                <b class="font-mono text-base text-accent-ink">{{ $decks->count() }}</b>
+                {{ Str::plural('deck', $decks->count()) }}
+            </span>
+            @foreach (config('series') as $key => $config)
+            <span class="inline-flex items-baseline gap-2 rounded-[10px] border border-line bg-surface px-3 py-2 text-[13px] text-body">
+                <b class="font-mono text-base text-ink">{{ $decks->where('game', $key)->count() }}</b>
+                {{ $config['label'] }}
+            </span>
+            @endforeach
+            <span class="inline-flex items-baseline gap-2 rounded-[10px] border border-line bg-surface px-3 py-2 text-[13px] text-body">
+                <b class="font-mono text-base text-ink">{{ $publicDecks->count() }}</b>
+                public
+            </span>
+            <span class="inline-flex items-baseline gap-2 rounded-[10px] border border-line bg-surface px-3 py-2 text-[13px] text-body">
+                <b class="font-mono text-base text-ink">{{ $likesReceived }}</b>
+                {{ Str::plural('like', $likesReceived) }} received
+            </span>
+        </div>
 
-                    <div class="flex items-center gap-3">
-                        <select id="seriesFilter" aria-label="Filter by series"
-                            class="bg-slate-800 text-slate-200 px-3 py-2 rounded-md border border-slate-700 focus:outline-none">
-                            <option value="all">All</option>
-                            @foreach (config('series') as $series => $config)
-                            <option value="{{ $series }}">{{ $config['label'] }}</option>
-                            @endforeach
-                        </select>
-                        <a href="{{ route('decks.builder', $defaultSeries) }}"
-                            class="hidden md:inline-block bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold px-4 py-2 rounded-md">Build Deck</a>
-                    </div>
+        @if ($decks->isEmpty())
+        <x-empty-state title="You don’t have any decks yet">
+            Start one in the deck builder, or copy a public deck to make it your own.
+            <x-slot:actions>
+                <a href="{{ route('decks.builder', $builderSeries) }}" class="btn-primary">Create your first deck</a>
+                <a href="{{ route('public-deck') }}" class="btn-secondary">Browse public decks</a>
+            </x-slot:actions>
+        </x-empty-state>
+        @else
+        <div x-data="deckSearch(@js($filterData))" class="flex flex-col gap-6">
+            <div class="flex flex-wrap items-center gap-3 rounded-[18px] border border-line bg-surface p-4">
+                <div class="relative min-w-0 flex-[1_1_320px]">
+                    <label for="my-deck-search" class="sr-only">Search your decks</label>
+                    <x-heroicon-o-magnifying-glass class="pointer-events-none absolute left-3.5 top-3.5 h-5 w-5 text-muted" aria-hidden="true" />
+                    <input id="my-deck-search" type="search" x-model="q" placeholder="Search your decks by name or description" class="input w-full pl-11">
                 </div>
 
-                @if ($decks->isEmpty())
-                <div class="bg-slate-800 border border-slate-700 rounded-lg p-8 text-center text-slate-400">
-                    <p class="mb-4">You don't have any decks yet.</p>
-                    <a href="{{ route('decks.builder', $defaultSeries) }}"
-                        class="inline-block bg-amber-500 hover:bg-amber-600 text-slate-900 font-semibold px-5 py-2 rounded-md">Create your first deck</a>
-                </div>
-                @else
-                <div id="decksGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    @foreach ($decks as $deck)
-                    <div class="deck-card bg-slate-800 border border-slate-700 rounded-lg overflow-hidden shadow-sm transition hover:shadow-lg"
-                        data-series="{{ $deck->game }}" data-search="{{ strtolower($deck->name.' '.$deck->description) }}">
-                        <div class="relative h-40 bg-gradient-to-br from-slate-700 to-slate-900 overflow-hidden">
-                            @if ($deck->image)
-                            <img src="{{ $deck->image }}" alt="{{ $deck->name }}" loading="lazy" class="w-full h-full object-cover">
-                            @else
-                            <div class="w-full h-full flex items-center justify-center text-slate-500 text-4xl" aria-hidden="true">🎴</div>
-                            @endif
-                            <div class="absolute left-3 top-3">
-                                <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-black/50 text-white">{{ config("series.{$deck->game}.label", ucfirst($deck->game)) }}</span>
-                            </div>
-                            <div class="absolute right-3 top-3">
-                                <form action="{{ route('decks.destroy', $deck) }}" method="POST" data-confirm="“{{ $deck->name }}” will be deleted. This cannot be undone."
-                                    data-confirm-title="Delete this deck?" data-confirm-button="Delete deck">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="rounded bg-black/50 px-2 py-1 text-red-400 font-bold hover:text-red-300" aria-label="Delete {{ $deck->name }}">✕</button>
-                                </form>
-                            </div>
-                        </div>
-
-                        <div class="p-4">
-                            <a href="{{ route('decks.show', $deck) }}" class="block">
-                                <h3 class="text-lg font-semibold text-white truncate">{{ $deck->name }}</h3>
-                            </a>
-                            <p class="text-sm text-slate-400 mt-2 line-clamp-3">{{ $deck->description ?: 'No description' }}</p>
-                            <span class="text-sm text-slate-400 mt-2 block">{{ $deck->is_public ? 'Public' : 'Private' }}</span>
-                            <div class="mt-4 flex items-center justify-between">
-                                <div class="text-xs text-slate-400">
-                                    <span class="font-semibold text-amber-400">{{ $deck->card_count }}</span>
-                                    <span class="ml-1">cards</span>
-                                </div>
-
-                                <div class="flex items-center gap-2">
-                                    <a href="{{ route('decks.show', $deck) }}" class="text-sm bg-slate-700 hover:bg-slate-600 text-white px-3 py-1 rounded-md">View</a>
-                                    <a href="{{ route('decks.edit', $deck) }}" class="text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md">Edit</a>
-                                </div>
-                            </div>
-
-                            <div class="mt-3 text-xs text-slate-500">Created {{ $deck->created_at->diffForHumans() }}</div>
-                        </div>
-                    </div>
+                <div role="group" aria-label="Series" class="inline-flex flex-wrap gap-1 rounded-xl border border-line bg-canvas p-1">
+                    <button type="button" @click="series = 'all'" :aria-pressed="(series === 'all').toString()" aria-pressed="true"
+                        :class="series === 'all' ? 'bg-surface-2 font-bold text-ink' : 'font-medium text-muted hover:text-ink'"
+                        class="focus-ring min-h-10 rounded-[9px] px-3.5 text-sm">All</button>
+                    @foreach (config('series') as $key => $config)
+                    <button type="button" @click="series = @js($key)" :aria-pressed="(series === @js($key)).toString()" aria-pressed="false"
+                        :class="series === @js($key) ? 'bg-surface-2 font-bold text-ink' : 'font-medium text-muted hover:text-ink'"
+                        class="focus-ring min-h-10 rounded-[9px] px-3.5 text-sm">{{ $config['label'] }}</button>
                     @endforeach
                 </div>
-                <p id="noDeckMatches" class="hidden text-center text-slate-500 py-8">No decks match your search.</p>
-                @endif
             </div>
 
-            <aside class="lg:col-span-1 space-y-6">
-                <div class="bg-slate-800 rounded-lg p-4 border border-slate-700">
-                    <h2 class="text-sm font-semibold text-slate-300 mb-3">Stats</h2>
-                    <div class="grid grid-cols-1 gap-3">
-                        <div class="flex items-center justify-between bg-slate-700 p-3 rounded">
-                            <div class="text-sm text-slate-300">All decks</div>
-                            <div class="font-semibold text-amber-400">{{ $decks->count() }}</div>
-                        </div>
-                        @foreach (config('series') as $series => $config)
-                        <div class="flex items-center justify-between bg-slate-700 p-3 rounded">
-                            <div class="text-sm text-slate-300">{{ $config['label'] }} decks</div>
-                            <div class="font-semibold text-blue-400">{{ $decks->where('game', $series)->count() }}</div>
-                        </div>
-                        @endforeach
-                    </div>
-                </div>
+            <p class="text-sm text-muted" aria-live="polite">
+                <span class="font-mono font-bold text-ink" x-text="shown + (shown === 1 ? ' deck' : ' decks')">{{ $decks->count() }} {{ Str::plural('deck', $decks->count()) }}</span>
+                · newest first
+            </p>
 
-                <div class="bg-slate-800 rounded-lg p-4 border border-slate-700">
-                    <h2 class="text-sm font-semibold text-slate-300 mb-3">Quick Links</h2>
-                    <div class="flex flex-col gap-2">
-                        @foreach (config('series') as $series => $config)
-                        <a href="{{ route('cards.index', $series) }}" class="px-3 py-2 rounded bg-slate-700 hover:bg-blue-600 text-white text-center">{{ $config['label'] }} cards</a>
-                        @endforeach
-                    </div>
-                </div>
-            </aside>
+            <div class="grid grid-cols-[repeat(auto-fill,minmax(min(300px,100%),1fr))] gap-6">
+                @foreach ($decks->values() as $deck)
+                <x-deck.card :deck="$deck" variant="owner" x-show="matches({{ $loop->index }})" />
+                @endforeach
+            </div>
+
+            <x-empty-state x-cloak x-show="shown === 0" title="No decks match">Try another search or series.</x-empty-state>
         </div>
+        @endif
     </div>
 </x-layout>

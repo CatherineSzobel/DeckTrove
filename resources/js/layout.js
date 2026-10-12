@@ -4,6 +4,7 @@
  */
 import Alpine from "alpinejs";
 import { createConfirmStore } from "./confirm.js";
+import { deckSearch } from "./deck-search.js";
 import { likeButton } from "./likes.js";
 
 // Let Vite process the images referenced with Vite::asset() in Blade, so they exist in production builds.
@@ -64,6 +65,7 @@ Alpine.store("confirm", createConfirmStore());
 window.confirmDialog = (options) => Alpine.store("confirm").ask(options);
 // Like buttons appear on deck cards in several lists and on the deck page.
 Alpine.data("likeButton", likeButton);
+Alpine.data("deckSearch", deckSearch);
 document.addEventListener("DOMContentLoaded", () => Alpine.start());
 
 document.addEventListener("DOMContentLoaded", () => {
