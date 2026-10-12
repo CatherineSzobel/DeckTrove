@@ -42,6 +42,11 @@ class Deck extends Model
         return $this->hasMany(DeckCard::class);
     }
 
+    public function likes(): HasMany
+    {
+        return $this->hasMany(DeckLike::class);
+    }
+
     public function scopePublic($query)
     {
         return $query->where('is_public', true);
