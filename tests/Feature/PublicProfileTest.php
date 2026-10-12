@@ -85,3 +85,45 @@ test('profile page links stay on the profile', function () {
     $response->assertSee(route('users.show', $user).'?page=2', false)
         ->assertDontSee(route('public-deck').'?page=2', false);
 });
+
+test('the profile header shows when the user joined and their stats', function () {
+    $user = User::factory()->create(['username' => 'deckmaster', 'created_at' => '2026-03-14 12:00:00']);
+    $deck = Deck::factory()->public()->for($user)->create();
+    DeckLike::factory()->count(3)->for($deck)->create();
+
+    expect($this->get(route('users.show', $user))->getContent())
+        ->toContain('Player · joined March 2026')
+        ->toMatch('/>1<\/b>\s*public deck\s*</')
+        ->toMatch('/>3<\/b>\s*likes received\s*</');
+});
+
+test('sort and series links stay on the profile', function () {
+    $user = User::factory()->create(['username' => 'deckmaster']);
+    Deck::factory()->public()->for($user)->create();
+
+    $html = $this->get(route('users.show', [$user, 'game' => 'magic']))->getContent();
+
+    expect($html)
+        ->toContain('href="'.e(route('users.show', [$user, 'sort' => 'liked', 'game' => 'magic'])).'"')
+        ->toContain('href="'.e(route('users.show', [$user, 'sort' => 'newest'])).'"')
+        ->toMatch('/data-game="magic"[^>]*aria-current="true"/');
+});
+
+test('an empty profile says so, and points the owner to their decks', function () {
+    $user = User::factory()->create(['username' => 'newcomer']);
+
+    $this->get(route('users.show', $user))
+        ->assertSee('No public decks yet')
+        ->assertSee('newcomer hasn’t shared any decks yet.')
+        ->assertDontSee(route('decks'));
+
+    $this->actingAs($user)->get(route('users.show', $user))
+        ->assertSee('You haven’t shared a deck yet')
+        ->assertSee(route('decks'));
+});
+
+test('your account page links to your public profile', function () {
+    $user = User::factory()->create(['username' => 'deckmaster']);
+
+    $this->actingAs($user)->get(route('profile'))->assertSee(route('users.show', $user));
+});

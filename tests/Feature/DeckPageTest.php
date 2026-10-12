@@ -103,3 +103,9 @@ test('a card the source no longer has still shows on the deck page', function ()
     $this->get(route('decks.show', deckPageDeck([[['id' => 99999999, 'name' => 'Lost Card', 'lost' => true], 'main', 1]])))
         ->assertOk()->assertSee('alt="Lost Card"', false);
 });
+
+test('a deck without cards says so in the empty state box', function () {
+    $html = $this->get(route('decks.show', deckPageDeck([])))->assertOk()->getContent();
+
+    expect($html)->toMatch('/<h2 class="heading-display[^"]*">No cards in this deck yet<\/h2>/');
+});

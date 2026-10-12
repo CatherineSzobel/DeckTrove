@@ -131,7 +131,7 @@
                 @endforeach
 
                 @if (collect($sections)->every(fn ($cards) => $cards->isEmpty()))
-                <p class="rounded-2xl border-2 border-dashed border-line-strong p-10 text-center text-muted">No cards in this deck yet.</p>
+                <x-empty-state title="No cards in this deck yet" />
                 @endif
             </div>
 

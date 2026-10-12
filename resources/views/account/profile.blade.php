@@ -15,6 +15,8 @@
                     View Decks
                 </a>
             </div>
+
+            <a href="{{ route('users.show', $user) }}" class="mt-4 text-sm font-medium text-blue-600 hover:text-blue-800">View your public profile</a>
         </div>
     </x-profile-card>
 </x-layout>
