@@ -219,3 +219,13 @@ test('the dashboard has no game switch', function () {
 
     $this->actingAs(User::factory()->create())->get(route('dashboard'))->assertOk()->assertDontSee('data-game-switch', false);
 });
+
+test('the logo goes to the welcome page for guests and to the dashboard when logged in', function () {
+    $logo = '/<a href="([^"]*)" class="focus-ring flex items-center gap-2\.5 rounded-lg">/';
+
+    preg_match($logo, $this->get(route('public-deck'))->getContent(), $guest);
+    preg_match($logo, $this->actingAs(User::factory()->create())->get(route('public-deck'))->getContent(), $member);
+
+    expect($guest[1])->toBe(route('index'))
+        ->and($member[1])->toBe(route('dashboard'));
+});

@@ -4,7 +4,7 @@
     <nav aria-label="Main">
         <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-3">
             <div class="flex items-center gap-7">
-                <a href="{{ route('index') }}" class="focus-ring flex items-center gap-2.5 rounded-lg">
+                <a href="{{ $homeUrl }}" class="focus-ring flex items-center gap-2.5 rounded-lg">
                     <img src="{{ Vite::asset('resources/img/decktrove-logo-white.png') }}" alt="" class="h-10 w-10 object-contain">
                     <span class="font-display text-2xl font-extrabold uppercase tracking-[0.04em]">DeckTrove</span>
                 </a>

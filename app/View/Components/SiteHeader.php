@@ -7,16 +7,21 @@ use Illuminate\View\Component;
 
 /**
  * The site header (resources/views/components/site-header.blade.php): its nav links point at the current or
- * remembered game, and the deck builder link only shows for logged-in users.
+ * remembered game, the deck builder link only shows for logged-in users, and the logo leads home: the dashboard when
+ * logged in, the welcome page otherwise.
  */
 class SiteHeader extends Component
 {
     /** @var list<array{key: string, label: string, href: string, active: bool}> */
     public array $links;
 
+    /** Where the logo links to. */
+    public string $homeUrl;
+
     public function __construct(?string $series = null)
     {
         $series ??= array_key_first(config('series'));
+        $this->homeUrl = auth()->check() ? route('dashboard') : route('index');
 
         $this->links = array_values(array_filter([
             ['key' => 'cards', 'label' => 'Cards', 'href' => route('cards.index', $series), 'active' => request()->routeIs('cards.*')],
