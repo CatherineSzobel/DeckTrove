@@ -39,9 +39,15 @@ class AppServiceProvider extends ServiceProvider
 
         // The series the visitor is browsing, used by the navigation links.
         View::composer('components.layout', function ($view) {
-            $series = request()->route('series') ?? session('series');
+            $routeSeries = request()->route('series');
+            $series = $routeSeries ?? session('series');
+            $isSeries = fn ($key) => is_string($key) && array_key_exists($key, config('series'));
 
-            $view->with('navSeries', array_key_exists((string) $series, config('series')) ? $series : null);
+            $view->with([
+                'navSeries' => $isSeries($series) ? $series : null,
+                // Game pages (routes with a valid {series}) get the game switch unless they place it themselves.
+                'routeSeries' => $isSeries($routeSeries) ? $routeSeries : null,
+            ]);
         });
     }
 }

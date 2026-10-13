@@ -1,14 +1,4 @@
-@props(['series'])
-
-{{-- Switches to the same section in another game: cards → cards, packs → packs, deck builder → deck builder. --}}
-@php
-    $route = request()->route()?->getName() ?? '';
-    $target = match (true) {
-        str_starts_with($route, 'packs.') => 'packs.index',
-        $route === 'decks.builder' => 'decks.builder',
-        default => 'cards.index',
-    };
-@endphp
+{{-- Switches to the same section in another game; App\View\Components\GameSwitch picks the target route. --}}
 
 <div role="group" aria-label="Game" data-game-switch class="inline-flex flex-wrap gap-1 rounded-xl border border-line bg-surface p-1">
     @foreach (config('series') as $key => $config)

@@ -4,11 +4,13 @@ use App\ViewModels\CardViewModel;
 use Illuminate\Support\Facades\Blade;
 
 test('the format badge shows casual, legal and broken decks', function () {
-    expect(Blade::render('<x-deck.format-badge :format="null" />'))->toContain('Casual')->toContain('bg-surface-2');
+    // The colours live in the .format-badge class in app.css, keyed by data-format-badge.
+    expect(Blade::render('<x-deck.format-badge :format="null" />'))
+        ->toContain('Casual')->toContain('data-format-badge="casual"')->toContain('class="format-badge')->not->toContain('bg-surface-2');
     expect(Blade::render('<x-deck.format-badge format="tcg" label="TCG Advanced" :problems="0" />'))
-        ->toContain('TCG Advanced')->toContain('Legal in TCG Advanced.')->toContain('text-ok');
+        ->toContain('TCG Advanced')->toContain('Legal in TCG Advanced.')->toContain('data-format-badge="legal"')->not->toContain('text-ok');
     expect(Blade::render('<x-deck.format-badge format="tcg" label="TCG Advanced" :problems="2" />'))
-        ->toContain('This deck no longer fits TCG Advanced.')->toContain('text-danger');
+        ->toContain('This deck no longer fits TCG Advanced.')->toContain('data-format-badge="broken"')->not->toContain('text-danger');
 });
 
 test('a card slot marks cards that break the format', function () {

@@ -152,6 +152,16 @@ test('flash messages are shown as notices', function (string $key) {
         ->assertSee('Deck saved successfully!');
 })->with(['success', 'warning', 'error']);
 
+test('notices get their look from the notice class and their type, and errors are alerts', function () {
+    $html = $this->withSession(['success' => 'Saved.', 'error' => 'Oops.'])->get(route('public-deck'))->getContent();
+
+    expect($html)
+        ->toMatch('/role="status" data-flash="success"[^>]*class="notice/')
+        ->toMatch('/role="alert" data-flash="error"[^>]*class="notice/')
+        ->not->toContain('border-ok-line bg-ok-bg')
+        ->not->toContain('border-danger-line bg-danger-bg');
+});
+
 test('flash messages are escaped', function () {
     $this->withSession(['success' => '<b>bold</b>'])->get(route('public-deck'))->assertOk()
         ->assertSee('&lt;b&gt;bold&lt;/b&gt;', false)

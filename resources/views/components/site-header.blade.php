@@ -1,17 +1,4 @@
-@props(['series' => null])
-
-{{-- The site header: always dark (.dark-scope), links for the current or remembered game, account controls. --}}
-@php
-    $series ??= array_key_first(config('series'));
-    $links = array_values(array_filter([
-        ['key' => 'cards', 'label' => 'Cards', 'href' => route('cards.index', $series), 'active' => request()->routeIs('cards.*')],
-        ['key' => 'packs', 'label' => 'Packs', 'href' => route('packs.index', $series), 'active' => request()->routeIs('packs.*')],
-        ['key' => 'public-decks', 'label' => 'Public decks', 'href' => route('public-deck'), 'active' => request()->routeIs('public-deck')],
-        auth()->check()
-            ? ['key' => 'deck-builder', 'label' => 'Deck builder', 'href' => route('decks.builder', $series), 'active' => request()->routeIs('decks.builder', 'decks.edit')]
-            : null,
-    ]));
-@endphp
+{{-- The site header: always dark (.dark-scope), the nav links from App\View\Components\SiteHeader, account controls. --}}
 
 <header x-data="{ menuOpen: false }" @keydown.escape.window="menuOpen = false" class="dark-scope border-b border-line bg-canvas text-ink">
     <nav aria-label="Main">

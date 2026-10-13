@@ -104,6 +104,48 @@
         }
     }
 
+    /* A deck's format (x-deck.format-badge): neutral for Casual, green when legal, red when the deck breaks it. */
+    .format-badge {
+        @apply inline-flex h-9 items-center gap-2 rounded-full border border-line bg-surface-2 px-3.5 font-mono text-[13px] font-bold uppercase tracking-[0.04em] text-body;
+
+        &[data-format-badge="legal"] {
+            @apply border-ok-line bg-ok-bg text-ok;
+        }
+
+        &[data-format-badge="broken"] {
+            @apply border-danger-line bg-danger-bg text-danger;
+        }
+    }
+
+    /* Session notices (x-flash): the box and the icon take the colour of their data-flash type. */
+    .notice {
+        @apply mb-4 flex items-center gap-3 rounded-xl border px-4 py-3 text-[15px] text-ink;
+
+        &[data-flash="success"] {
+            @apply border-ok-line bg-ok-bg;
+        }
+
+        &[data-flash="warning"] {
+            @apply border-warn-line bg-warn-bg;
+        }
+
+        &[data-flash="error"] {
+            @apply border-danger-line bg-danger-bg;
+        }
+
+        &[data-flash="success"] .notice-icon {
+            @apply text-ok;
+        }
+
+        &[data-flash="warning"] .notice-icon {
+            @apply text-accent-ink;
+        }
+
+        &[data-flash="error"] .notice-icon {
+            @apply text-danger;
+        }
+    }
+
     /* Like buttons (x-deck.like-button). The liked look follows aria-pressed, which only the toggle has. */
     .btn-like {
         @apply focus-ring relative z-10 rounded-xl border-[1.5px] border-line-strong font-bold transition hover:bg-surface-2 aria-pressed:border-accent-ink aria-pressed:bg-warn-bg aria-pressed:text-accent-ink;
