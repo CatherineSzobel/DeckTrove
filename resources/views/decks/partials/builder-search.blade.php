@@ -18,19 +18,14 @@
 
     <div id="filterPanel" x-show="showFilters" x-cloak role="group" aria-label="Filters"
         class="grid grid-cols-2 gap-2.5 rounded-xl border border-line bg-canvas p-3.5">
-        @foreach (config("series.$game.filters") as $key => $filter)
-        @php
-            $values = $options[$key] ?? [];
-            // Lists of values become value => label maps; config may provide nicer labels.
-            $choices = array_is_list($values) ? array_combine($values, $values) : $values;
-        @endphp
+        @foreach ($filterChoices as $key => $filter)
         <div class="flex min-w-0 flex-col gap-1">
             <label for="filter-{{ $key }}" class="font-mono text-[11px] uppercase tracking-[0.08em] text-muted">{{ $filter['label'] }}</label>
             <select id="filter-{{ $key }}" x-model="filters.{{ $key }}" @change="runSearch()"
                 class="focus-ring h-11 min-w-0 rounded-[10px] border-[1.5px] border-line-strong bg-surface px-2.5 text-sm text-ink">
                 <option value="">All</option>
-                @foreach ($choices as $value => $label)
-                <option value="{{ $value }}">{{ $filter['labels'][$value] ?? $label }}</option>
+                @foreach ($filter['choices'] as $value => $label)
+                <option value="{{ $value }}">{{ $label }}</option>
                 @endforeach
             </select>
         </div>

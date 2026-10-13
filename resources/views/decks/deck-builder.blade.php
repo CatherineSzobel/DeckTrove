@@ -2,10 +2,6 @@
     Deck builder, for new decks ($deck === null) and for editing. One Alpine component (resources/js/deck-builder.js)
     holds the deck; it starts from the JSON state below (DeckController::builderState()).
 --}}
-@php
-    $rules = $state['rules'];
-    $editing = $deck !== null;
-@endphp
 
 <x-layout :title="$editing ? 'Edit '.$deck->name : 'Deck builder'" :js="['resources/js/deck-builder.js']">
     <script type="application/json" id="deck-builder-state">@json($state)</script>

@@ -1,5 +1,7 @@
 <?php
 
+use App\Decks\MagicTextFormat;
+use App\Decks\YdkFormat;
 use App\Models\Card;
 use App\Models\Deck;
 use App\Models\User;
@@ -205,4 +207,15 @@ test('the deck page shows export and copy buttons', function () {
 
     $this->get(route('decks.show', $deck))->assertSee(route('decks.export', $deck))->assertDontSee(route('decks.copy', $deck));
     $this->actingAs(User::factory()->create())->get(route('decks.show', $deck))->assertSee(route('decks.copy', $deck));
+});
+
+test('each deck file format says which files its import takes, and the builder uses it', function () {
+    expect(app(YdkFormat::class)->acceptedFiles())->toBe('.ydk')
+        ->and(app(MagicTextFormat::class)->acceptedFiles())->toBe('.txt,.dek');
+
+    $this->actingAs(User::factory()->create())
+        ->get(route('decks.builder', 'magic'))
+        ->assertOk()
+        ->assertViewHas('deckFormat', fn ($format) => $format instanceof MagicTextFormat)
+        ->assertSee('accept=".txt,.dek"', false);
 });

@@ -4,9 +4,8 @@
     One card in a deck: its image in a card-shaped slot. `over` is the message for a card that breaks the deck's
     format (red outline and "!"). With `href` the slot is a link. The slot's content (e.g. a preview) goes inside.
 --}}
-@php $tag = $href ? 'a' : 'div'; @endphp
 
-<{{ $tag }} @if ($href) href="{{ $href }}" @endif @if ($over) title="{{ $over }}" @endif
+<{{ $href ? 'a' : 'div' }} @if ($href) href="{{ $href }}" @endif @if ($over) title="{{ $over }}" @endif
     {{ $attributes->class([
         // The lift on hover gives the slot its own layer; z-20 keeps that layer (and the preview inside it) above
         // the cards after it in the grid.
@@ -20,4 +19,4 @@
     <span class="sr-only">{{ $over }}</span>
     @endif
     {{ $slot }}
-</{{ $tag }}>
+</{{ $href ? 'a' : 'div' }}>

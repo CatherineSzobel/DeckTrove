@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Cards\FilterChoices;
 use App\Decks\DeckStats;
 use App\Decks\PublicDeckQuery;
+use App\Decks\StatsCharts;
 use App\Http\Requests\SaveDeckRequest;
 use App\Models\Deck;
 use App\Services\CardService;
@@ -84,6 +86,7 @@ class DeckController extends Controller
             'sections' => $sections,
             'zones' => $zones,
             'stats' => $stats,
+            'charts' => StatsCharts::for($stats, $deck->game),
             'formatErrors' => $formatErrors,
             // The message for each card that breaks the format, by external id, for its red outline.
             'cardProblems' => array_combine($formatErrors['card_ids'], $formatErrors['messages']),
@@ -109,13 +112,7 @@ class DeckController extends Controller
                 ->header('X-Total', $cards->total());
         }
 
-        return view('decks.deck-builder', [
-            'deck' => null,
-            'game' => $series,
-            'cards' => $cards,
-            'state' => $this->builderState($series, null, [], $cards),
-            'options' => $this->cardService->for($series)->filterOptions(),
-        ]);
+        return $this->builderView($series, null, $cards);
     }
 
     public function store(SaveDeckRequest $request, string $series)
@@ -129,14 +126,25 @@ class DeckController extends Controller
 
     public function edit(Request $request, Deck $deck)
     {
-        $cards = $this->searchCards($request, $deck->game);
+        return $this->builderView($deck->game, $deck, $this->searchCards($request, $deck->game));
+    }
+
+    /**
+     * The deck builder page, for a new deck ($deck null) or editing one.
+     */
+    private function builderView(string $series, ?Deck $deck, LengthAwarePaginator $cards)
+    {
+        $state = $this->builderState($series, $deck, $deck ? $this->deckService->buildSections($deck) : [], $cards);
 
         return view('decks.deck-builder', [
             'deck' => $deck,
-            'game' => $deck->game,
+            'editing' => $deck !== null,
+            'game' => $series,
             'cards' => $cards,
-            'state' => $this->builderState($deck->game, $deck, $this->deckService->buildSections($deck), $cards),
-            'options' => $this->cardService->for($deck->game)->filterOptions(),
+            'state' => $state,
+            'rules' => $state['rules'],
+            'filterChoices' => FilterChoices::for($series, $this->cardService->for($series)->filterOptions()),
+            'deckFormat' => app(config("series.$series.deck_format")),
         ]);
     }
 

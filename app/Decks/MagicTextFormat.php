@@ -33,6 +33,11 @@ class MagicTextFormat implements DeckFormat
         return 'Paste a deck list from MTG Arena, MTGO or a deck site, e.g. "4 Lightning Bolt (2X2) 117", with a "Sideboard" section.';
     }
 
+    public function acceptedFiles(): string
+    {
+        return '.txt,.dek';
+    }
+
     public function export(array $zones, Collection $cards): string
     {
         $sections = [];

@@ -25,6 +25,11 @@ class YdkFormat implements DeckFormat
         return 'Upload or paste a .ydk file, as exported by EDOPro, YGO Omega or YGOPRODeck.';
     }
 
+    public function acceptedFiles(): string
+    {
+        return '.ydk';
+    }
+
     public function export(array $zones, Collection $cards): string
     {
         $lines = ['#created by DeckTrove'];

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Cards\FilterChoices;
 use App\Services\CardService;
 use App\ViewModels\CardViewModel;
 use Illuminate\Http\Request;
@@ -38,7 +39,8 @@ class CardsController extends Controller
             'cards' => $cards,
             'series' => $series,
             'currentView' => $currentView,
-            'options' => $provider->filterOptions(),
+            'seriesLabel' => config("series.$series.label"),
+            'filterChoices' => FilterChoices::for($series, $provider->filterOptions()),
         ]);
     }
 

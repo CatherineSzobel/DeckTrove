@@ -1,5 +1,6 @@
 <?php
 
+use App\Decks\StatsCharts;
 use App\Models\Card;
 use App\Models\Deck;
 use App\Models\User;
@@ -119,4 +120,11 @@ test('the controller hands the deck page its owner check, export extension and c
         ->assertViewHas('cardProblems', ['55144522' => 'Pot of Greed is not allowed in TCG Advanced.']);
 
     $this->actingAs(User::factory()->create())->get(route('decks.show', $deck))->assertViewHas('isOwner', false);
+});
+
+test('the stats sidebar is drawn from the stats charts', function () {
+    $this->get(route('decks.show', deckPageDeck([darkMagicianEntry()])))
+        ->assertViewHas('charts', fn ($charts) => $charts instanceof StatsCharts)
+        ->assertSeeInOrder(['>Main</button>', '>Extra</button>', '>Side</button>'], false)
+        ->assertSee('Cardmarket prices in euros');
 });

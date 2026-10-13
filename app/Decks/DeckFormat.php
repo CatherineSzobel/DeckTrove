@@ -22,6 +22,11 @@ interface DeckFormat
     public function importHint(): string;
 
     /**
+     * The files the import form's file picker accepts, e.g. ".ydk" (an `accept` attribute value).
+     */
+    public function acceptedFiles(): string;
+
+    /**
      * @param  array<string, array<string, int>>  $zones  card counts per zone: ['main' => ['<external id>' => 2, ...], ...]
      * @param  Collection<string, array>  $cards  raw cards keyed by external id
      */

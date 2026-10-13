@@ -1,9 +1,7 @@
-@php $label = config("series.$series.label"); @endphp
-
-<x-layout :title="$label.' cards'" :js="['resources/js/card-database.js']">
+<x-layout :title="$seriesLabel.' cards'" :js="['resources/js/card-database.js']">
     <div class="container mx-auto px-4" data-series="{{ $series }}">
 
-        <x-database-header :title="$label">
+        <x-database-header :title="$seriesLabel">
             <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div class="flex gap-4 flex-wrap items-center">
 
@@ -28,14 +26,14 @@
 
                 <form id="search-form" class="flex gap-2" role="search">
                     <input type="search" id="search-input" name="search" value="{{ request('search', '') }}"
-                        placeholder="Search {{ $label }} cards…" aria-label="Search cards"
+                        placeholder="Search {{ $seriesLabel }} cards…" aria-label="Search cards"
                         class="w-64 px-4 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 bg-gray-50">
                     <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">Search</button>
                 </form>
             </div>
         </x-database-header>
 
-        <x-filter-section :series="$series" :options="$options" />
+        <x-filter-section :filters="$filterChoices" />
 
         <div id="card-container" class="relative mt-6 bg-gradient-to-b from-gray-200 via-gray-100 to-gray-50 p-6 rounded-xl">
             <div id="cards-inner">

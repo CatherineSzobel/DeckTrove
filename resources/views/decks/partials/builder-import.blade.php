@@ -2,10 +2,6 @@
     Import panel of the deck builder: a deck file or a pasted list. A new deck is created from it; on the edit page
     it replaces the deck's cards instead (e.g. to fix a wrong import).
 --}}
-@php
-    $deckFormat = app(config("series.$game.deck_format"));
-    $accept = $deckFormat->extension() === 'ydk' ? '.ydk' : '.txt,.dek';
-@endphp
 
 <section id="importPanel" x-show="showImport" x-cloak aria-labelledby="importTitle"
     class="flex flex-col gap-3.5 rounded-[18px] border border-line bg-surface px-6 py-5">
@@ -30,7 +26,7 @@
         <div class="flex flex-wrap items-stretch gap-5">
             <div class="flex flex-[1_1_260px] flex-col gap-2">
                 <label for="importFile" class="font-mono text-xs uppercase tracking-[0.08em] text-muted">Deck file</label>
-                <input id="importFile" type="file" name="file" accept="{{ $accept }}"
+                <input id="importFile" type="file" name="file" accept="{{ $deckFormat->acceptedFiles() }}"
                     class="focus-ring min-h-24 flex-1 cursor-pointer rounded-xl border-[1.5px] border-dashed border-line-strong bg-canvas p-3.5 text-sm text-body">
             </div>
             <div class="flex flex-[2_1_360px] flex-col gap-2">

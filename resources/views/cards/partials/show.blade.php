@@ -1,12 +1,11 @@
-@php $faces = $card->faceImages(); @endphp
 
 <div class="flex flex-col md:flex-row md:items-start gap-6 md:gap-8 text-gray-900">
     <div class="md:w-1/2 flex-shrink-0 flex items-center justify-center md:flex-1 flex-col">
         <img id="cardImage" src="{{ $card->image() }}" alt="{{ $card->name() }}"
-            @if (count($faces) > 1) data-faces="{{ json_encode($faces) }}" @endif
+            @if (count($card->faceImages()) > 1) data-faces="{{ json_encode($card->faceImages()) }}" @endif
             class="w-84 max-w-md rounded-lg shadow-lg bg-black object-contain">
 
-        @if (count($faces) > 1)
+        @if (count($card->faceImages()) > 1)
         <button type="button" id="transformButton"
             class="mt-4 px-4 py-2 bg-slate-700 text-white rounded hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
             Transform
