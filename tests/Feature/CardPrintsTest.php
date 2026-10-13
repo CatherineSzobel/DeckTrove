@@ -11,7 +11,7 @@ test('a card lists each set it was printed in once, linked to the pack page', fu
     ]], config('series.yugioh'));
 
     expect($card->printPacks('yugioh')->all())->toBe([
-        ['set_name' => 'Legend of Blue Eyes White Dragon', 'url' => route('packs.show', ['yugioh', 'LOB', 'legend-of-blue-eyes-white-dragon'])],
-        ['set_name' => 'Starter Deck: Yugi', 'url' => route('packs.show', ['yugioh', 'SDY', 'starter-deck-yugi'])],
+        ['set_name' => 'Legend of Blue Eyes White Dragon', 'code' => 'LOB', 'url' => route('packs.show', ['yugioh', 'LOB', 'legend-of-blue-eyes-white-dragon'])],
+        ['set_name' => 'Starter Deck: Yugi', 'code' => 'SDY', 'url' => route('packs.show', ['yugioh', 'SDY', 'starter-deck-yugi'])],
     ]);
 });

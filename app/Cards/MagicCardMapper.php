@@ -58,6 +58,21 @@ class MagicCardMapper extends CardMapper
         return $card['type_line'] ?? '';
     }
 
+    /**
+     * The type line alone: Magic's type() is the mana cost, which the card page shows as a stat.
+     */
+    public function typeLine(array $card): string
+    {
+        return $this->subtype($card);
+    }
+
+    public function manaCost(array $card): ?string
+    {
+        $cost = $this->type($card);
+
+        return $cost === '' ? null : $cost;
+    }
+
     public function description(array $card): string
     {
         return $this->field($card, 'oracle_text');

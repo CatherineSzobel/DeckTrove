@@ -31,6 +31,24 @@ abstract class CardMapper
 
     abstract public function subtype(array $card): string;
 
+    /**
+     * The card's type as one line, e.g. "Effect Monster — Spellcaster" (shown above the card's name).
+     */
+    public function typeLine(array $card): string
+    {
+        return collect([$this->type($card), $this->subtype($card)])
+            ->reject(fn (string $part) => $part === '')
+            ->implode(' — ');
+    }
+
+    /**
+     * The mana cost, for games that have one (shown as a stat on the card page).
+     */
+    public function manaCost(array $card): ?string
+    {
+        return null;
+    }
+
     abstract public function description(array $card): string;
 
     /**

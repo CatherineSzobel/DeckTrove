@@ -69,6 +69,11 @@ class CardViewModel
         return trim($this->type().' '.$this->subtype());
     }
 
+    public function typeLine(): string
+    {
+        return $this->mapper->typeLine($this->card);
+    }
+
     public function description(): string
     {
         return $this->mapper->description($this->card);
@@ -89,6 +94,25 @@ class CardViewModel
         return collect($this->stats())
             ->map(fn ($stat) => "{$stat['label']}: ".($stat['value'] ?? '-'))
             ->implode(' / ');
+    }
+
+    /**
+     * The boxes on the card page: the mana cost (Magic), the stats that have a value, then the price.
+     *
+     * @return list<array{label: string, value: string}>
+     */
+    public function detailStats(): array
+    {
+        $manaCost = $this->mapper->manaCost($this->card);
+
+        return collect($manaCost === null ? [] : [['label' => 'Mana cost', 'value' => $manaCost]])
+            ->merge(collect($this->stats())
+                ->reject(fn (array $stat) => $stat['value'] === null)
+                ->map(fn (array $stat) => ['label' => $stat['label'], 'value' => (string) $stat['value']])
+                ->values())
+            ->push(['label' => 'Price', 'value' => $this->formattedPrice()])
+            ->values()
+            ->all();
     }
 
     public function setName(): string
@@ -146,7 +170,7 @@ class CardViewModel
      * "LOB-EN001"; the pack code is the part before the dash, and the set name's slug picks between products that
      * share a pack code.
      *
-     * @return Collection<int, array{set_name: string, url: string}>
+     * @return Collection<int, array{set_name: string, code: string, url: string}>
      */
     public function printPacks(string $series): Collection
     {
@@ -156,6 +180,7 @@ class CardViewModel
             ->unique('set_name')
             ->map(fn (array $set) => [
                 'set_name' => $set['set_name'],
+                'code' => $set['code'],
                 'url' => route('packs.show', [$series, $set['code'], Str::slug($set['set_name'])]),
             ])
             ->values();
