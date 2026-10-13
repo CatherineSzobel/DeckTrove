@@ -96,18 +96,23 @@ test('the homepage lists every live and upcoming series', function () {
     }
 });
 
-test('the dashboard shows random cards from every series', function () {
+test('every series can fill the dashboard’s random cards', function () {
     Http::fake(['api.scryfall.com/cards/random' => Http::response([
         'id' => '00000000-0000-0000-0000-000000000001', 'name' => 'Random Magic Card',
     ])]);
     YugiohCard::factory()->fromCard(['id' => 46986414, 'name' => 'Dark Magician'])->create();
+    $expected = [
+        'yugioh' => ['Dark Magician', route('cards.show', ['yugioh', '46986414'])],
+        'magic' => ['Random Magic Card', route('cards.show', ['magic', '00000000-0000-0000-0000-000000000001'])],
+    ];
+    $this->actingAs(User::factory()->create());
 
-    $this->actingAs(User::factory()->create())
-        ->get(route('dashboard'))
-        ->assertOk()
-        ->assertSee('Random Magic Card')
-        ->assertSee('Dark Magician')
-        ->assertSee(route('cards.show', ['yugioh', '46986414']));
+    // The dashboard shows the current series' cards; every configured series needs an entry above.
+    expect(array_keys($expected))->toEqualCanonicalizing(array_keys(config('series')));
+    foreach ($expected as $series => [$name, $link]) {
+        $this->withSession(['series' => $series])->get(route('dashboard'))
+            ->assertOk()->assertSee($name)->assertSee($link);
+    }
 });
 
 test('card ids are not limited to the formats of the current series', function () {

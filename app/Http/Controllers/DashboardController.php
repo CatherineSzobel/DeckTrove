@@ -11,15 +11,23 @@ class DashboardController extends Controller
     {
         $user = $request->user();
         $selectedTcg = array_key_exists((string) $request->query('tcg'), config('series')) ? $request->query('tcg') : null;
+        // Picking a series for the random cards also makes it the remembered series (New deck, header links).
+        if (array_key_exists((string) $request->query('cards'), config('series'))) {
+            session(['series' => $request->query('cards')]);
+        }
         $builderSeries = session('series', array_key_first(config('series')));
+        $stats = $service->stats($user);
 
         return view('dashboard', [
-            'quickLinks' => $service->quickLinks($builderSeries),
+            'username' => $user->username,
             'builderSeries' => $builderSeries,
-            'deckCounts' => $service->deckCounts($user),
+            'stats' => $stats,
+            'seriesLinks' => $service->seriesLinks($selectedTcg),
             'recentDecks' => $service->recentDecks($user, $selectedTcg),
-            'randomCards' => $service->randomCards(),
-            'selectedTcg' => $selectedTcg,
+            'emptyTitle' => $service->emptyTitle($stats[0]['value'], $selectedTcg),
+            'quickLinks' => $service->quickLinks($user),
+            'randomCards' => $service->randomCards($builderSeries),
+            'randomSeriesLinks' => $service->randomSeriesLinks($builderSeries, $selectedTcg),
         ]);
     }
 }

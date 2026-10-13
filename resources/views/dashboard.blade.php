@@ -1,103 +1,95 @@
+{{--
+    The signed-in user's home: welcome and actions, deck counts, their newest decks (filtered by series with plain
+    links), quick links and random cards with their own series switch (?cards=, which also becomes the remembered
+    series). All data comes from DashboardService.
+--}}
 
-<x-layout title="Dashboard" :js="['resources/js/moving-carousel.js']" :css="['resources/css/dashboard.css']">
-    <div class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-4 md:p-8 rounded-lg">
-        <div class="max-w-7xl mx-auto">
-            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                <div class="lg:col-span-3 space-y-6">
-                    <div class="bg-slate-900/50 backdrop-blur-xl rounded-2xl shadow-2xl p-6 md:p-8 border border-slate-800/50 hover:border-amber-500/30 transition-all duration-300">
-                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
-                            <div>
-                                <h2 class="text-3xl font-bold text-white mb-3">Your Decks</h2>
-                                <a href="{{ route('decks') }}" class="group inline-flex items-center gap-2 text-sm text-amber-400 hover:text-amber-300 transition-colors">
-                                    <span>View all decks</span>
-                                    <x-heroicon-m-chevron-right class="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                                </a>
-                            </div>
-                            <form method="GET" action="{{ route('dashboard') }}">
-                                <label for="tcgFilter" class="sr-only">Filter decks by series</label>
-                                <select id="tcgFilter" name="tcg" data-autosubmit
-                                    class="bg-slate-800/80 text-white rounded-xl px-4 py-2.5 border border-slate-700 hover:border-amber-400 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 transition-all cursor-pointer">
-                                    <option value="">All TCGs</option>
-                                    @foreach (config('series') as $key => $config)
-                                    <option value="{{ $key }}" @selected($selectedTcg === $key)>{{ $config['label'] }}</option>
-                                    @endforeach
-                                </select>
-                                <noscript><button type="submit" class="ml-2 text-amber-400">Filter</button></noscript>
-                            </form>
-                        </div>
+<x-layout title="Dashboard">
+    <div class="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6">
+        <div class="flex flex-wrap items-end justify-between gap-6">
+            <div class="flex min-w-0 flex-col gap-2.5">
+                <p class="eyebrow">Dashboard</p>
+                <h1 class="heading-display break-words text-[clamp(40px,5vw,64px)] text-ink">Welcome back, {{ $username }}</h1>
+            </div>
 
-                        @if ($recentDecks->isNotEmpty())
-                        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                            @foreach ($recentDecks as $deck)
-                            <a href="{{ route('decks.show', $deck) }}" class="group">
-                                <div class="bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50 hover:border-amber-400/50 transition-all duration-300 transform hover:scale-105 hover:shadow-xl hover:shadow-amber-500/10">
-                                    <div class="bg-gradient-to-br from-slate-700 to-slate-900 rounded-lg h-40 flex items-center justify-center mb-3 overflow-hidden relative">
-                                        @if ($deck->image)
-                                        <img src="{{ $deck->image }}" alt="{{ $deck->name }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300">
-                                        @else
-                                        <span class="text-slate-500 group-hover:text-amber-400 transition-colors text-2xl">No Image</span>
-                                        @endif
-                                    </div>
-                                    <h3 class="text-white font-semibold truncate group-hover:text-amber-400 transition-colors text-lg">{{ $deck->name }}</h3>
-                                    <div class="flex items-center justify-between mt-2">
-                                        <p class="text-slate-400 text-sm">{{ $deck->series_label }}</p>
-                                        <span class="bg-slate-700/50 text-amber-400 text-xs font-medium px-2.5 py-1 rounded-full">{{ $deck->card_count }} cards</span>
-                                    </div>
-                                </div>
-                            </a>
-                            @endforeach
-                        </div>
-                        @else
-                        <div class="text-center py-16">
-                            <p class="text-slate-400 text-lg mb-6">No decks yet. Start building your collection!</p>
-                            <a href="{{ route('decks.builder', $builderSeries) }}"
-                                class="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-900 font-semibold px-8 py-3 rounded-xl transition-all transform hover:scale-105 shadow-lg hover:shadow-amber-500/50">
-                                <x-heroicon-o-plus class="w-5 h-5" />
-                                Create Your First Deck
-                            </a>
-                        </div>
-                        @endif
-                    </div>
-
-                    <div class="bg-slate-900/90 backdrop-blur-md rounded-2xl shadow-lg border border-slate-700/50 p-6 hover:border-amber-500/40 transition-all">
-                        <h3 class="text-xl font-bold text-white mb-4">Quick Stats</h3>
-                        <div class="flex flex-wrap gap-4 justify-start">
-                            @foreach ($deckCounts as $key => $count)
-                            <div class="flex-1 min-w-[90px] bg-slate-800/80 p-3 rounded-xl border border-slate-600/30 hover:border-amber-400/50 transition-all flex flex-col items-center text-center">
-                                <p class="text-slate-400 text-sm mb-1">{{ $key === 'total' ? 'Total' : config("series.$key.label") }}</p>
-                                <p class="text-amber-400 font-bold text-2xl">{{ $count }}</p>
-                            </div>
-                            @endforeach
-                        </div>
-                    </div>
-
-                    @if ($randomCards->isNotEmpty())
-                    <div class="bg-slate-900/50 backdrop-blur-xl rounded-2xl shadow-2xl p-6 md:p-8 border border-slate-800/50 hover:border-purple-500/30 transition-all duration-300">
-                        <h3 class="text-xl font-bold text-white mb-2">Discover random cards</h3>
-                        <div class="overflow-hidden relative rounded-xl">
-                            <div class="marquee">
-                                <div class="flex gap-4 py-4">
-                                    @foreach ($randomCards as $card)
-                                    <a href="{{ $card->link() }}" target="_blank" class="flex-shrink-0 card-link group">
-                                        <div class="h-56 w-40 rounded-xl overflow-hidden shadow-xl hover:shadow-2xl hover:shadow-purple-500/30 transition-all transform hover:scale-110 hover:-rotate-2 cursor-pointer border-2 border-slate-700 hover:border-purple-500">
-                                            <img src="{{ $card->imageSmall() }}" alt="{{ $card->name() }}" class="w-full h-full object-cover" loading="lazy">
-                                        </div>
-                                    </a>
-                                    @endforeach
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    @endif
-                </div>
-
-                <div class="lg:col-span-1 flex flex-col gap-6 lg:h-full">
-                    <div class="bg-slate-900/90 backdrop-blur-md rounded-2xl shadow-lg border border-slate-700/50 p-6 hover:border-purple-500/40 transition-all flex flex-col">
-                        <h3 class="text-xl font-bold text-white mb-6">Quick Links</h3>
-                        <x-dashboard-quick-link class="gap-2" :links="$quickLinks" />
-                    </div>
-                </div>
+            <div class="flex flex-wrap items-center gap-3">
+                <a href="{{ route('decks.builder', $builderSeries) }}" class="btn-primary">
+                    <x-heroicon-o-plus class="h-5 w-5" aria-hidden="true" />
+                    New deck
+                </a>
+                <a href="{{ route('profile') }}" class="btn-secondary">Profile</a>
             </div>
         </div>
+
+        <section aria-label="Quick stats" class="grid grid-cols-[repeat(auto-fit,minmax(min(200px,100%),1fr))] gap-4">
+            @foreach ($stats as $stat)
+            <x-stat-tile :label="$stat['label']" :value="$stat['value']" :accent="$stat['accent']" />
+            @endforeach
+        </section>
+
+        <div class="flex flex-wrap items-start gap-6">
+            <section aria-labelledby="your-decks" class="flex min-w-0 flex-[999_1_640px] flex-col gap-5 rounded-[20px] border border-line bg-surface p-6">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <h2 id="your-decks" class="heading-display text-[32px] text-ink">Your decks</h2>
+                    <div class="flex flex-wrap items-center gap-3">
+                        <x-segment-links :links="$seriesLinks" label="Filter by series" />
+                        <a href="{{ route('decks') }}" class="focus-ring inline-flex min-h-11 items-center gap-1.5 rounded-sm font-bold text-accent-ink hover:underline">
+                            View all
+                            <x-heroicon-o-arrow-right class="h-4 w-4" aria-hidden="true" />
+                        </a>
+                    </div>
+                </div>
+
+                @if ($recentDecks->isEmpty())
+                <x-empty-state :title="$emptyTitle" heading="h3">
+                    Start one in the deck builder, or copy a public deck to make it your own.
+                    <x-slot:actions>
+                        <a href="{{ route('decks.builder', $builderSeries) }}" class="btn-primary">Create a deck</a>
+                        <a href="{{ route('public-deck') }}" class="btn-secondary">Browse public decks</a>
+                    </x-slot:actions>
+                </x-empty-state>
+                @else
+                <div class="grid grid-cols-[repeat(auto-fill,minmax(min(220px,100%),1fr))] gap-4">
+                    @foreach ($recentDecks as $deck)
+                    <x-deck.tile :deck="$deck" />
+                    @endforeach
+                </div>
+                @endif
+            </section>
+
+            <section aria-labelledby="quick-links" class="flex min-w-0 flex-[1_1_300px] flex-col gap-4 rounded-[20px] border border-line bg-surface p-6">
+                <h2 id="quick-links" class="heading-display text-[32px] text-ink">Quick links</h2>
+                <ul class="flex flex-col gap-2.5">
+                    @foreach ($quickLinks as $link)
+                    <li>
+                        <a href="{{ $link['href'] }}" class="focus-ring flex min-h-14 items-center justify-between gap-3 rounded-xl border-[1.5px] border-line bg-canvas px-4 font-bold text-ink transition hover:border-accent">
+                            {{ $link['title'] }}
+                            <x-heroicon-o-arrow-right class="h-[18px] w-[18px] flex-none text-accent-ink" aria-hidden="true" />
+                        </a>
+                    </li>
+                    @endforeach
+                </ul>
+            </section>
+        </div>
+
+        <section aria-labelledby="discover" class="flex flex-col gap-4 overflow-hidden rounded-[20px] border border-line bg-surface p-6">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <h2 id="discover" class="heading-display text-[32px] text-ink">Discover random cards</h2>
+                <x-segment-links :links="$randomSeriesLinks" label="Random cards series" />
+            </div>
+            @if ($randomCards->isEmpty())
+            <p class="text-[15px] text-muted">No random cards right now.</p>
+            @else
+            <ul class="flex gap-4 overflow-x-auto px-1 pb-2 pt-3">
+                @foreach ($randomCards as $card)
+                <li class="flex-none">
+                    <a href="{{ $card->link() }}" class="random-card">
+                        <img src="{{ $card->imageSmall() }}" alt="{{ $card->name() }}" loading="lazy" class="h-full w-full object-cover">
+                    </a>
+                </li>
+                @endforeach
+            </ul>
+            @endif
+        </section>
     </div>
 </x-layout>

@@ -79,6 +79,14 @@ class Deck extends Model
     }
 
     /**
+     * "Public" or "Private", for the dashboard's deck tiles.
+     */
+    protected function visibilityLabel(): Attribute
+    {
+        return Attribute::get(fn () => $this->is_public ? 'Public' : 'Private');
+    }
+
+    /**
      * A tooltip for the format badge: what the deck's format means.
      */
     protected function formatTitle(): Attribute

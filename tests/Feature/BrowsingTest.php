@@ -95,7 +95,7 @@ test('the dashboard loads for logged in users', function () {
     fakeScryfall();
 
     $this->get(route('dashboard'))->assertRedirect(route('login'));
-    $this->actingAs(User::factory()->create())->get(route('dashboard'))->assertOk()->assertSee('Your Decks');
+    $this->actingAs(User::factory()->create())->get(route('dashboard'))->assertOk()->assertSee('Your decks');
 });
 
 test('the deck builder loads for guests and returns card results for infinite scroll', function () {

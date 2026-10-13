@@ -84,3 +84,11 @@ test('the deck card and the deck page use the cover fan', function () {
     expect(file_get_contents(resource_path('views/components/deck/card.blade.php')))->toContain('<x-deck.cover-fan')->not->toContain('-rotate-12');
     expect(file_get_contents(resource_path('views/decks/deck.blade.php')))->toContain('<x-deck.cover-fan :deck="$deck" size="lg" />')->not->toContain('-rotate-12');
 });
+
+test('a stat tile shows its label and number, the number in accent when asked', function () {
+    $plain = Blade::render('<x-stat-tile label="Yu-Gi-Oh!" :value="2" />');
+    $accent = Blade::render('<x-stat-tile label="Total decks" :value="3" accent />');
+
+    expect($plain)->toContain('Yu-Gi-Oh!')->toMatch('/<span class="[^"]*text-ink[^"]*">2<\/span>/');
+    expect($accent)->toContain('Total decks')->toMatch('/<span class="[^"]*text-accent-ink[^"]*">3<\/span>/');
+});

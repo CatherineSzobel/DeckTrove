@@ -1,6 +1,6 @@
 @props([
     'js' => [], // page scripts, e.g. ['resources/js/deck-builder.js']
-    'css' => [], // page styles, e.g. ['resources/css/dashboard.css']
+    'css' => [], // page styles, e.g. ['resources/css/page.css']
     'class' => '',
     'hideNav' => false,
     'title' => null,

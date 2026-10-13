@@ -121,3 +121,30 @@ test('an avatar shows the picture, or the initial when there is none', function 
         ->and(Blade::render('<x-avatar :user="$user" class="h-7 w-7" />', ['user' => $without]))
         ->toContain('>É</span>')->toContain('bg-accent')->not->toContain('<img');
 });
+
+test('a deck tile shows the cover fan, card count, name, series and visibility', function () {
+    $deck = Deck::factory()->public()->create(['name' => 'Burn', 'game' => 'magic', 'image' => 'https://example.test/burn.jpg']);
+    $deck = Deck::withCardCount()->find($deck->id);
+
+    $html = renderDeckComponent('<x-deck.tile :deck="$deck" />', $deck);
+
+    expect($html)
+        ->toContain('class="cover-fan" data-size="sm"')
+        ->toContain('src="https://example.test/burn.jpg"')
+        ->toMatch('/<b[^>]*>0<\/b>\s*cards/')
+        ->toMatch('/<h3[^>]*>\s*<a href="'.preg_quote(route('decks.show', $deck), '/').'"[^>]*>Burn<\/a>/')
+        ->toContain('Magic: The Gathering')
+        ->toContain('Public');
+});
+
+test('a private deck without a cover gets the empty card and "Private"', function () {
+    $deck = Deck::withCardCount()->find(Deck::factory()->create(['image' => null])->id);
+
+    expect(renderDeckComponent('<x-deck.tile :deck="$deck" />', $deck))
+        ->toContain('cover-fan-empty')->toContain('Private')->not->toContain('>Public<');
+});
+
+test('a deck knows its visibility label', function () {
+    expect(Deck::factory()->public()->make()->visibility_label)->toBe('Public')
+        ->and(Deck::factory()->make()->visibility_label)->toBe('Private');
+});

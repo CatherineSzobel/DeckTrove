@@ -222,6 +222,11 @@
     .cover-fan-empty {
         @apply border border-line-strong bg-canvas;
     }
+
+    /* A card in the dashboard's "Discover random cards" row: lifts and tilts on hover and focus, unless motion is reduced. */
+    .random-card {
+        @apply focus-ring block aspect-[63/88] w-[150px] flex-none overflow-hidden rounded-lg shadow-lg transition motion-safe:hover:-translate-y-1.5 motion-safe:hover:-rotate-2 motion-safe:focus-visible:-translate-y-1.5 motion-safe:focus-visible:-rotate-2;
+    }
 }
 
 .loader {
@@ -236,7 +241,7 @@
 /*
  * Dark mode: toggled by the `dark` class on <html> (see resources/js/layout.js).
  * Tokens switch to their dark values; on old pages light grays become dark and vice versa, and white surfaces become dark cards.
- * Parts that are dark in both modes use `.dark-scope` (the header) or `slate` (tooltips, dashboard), which is not flipped.
+ * Parts that are dark in both modes use `.dark-scope` (the header) or `slate` (tooltips), which is not flipped.
  */
 .dark,
 .dark-scope {

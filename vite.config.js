@@ -8,7 +8,6 @@ export default defineConfig({
             // Every file passed to <x-layout :js/:css> must be listed here for production builds.
             input: [
                 'resources/css/app.css',
-                'resources/css/dashboard.css',
                 'resources/js/layout.js',
                 'resources/js/account.js',
                 'resources/js/card.js',
@@ -16,7 +15,6 @@ export default defineConfig({
                 'resources/js/carousel.js',
                 'resources/js/deck-builder.js',
                 'resources/js/deck-page.js',
-                'resources/js/moving-carousel.js',
                 'resources/js/pack.js',
             ],
             refresh: true,
