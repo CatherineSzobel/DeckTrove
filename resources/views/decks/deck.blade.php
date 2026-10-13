@@ -13,15 +13,7 @@
         </nav>
 
         <section class="flex flex-wrap items-center gap-10 rounded-3xl border border-line bg-surface p-6 sm:p-8">
-            <div class="relative h-[210px] w-[220px] flex-none" aria-hidden="true">
-                <div class="absolute left-[22px] top-[34px] aspect-[59/86] w-[120px] -rotate-12 rounded-lg bg-surface-2 shadow-lg"></div>
-                <div class="absolute left-[82px] top-[34px] aspect-[59/86] w-[120px] rotate-[10deg] rounded-lg bg-surface-2 shadow-lg"></div>
-                @if ($deck->image)
-                <img src="{{ $deck->image }}" alt="" class="absolute left-[52px] top-3 aspect-[59/86] w-[120px] rounded-lg object-cover shadow-xl">
-                @else
-                <div class="absolute left-[52px] top-3 aspect-[59/86] w-[120px] rounded-lg border border-line-strong bg-canvas shadow-xl"></div>
-                @endif
-            </div>
+            <x-deck.cover-fan :deck="$deck" size="lg" />
 
             <div class="flex min-w-0 flex-[1_1_420px] flex-col gap-4">
                 <p class="eyebrow">{{ $deck->series_label }} deck · by <a href="{{ route('users.show', $deck->user) }}" class="focus-ring rounded-sm underline underline-offset-4 hover:text-ink">{{ $deck->user->username }}</a></p>

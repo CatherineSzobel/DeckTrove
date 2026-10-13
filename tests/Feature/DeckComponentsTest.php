@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Deck;
 use App\ViewModels\CardViewModel;
 use Illuminate\Support\Facades\Blade;
 
@@ -66,4 +67,20 @@ test('a stat chip shows a number with its label', function () {
     expect(Blade::render('<x-stat-chip :value="40" label="cards" size="sm" class="absolute right-3 top-3" />'))
         ->toContain('text-xs')->toContain('absolute right-3 top-3')
         ->toMatch('/<b class="font-mono text-sm text-ink">40<\/b>\s*cards/');
+});
+
+test('the cover fan shows the cover in front of two card shapes, or an empty card', function () {
+    $withCover = Blade::render('<x-deck.cover-fan :deck="$deck" size="sm" />', ['deck' => new Deck(['image' => 'https://example.test/cover.jpg'])]);
+    $withoutCover = Blade::render('<x-deck.cover-fan :deck="$deck" />', ['deck' => new Deck(['image' => null])]);
+
+    expect($withCover)->toContain('class="cover-fan" data-size="sm" aria-hidden="true"')
+        ->toContain('src="https://example.test/cover.jpg"')->toContain('cover-fan-front')
+        ->and(substr_count($withCover, 'cover-fan-card'))->toBe(3);
+
+    expect($withoutCover)->toContain('data-size="md"')->toContain('cover-fan-empty')->not->toContain('<img');
+});
+
+test('the deck card and the deck page use the cover fan', function () {
+    expect(file_get_contents(resource_path('views/components/deck/card.blade.php')))->toContain('<x-deck.cover-fan')->not->toContain('-rotate-12');
+    expect(file_get_contents(resource_path('views/decks/deck.blade.php')))->toContain('<x-deck.cover-fan :deck="$deck" size="lg" />')->not->toContain('-rotate-12');
 });

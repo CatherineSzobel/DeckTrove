@@ -9,15 +9,7 @@
 
 <article {{ $attributes->class('relative flex flex-col overflow-hidden rounded-[18px] border border-line bg-surface transition hover:-translate-y-0.5 hover:border-accent focus-within:border-accent') }}>
     <div class="relative flex h-[190px] items-center justify-center border-b border-line bg-canvas">
-        <div class="relative h-40 w-44" aria-hidden="true">
-            <div class="absolute left-[18px] top-7 aspect-[59/86] w-[92px] -rotate-12 rounded-lg bg-surface-2 shadow-lg"></div>
-            <div class="absolute left-[66px] top-7 aspect-[59/86] w-[92px] rotate-[10deg] rounded-lg bg-surface-2 shadow-lg"></div>
-            @if ($deck->image)
-            <img src="{{ $deck->image }}" alt="" loading="lazy" class="absolute left-[42px] top-2.5 aspect-[59/86] w-[92px] rounded-lg object-cover shadow-xl">
-            @else
-            <div class="absolute left-[42px] top-2.5 aspect-[59/86] w-[92px] rounded-lg border border-line-strong bg-canvas shadow-xl"></div>
-            @endif
-        </div>
+        <x-deck.cover-fan :deck="$deck" />
 
         @if ($trending && $deck->recent_likes_count > 0)
         <span class="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-[10px] border border-warn-line bg-surface px-2.5 py-1.5 font-mono text-xs font-bold text-accent-ink">

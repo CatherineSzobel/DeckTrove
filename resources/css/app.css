@@ -158,6 +158,70 @@
     .btn-like-lg {
         @apply flex h-12 w-full items-center justify-between gap-3 pl-[18px] pr-1.5 text-ink;
     }
+
+    /* A deck's cover in front of two tilted cards (x-deck.cover-fan). data-size sets the card width and offsets. */
+    .cover-fan {
+        --fan-w: 92px;
+        --fan-box-w: 176px;
+        --fan-box-h: 160px;
+        --fan-left: 18px;
+        --fan-right: 66px;
+        --fan-front: 42px;
+        --fan-back-top: 28px;
+        --fan-front-top: 10px;
+        @apply relative flex-none;
+        width: var(--fan-box-w);
+        height: var(--fan-box-h);
+
+        &[data-size="sm"] {
+            --fan-w: 68px;
+            --fan-box-w: 140px;
+            --fan-box-h: 120px;
+            --fan-left: 18px;
+            --fan-right: 54px;
+            --fan-front: 36px;
+            --fan-back-top: 18px;
+            --fan-front-top: 6px;
+        }
+
+        &[data-size="lg"] {
+            --fan-w: 120px;
+            --fan-box-w: 220px;
+            --fan-box-h: 210px;
+            --fan-left: 22px;
+            --fan-right: 82px;
+            --fan-front: 52px;
+            --fan-back-top: 34px;
+            --fan-front-top: 12px;
+        }
+    }
+
+    .cover-fan-card {
+        @apply absolute aspect-[59/86] rounded-lg;
+        width: var(--fan-w);
+    }
+
+    .cover-fan-left {
+        @apply -rotate-12 bg-surface-2 shadow-lg;
+        left: var(--fan-left);
+        top: var(--fan-back-top);
+    }
+
+    .cover-fan-right {
+        @apply rotate-[10deg] bg-surface-2 shadow-lg;
+        left: var(--fan-right);
+        top: var(--fan-back-top);
+    }
+
+    .cover-fan-front {
+        @apply object-cover shadow-xl;
+        left: var(--fan-front);
+        top: var(--fan-front-top);
+    }
+
+    .cover-fan-empty {
+        @apply border border-line-strong bg-canvas;
+    }
 }
 
 .loader {
