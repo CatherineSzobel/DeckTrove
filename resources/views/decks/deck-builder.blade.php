@@ -38,7 +38,7 @@
                 <p class="eyebrow">{{ $editing ? 'Edit deck' : 'Deck builder' }}</p>
                 <label for="deckTitle" class="sr-only">Deck title</label>
                 <input id="deckTitle" type="text" maxlength="255" placeholder="Name your deck" x-model="title"
-                    class="focus-ring w-full border-0 border-b-[1.5px] border-line bg-transparent px-0 pb-1.5 pt-0.5 font-display text-[40px] font-extrabold uppercase leading-tight text-ink placeholder:text-muted">
+                    class="focus-ring w-full border-0 border-b-[1.5px] border-line bg-transparent px-0 pb-1.5 pt-0.5 font-display text-[40px] font-bold leading-tight text-ink placeholder:text-muted">
                 <label for="deckDescription" class="sr-only">Deck description</label>
                 <input id="deckDescription" type="text" maxlength="2000" placeholder="Add a short description (optional)" x-model="description"
                     class="focus-ring w-full border-0 bg-transparent px-0 py-1.5 text-base text-body placeholder:text-muted">
