@@ -73,6 +73,15 @@
     display: none !important;
 }
 
+/*
+ * The layout adds `js` to <html> when scripts run. Content that starts collapsed (data-collapsed="true") and
+ * controls only needed without JS (.no-js-only) are hidden then; without JS everything stays visible and usable.
+ */
+.js [data-collapsed="true"],
+.js .no-js-only {
+    display: none;
+}
+
 /* Pieces that repeat on nearly every screen of the redesign. Page reworks add more as they need them. */
 @layer components {
     .btn-primary {

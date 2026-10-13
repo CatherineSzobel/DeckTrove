@@ -229,3 +229,12 @@ test('the logo goes to the welcome page for guests and to the dashboard when log
     expect($guest[1])->toBe(route('index'))
         ->and($member[1])->toBe(route('dashboard'));
 });
+
+test('the page knows when JS runs, so collapsed content stays visible without it', function () {
+    $this->get(route('public-deck'))->assertOk()
+        ->assertSee('document.documentElement.classList.add("js");', false);
+
+    expect(file_get_contents(resource_path('css/app.css')))
+        ->toContain('.js [data-collapsed="true"]')
+        ->toContain('.js .no-js-only');
+});

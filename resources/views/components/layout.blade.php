@@ -18,9 +18,11 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ? "$title · DeckTrove" : 'DeckTrove' }}</title>
 
-    {{-- Apply the saved theme before the page paints, so dark mode doesn't flash white. --}}
+    {{-- Mark that JS runs (CSS keeps collapsed content visible without it), and apply the saved theme before the
+    page paints, so dark mode doesn't flash white. --}}
     <script>
         (() => {
+            document.documentElement.classList.add("js");
             let theme = null;
             try { theme = localStorage.getItem("theme"); } catch {}
             if (theme === "dark" || (!theme && matchMedia("(prefers-color-scheme: dark)").matches)) {
