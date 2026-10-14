@@ -387,6 +387,23 @@ html:not(.js) .js-only {
             @apply border-transparent text-muted hover:bg-transparent;
         }
     }
+
+    /* The log in / create account showcase: a soft accent glow and two tilted screenshots in a light frame. */
+    .showcase-glow {
+        @apply absolute inset-[10%_6%_6%_10%] rounded-[28px] bg-accent opacity-15 blur-[48px];
+    }
+
+    .showcase-shot {
+        @apply absolute rounded-xl border-[5px] border-[#F4EFE6] shadow-[0_24px_48px_rgba(0,0,0,0.45)];
+
+        &[data-shot="1"] {
+            @apply left-0 top-[2%] w-[70%] -rotate-5;
+        }
+
+        &[data-shot="2"] {
+            @apply bottom-0 right-0 w-[72%] rotate-4;
+        }
+    }
 }
 
 /*

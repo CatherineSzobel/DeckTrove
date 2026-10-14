@@ -1,52 +1,31 @@
-<x-layout title="Register" :js="['resources/js/carousel.js']">
+{{-- Create account: a plain POST form (RegisterUserController@store) next to the "About DeckTrove" showcase. --}}
 
-    <div class="flex items-start justify-center min-h-screen gap-8 px-4 bg-gray-50">
-        <form method="POST" action="{{ route('register') }}" class="w-full max-w-md bg-white p-8 rounded-lg shadow-lg text-center">
-            @csrf
+<x-layout title="Create account">
+    <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-16 px-4 py-12 sm:px-6 lg:py-[72px]">
+        <x-auth.card eyebrow="Join DeckTrove" title="Create account">
+            <x-slot:intro><p class="text-base text-body">Save your decks and share them with the community.</p></x-slot:intro>
 
-            <h2 class="mt-6 text-3xl font-bold tracking-tight text-gray-900">Register Account</h2>
-            <p class="mt-2 text-sm text-gray-600">Create your Decktrove account</p>
+            <form method="POST" action="{{ route('register') }}" class="flex flex-col gap-[18px]">
+                @csrf
+                <x-field name="username" label="Username" :value="old('username')" autocomplete="username" required />
+                <x-field name="email" label="E-mail" type="email" :value="old('email')" autocomplete="email" required />
 
-            <div class="mt-8 space-y-6">
-                <x-form-field>
-                    <x-form-label for="username" class="block text-center">Username</x-form-label>
-                    <div class="mt-2">
-                        <x-form-input name="username" id="username" :value="old('username')" autocomplete="username" required class="mx-auto" />
-                        <x-form-error name="username" />
+                {{-- The password pair sits side by side when there's room; each wrapper is one flex column. --}}
+                <div class="flex flex-wrap gap-3">
+                    <div class="min-w-0 flex-[1_1_160px]">
+                        <x-field name="password" label="Password" type="password" autocomplete="new-password" required />
                     </div>
-                </x-form-field>
-
-                <x-form-field>
-                    <x-form-label for="email" class="block text-center">E-mail</x-form-label>
-                    <div class="mt-2">
-                        <x-form-input name="email" id="email" type="email" :value="old('email')" autocomplete="email" required class="mx-auto" />
-                        <x-form-error name="email" />
+                    <div class="min-w-0 flex-[1_1_160px]">
+                        <x-field name="password_confirmation" label="Confirm password" type="password" autocomplete="new-password" required />
                     </div>
-                </x-form-field>
+                </div>
 
-                <x-form-field>
-                    <x-form-label for="password" class="block text-center">Password</x-form-label>
-                    <div class="mt-2">
-                        <x-form-input name="password" id="password" type="password" required class="mx-auto" />
-                        <x-form-error name="password" />
-                    </div>
-                </x-form-field>
+                <button type="submit" class="btn-primary mt-1 h-[52px] w-full text-[17px]">Create account</button>
+            </form>
 
-                <x-form-field>
-                    <x-form-label for="password_confirmation" class="block text-center">Confirm Password</x-form-label>
-                    <div class="mt-2">
-                        <x-form-input name="password_confirmation" id="password_confirmation" type="password" required class="mx-auto" />
-                        <x-form-error name="password_confirmation" />
-                    </div>
-                </x-form-field>
-            </div>
+            <x-slot:footer>Already have an account? <a href="{{ route('login') }}" class="focus-ring rounded-sm font-bold text-accent-ink">Log in</a></x-slot:footer>
+        </x-auth.card>
 
-            <p class="mt-2 text-sm text-gray-600">Already have an account? <a href="{{ route('login') }}" class="font-semibold leading-6 text-indigo-600 hover:text-indigo-500">Login</a></p>
-
-            <div class="mt-6 flex items-center justify-center gap-4">
-                <x-form-button>Register</x-form-button>
-            </div>
-        </form>
-        <x-welcome-div heading="Why Join Decktrove?"></x-welcome-div>
+        <x-auth.showcase variant="register" />
     </div>
 </x-layout>

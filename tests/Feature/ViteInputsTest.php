@@ -38,3 +38,8 @@ test('the old pack script is gone', function () {
     expect(file_exists(resource_path('js/pack.js')))->toBeFalse()
         ->and(file_get_contents(base_path('vite.config.js')))->not->toContain("'resources/js/pack.js'");
 });
+
+test('the old auth carousel is gone', function () {
+    expect(file_exists(resource_path('js/carousel.js')))->toBeFalse()
+        ->and(file_get_contents(base_path('vite.config.js')))->not->toContain('carousel.js');
+});
