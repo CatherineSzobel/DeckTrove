@@ -80,6 +80,7 @@ return [
             'release_date' => 'tcg_date',
             'card_count' => 'num_of_cards',
             'image' => 'set_image',
+            'cover' => 'art', // product images; 'symbol' for set symbols shown on a tile
         ],
     ],
 
@@ -148,6 +149,7 @@ return [
             'release_date' => 'released_at',
             'card_count' => 'card_count',
             'image' => 'icon_svg_uri',
+            'cover' => 'symbol',
         ],
     ],
 

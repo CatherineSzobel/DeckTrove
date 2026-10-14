@@ -37,6 +37,7 @@ test('every configured series is fully set up', function () {
         $check($implements($config['deck_format'] ?? null, DeckFormat::class), "'deck_format' must implement DeckFormat");
         $check($implements($config['pack']['provider'] ?? null, PackProvider::class), "'pack.provider' must implement PackProvider");
         $check(($config['pack']['link_prefix'] ?? null) === "/$series", "'pack.link_prefix' must be '/$series'");
+        $check(in_array($config['pack']['cover'] ?? null, ['art', 'symbol'], true), "'pack.cover' must be 'art' or 'symbol'");
 
         foreach ($config['filters'] ?? [] as $key => $filter) {
             $check(is_string($filter['label'] ?? null), "filter '$key' needs a 'label'");

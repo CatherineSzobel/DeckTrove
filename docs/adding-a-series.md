@@ -120,6 +120,7 @@ Add an entry to `config/series.php` (and remove it from `config/coming_soon.php`
         'release_date' => 'releaseDate',
         'card_count' => 'total',
         'image' => 'images.logo',
+        'cover' => 'art', // 'art' for product images, 'symbol' for set symbols (shown on a coloured tile)
     ],
 ],
 ```

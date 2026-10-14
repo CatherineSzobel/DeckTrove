@@ -309,6 +309,61 @@ html:not(.js) .js-only {
     .random-card {
         @apply focus-ring block aspect-[63/88] w-[150px] flex-none overflow-hidden rounded-lg shadow-lg transition motion-safe:hover:-translate-y-1.5 motion-safe:hover:-rotate-2 motion-safe:focus-visible:-translate-y-1.5 motion-safe:focus-visible:-rotate-2;
     }
+
+    /*
+     * A pack's cover (x-pack.cover). Size by data-size; packs without art are tiles in one of six colours (data-tone,
+     * the board's stand-ins), the same in both themes. Magic set symbols are black, so they sit on a light circle.
+     */
+    .pack-cover {
+        --cover-w: 64px;
+        --cover-h: 88px;
+        @apply relative flex shrink-0 flex-col items-center justify-end gap-1.5 overflow-hidden rounded-lg pb-2 font-mono text-[10px] font-bold text-white/90 shadow-md;
+        width: var(--cover-w);
+        height: var(--cover-h);
+
+        &[data-size="xs"] {
+            --cover-w: 32px;
+            --cover-h: 44px;
+            @apply rounded-sm pb-0 shadow-sm;
+        }
+
+        &[data-size="lg"] {
+            --cover-w: 150px;
+            --cover-h: 206px;
+            @apply rounded-[14px] pb-4 text-[13px] shadow-[0_24px_48px_rgba(0,0,0,0.4)];
+        }
+
+        &[data-tone="0"] { background-color: #6E4A9E; }
+        &[data-tone="1"] { background-color: #2D5DA8; }
+        &[data-tone="2"] { background-color: #B8652F; }
+        &[data-tone="3"] { background-color: #1C8C7E; }
+        &[data-tone="4"] { background-color: #A63D7E; }
+        &[data-tone="5"] { background-color: #3A3633; }
+
+        &[data-kind="art"] {
+            @apply bg-surface-2 pb-0;
+        }
+
+        &[data-kind="symbol"] {
+            @apply justify-center;
+        }
+
+        & > img {
+            @apply h-full w-full object-cover;
+        }
+
+        &[data-size="xs"] .pack-cover-code {
+            @apply hidden;
+        }
+    }
+
+    .pack-cover-symbol {
+        @apply flex aspect-square w-3/5 items-center justify-center rounded-full bg-[#F6F3EE] p-[12%];
+
+        & img {
+            @apply h-full w-full object-contain;
+        }
+    }
 }
 
 /*
