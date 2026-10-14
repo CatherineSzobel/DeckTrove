@@ -5,9 +5,11 @@
  * The server answers AJAX requests with cards/partials/results.blade.php.
  */
 import { buildUrl, countFilters, syncValues, viewUrl } from "./cards/query.js";
+import { cardPreview } from "./deckbuilder/preview.js";
 
 document.addEventListener("alpine:init", () => {
     window.Alpine.data("cardDatabase", () => ({
+        ...cardPreview(),
         showFilters: false,
         loading: false,
         loadingMore: false,
@@ -29,6 +31,18 @@ document.addEventListener("alpine:init", () => {
             window.addEventListener("popstate", () => this.refresh(location.href));
         },
 
+        /** Scrolling hides the preview, except when the scroll comes from keyboard focus on a tile: then it follows the tile. */
+        hideOnScroll() {
+            const tile = document.activeElement;
+
+            if (tile?.matches(".card-tile:focus-visible")) {
+                if (this.preview) this.showPreview(this.preview, tile);
+                return;
+            }
+
+            this.hidePreview();
+        },
+
         filterKeys() {
             return [...this.$el.querySelectorAll("#filters select[name]")].map((select) => select.name);
         },
@@ -41,6 +55,7 @@ document.addEventListener("alpine:init", () => {
         },
 
         async refresh(url) {
+            this.hidePreview();
             this.request?.abort();
             this.moreRequest?.abort();
             this.loadingMore = false;
@@ -49,6 +64,7 @@ document.addEventListener("alpine:init", () => {
 
             try {
                 this.$refs.region.innerHTML = await this.fetchHtml(url, request.signal);
+                this.hidePreview();
                 this.syncForm(new URL(url, location.origin).searchParams);
                 this.watchLoadMore();
             } catch (error) {

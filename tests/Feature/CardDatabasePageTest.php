@@ -187,3 +187,28 @@ test('the view switch does not move when Alpine starts', function () {
 
     expect(file_get_contents(resource_path('css/app.css')))->toContain('html:not(.js) .js-only');
 });
+
+test('image tiles show the card preview on hover and focus, with the description', function () {
+    YugiohCard::factory()->fromCard(['id' => 12345, 'name' => 'Preview Card', 'desc' => 'Unique preview text.'])->create();
+
+    $html = $this->get(route('cards.index', ['yugioh', 'view' => 'images']))->getContent();
+
+    expect($html)->toContain('@mouseenter="showPreview(card, $el)" @mouseleave="hidePreview()"')
+        ->toContain('@focus="showPreview(card, $el)" @blur="hidePreview()"')
+        ->toContain('Unique preview text.')
+        ->toMatch('/class="card-tile"[\s\S]*?x-data="\{ card:|x-data="\{ card:[\s\S]*?class="card-tile"/')
+        ->and(substr_count($html, 'data-card-preview'))->toBe(1)
+        ->and($html)->toContain('@scroll.window.passive="hideOnScroll()"');
+});
+
+test('the full and list views have no card preview handlers on their cards', function (string $view) {
+    expect($this->get(route('cards.index', ['yugioh', 'view' => $view]))->getContent())
+        ->not->toContain('showPreview(card, $el)');
+})->with(['full', 'list']);
+
+test('the AJAX images response has the preview handlers too', function () {
+    $html = $this->get(route('cards.index', ['yugioh', 'view' => 'images']), ['X-Requested-With' => 'XMLHttpRequest'])->getContent();
+
+    expect($html)->toContain('@mouseenter="showPreview(card, $el)"')
+        ->not->toContain('data-card-preview');
+});

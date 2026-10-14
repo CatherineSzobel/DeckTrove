@@ -5,7 +5,7 @@
 --}}
 
 <x-layout :title="$seriesLabel.' cards'" :game-switch="false" :js="['resources/js/card-database.js']">
-    <div data-card-database x-data="cardDatabase" class="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-8 sm:px-6">
+    <div data-card-database x-data="cardDatabase" @scroll.window.passive="hideOnScroll()" class="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-8 sm:px-6">
         <div class="flex flex-wrap items-end justify-between gap-4">
             <div class="flex flex-col gap-2">
                 <p class="eyebrow">Card database</p>
@@ -75,5 +75,7 @@
             <span class="spinner" aria-hidden="true"></span>
             Loading more cards…
         </p>
+
+        <x-deck.card-preview />
     </div>
 </x-layout>
