@@ -364,6 +364,24 @@ html:not(.js) .js-only {
             @apply h-full w-full object-contain;
         }
     }
+
+    /* A tile linking to a pack or a card on the pack pages: lifts and turns accent on hover and focus. */
+    .pack-tile {
+        @apply focus-ring rounded-2xl border-[1.5px] border-line bg-surface transition hover:border-accent focus-visible:border-accent motion-safe:hover:-translate-y-0.5 motion-safe:focus-visible:-translate-y-0.5;
+    }
+
+    /* One square in the numbered pagination (x-pagination). */
+    .page-link {
+        @apply focus-ring flex h-11 min-w-11 items-center justify-center rounded-[10px] border border-line px-2 text-ink hover:bg-surface-2;
+
+        &[aria-current="page"] {
+            @apply border-accent bg-accent font-bold text-white hover:bg-accent;
+        }
+
+        &[data-gap] {
+            @apply border-transparent text-muted hover:bg-transparent;
+        }
+    }
 }
 
 /*

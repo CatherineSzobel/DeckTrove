@@ -1,39 +1,52 @@
-<x-layout :title="config('series.'.$series.'.label').' packs'">
-    <div class="container mx-auto px-4">
-        <x-database-header :title="config('series.'.$series.'.label').' packs'">
-            <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
-                <div class="flex gap-2" role="group" aria-label="Pack view">
-                    @foreach (['full' => 'Full', 'list' => 'List'] as $key => $label)
-                    <a href="{{ request()->fullUrlWithQuery(['view' => $key, 'page' => null]) }}" @if ($currentView === $key) aria-current="page" @endif
-                        class="px-3 py-1 rounded text-sm {{ $currentView === $key ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700' }}">
-                        {{ $label }}
-                    </a>
-                    @endforeach
-                </div>
+{{-- The pack list: a GET search, Full / List view links and numbered pages, so it works without JS. --}}
 
-                <x-search-button placeholder="Search packs by name or code..." :value="$search" :hidden="['view' => $currentView]">Search</x-search-button>
+<x-layout :title="$seriesLabel.' packs'" :game-switch="false">
+    <div class="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-8 sm:px-6">
+        <div class="flex flex-wrap items-end justify-between gap-4">
+            <div class="flex flex-col gap-2">
+                <p class="eyebrow">Sets &amp; releases</p>
+                <h1 class="heading-display text-[clamp(40px,5vw,60px)] text-ink">{{ $seriesLabel }} packs</h1>
             </div>
+            <x-game-switch :series="$series" />
+        </div>
 
-            @if ($search !== '')
-            <p class="text-sm text-gray-600">
-                {{ number_format($packs->total()) }} {{ Str::plural('pack', $packs->total()) }} matching “{{ $search }}” ·
-                <a href="{{ route('packs.index', [$series, 'view' => $currentView]) }}" class="text-blue-600 underline">clear</a>
-            </p>
-            @endif
-        </x-database-header>
-    </div>
+        <section aria-label="Search packs" class="flex flex-wrap items-center gap-3 rounded-[18px] border border-line bg-surface p-4">
+            <form method="GET" action="{{ route('packs.index', $series) }}" role="search" class="flex min-w-0 flex-[1_1_360px] gap-2">
+                @foreach ($hiddenFields as $name => $value)
+                <input type="hidden" name="{{ $name }}" value="{{ $value }}">
+                @endforeach
+                <div class="relative min-w-0 flex-1">
+                    <label for="pack-search" class="sr-only">Search packs</label>
+                    <x-heroicon-o-magnifying-glass class="pointer-events-none absolute left-3.5 top-3.5 h-5 w-5 text-muted" aria-hidden="true" />
+                    <input id="pack-search" type="search" name="search" value="{{ $search }}" maxlength="100"
+                        placeholder="Search packs by name or code" class="input w-full pl-11">
+                </div>
+                <button type="submit" class="btn-primary">Search</button>
+            </form>
 
-    <div class="container mx-auto">
-        @if ($packs->isEmpty())
-        <p class="text-center text-gray-500 py-16">No packs found.</p>
-        @else
-        @include("packs.partials.packs-{$currentView}")
-        @endif
+            <nav aria-label="Pack view" class="inline-flex gap-1 rounded-xl border border-line bg-canvas p-1">
+                @foreach ($viewLinks as $link)
+                <a href="{{ $link['href'] }}" data-view="{{ $link['key'] }}" @if ($link['current']) aria-current="page" @endif class="segment">{{ $link['label'] }}</a>
+                @endforeach
+            </nav>
+        </section>
 
-        @if ($packs->hasPages())
-        <div class="mt-16 flex justify-center">
-            <div class="rounded-2xl bg-white shadow-sm px-10 py-8">{{ $packs->links() }}</div>
+        @if ($resultLine)
+        <div class="flex flex-wrap items-center gap-3 text-sm">
+            <p aria-live="polite" class="text-muted">{{ $resultLine }}</p>
+            <a href="{{ $clearUrl }}" class="focus-ring rounded-sm font-bold text-accent-ink">Clear search</a>
         </div>
         @endif
+
+        @if ($packs->isEmpty())
+        <x-empty-state title="No packs found">
+            Try another name or code.
+            <x-slot:actions>@if ($resultLine)<a href="{{ $clearUrl }}" class="btn-secondary">Clear search</a>@endif</x-slot:actions>
+        </x-empty-state>
+        @else
+        @include("packs.partials.view-{$currentView}")
+        @endif
+
+        <x-pagination :paginator="$packs" />
     </div>
 </x-layout>
