@@ -82,3 +82,38 @@ test('create account errors show under their fields', function () {
         ->toContain('<p id="password-error" role="alert"')
         ->toContain('value="newduelist"');
 });
+
+test('the forgot password page is a single card with a way back', function () {
+    expect($this->get(route('password.request'))->assertOk()->getContent())
+        ->toContain('<p class="eyebrow">Account help</p>')
+        ->toContain('>Forgot your password?</h1>')
+        ->toContain('Enter your account’s email and we’ll send you a link to choose a new one.')
+        ->toContain('autocomplete="email"')
+        ->toContain('Send reset link')
+        ->toContain('href="'.route('login').'" class="focus-ring rounded-sm font-bold text-accent-ink">Back to log in</a>')
+        ->not->toContain('aria-label="About DeckTrove"');
+});
+
+test('the reset page carries the token and the e-mail, escaped', function () {
+    expect($this->get(route('password.reset', ['token' => 'abc123', 'email' => '"><b>x</b>']))->assertOk()->getContent())
+        ->toContain('>Choose a new password</h1>')
+        ->toContain('<input type="hidden" name="token" value="abc123">')
+        ->toContain('value="&quot;&gt;&lt;b&gt;x&lt;/b&gt;"')
+        ->toContain('minlength="8"')
+        ->toContain('name="password_confirmation"')
+        ->not->toContain('aria-label="About DeckTrove"');
+});
+
+test('a rejected reset shows the error under the e-mail', function () {
+    $user = User::factory()->create();
+
+    $html = $this->from(route('password.reset', ['token' => 'nope', 'email' => $user->email]))->followingRedirects()
+        ->post(route('password.store'), ['token' => 'nope', 'email' => $user->email, 'password' => 'brand-new-password', 'password_confirmation' => 'brand-new-password'])
+        ->getContent();
+
+    expect($html)->toContain('<p id="email-error" role="alert"');
+});
+
+test('a reset link with an array e-mail still opens', function () {
+    $this->get(route('password.reset', ['token' => 'abc123', 'email' => ['a']]))->assertOk();
+});
