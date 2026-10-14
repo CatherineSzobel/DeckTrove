@@ -404,6 +404,27 @@ html:not(.js) .js-only {
             @apply bottom-0 right-0 w-[72%] rotate-4;
         }
     }
+
+    /* The profile card's banner (x-profile.card): a dark strip with three tilted card shapes, in both themes. */
+    .profile-banner {
+        @apply relative h-[140px] overflow-hidden bg-[#131211];
+
+        & span {
+            @apply absolute aspect-[59/86] w-[70px] rounded-md opacity-85;
+        }
+
+        & span:nth-child(1) {
+            @apply right-10 top-[30px] -rotate-14 bg-[#B8652F];
+        }
+
+        & span:nth-child(2) {
+            @apply right-[90px] top-[46px] -rotate-4 bg-[#2D5DA8];
+        }
+
+        & span:nth-child(3) {
+            @apply -right-1.5 top-[50px] rotate-12 bg-[#B5432F];
+        }
+    }
 }
 
 /*

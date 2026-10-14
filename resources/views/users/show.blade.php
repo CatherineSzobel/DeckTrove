@@ -12,39 +12,29 @@
         </nav>
 
         <div class="flex flex-wrap items-start gap-6">
-            <section aria-label="Profile" class="min-w-0 flex-[1_1_300px] overflow-hidden rounded-3xl border border-line bg-surface lg:max-w-[400px]">
-                <div class="relative h-[120px] overflow-hidden border-b border-line bg-canvas" aria-hidden="true">
-                    <div class="absolute right-[86px] top-[34px] aspect-[59/86] w-16 -rotate-12 rounded-md bg-surface-2 shadow-lg"></div>
-                    <div class="absolute right-6 top-[34px] aspect-[59/86] w-16 rotate-[10deg] rounded-md bg-surface-2 shadow-lg"></div>
-                    <div class="absolute right-[54px] top-[18px] aspect-[59/86] w-16 rounded-md border border-line-strong bg-canvas shadow-xl"></div>
+            <x-profile.card :user="$user" class="flex-[1_1_300px] lg:max-w-[400px]">
+                <div class="flex flex-col gap-2">
+                    <p class="eyebrow">Player · joined {{ $user->created_at->format('F Y') }}</p>
+                    <h1 class="heading-display break-words text-[44px] text-ink">{{ $user->username }}</h1>
                 </div>
 
-                <div class="flex flex-col gap-4 px-6 pb-6">
-                    <x-avatar :user="$user" class="relative -mt-12 h-24 w-24 border-4 border-surface font-display text-[42px] font-extrabold" />
+                @if ($user->about)
+                <p class="text-[15px] leading-relaxed text-body">{{ $user->about }}</p>
+                @endif
 
-                    <div class="flex flex-col gap-2">
-                        <p class="eyebrow">Player · joined {{ $user->created_at->format('F Y') }}</p>
-                        <h1 class="heading-display break-words text-[44px] text-ink">{{ $user->username }}</h1>
-                    </div>
-
-                    @if ($user->about)
-                    <p class="text-[15px] leading-relaxed text-body">{{ $user->about }}</p>
-                    @endif
-
-                    <div class="flex flex-wrap gap-2.5">
-                        <x-stat-chip :value="$stats['public_decks']" :label="'public '.Str::plural('deck', $stats['public_decks'])" accent inset />
-                        <x-stat-chip :value="$stats['likes_received']" :label="Str::plural('like', $stats['likes_received']).' received'" inset />
-                    </div>
-
-                    @if ($isOwner)
-                    <a href="{{ route('profile.edit') }}" class="btn-secondary">
-                        <x-heroicon-o-pencil-square class="h-5 w-5" aria-hidden="true" />
-                        Edit profile
-                    </a>
-                    <p class="-mt-1.5 text-center text-xs text-muted">This is how other players see your profile. Private decks never show here.</p>
-                    @endif
+                <div class="flex flex-wrap gap-2.5">
+                    <x-stat-chip :value="$stats['public_decks']" :label="'public '.Str::plural('deck', $stats['public_decks'])" accent inset />
+                    <x-stat-chip :value="$stats['likes_received']" :label="Str::plural('like', $stats['likes_received']).' received'" inset />
                 </div>
-            </section>
+
+                @if ($isOwner)
+                <a href="{{ route('profile.edit') }}" class="btn-secondary">
+                    <x-heroicon-o-pencil-square class="h-5 w-5" aria-hidden="true" />
+                    Edit profile
+                </a>
+                <p class="-mt-1.5 text-center text-xs text-muted">This is how other players see your profile. Private decks never show here.</p>
+                @endif
+            </x-profile.card>
 
             <section aria-labelledby="profile-decks" class="flex min-w-0 flex-[999_1_640px] flex-col gap-6">
                 <div class="flex flex-wrap items-end justify-between gap-4">
