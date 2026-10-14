@@ -93,7 +93,7 @@ test('the homepage lists every live and upcoming series', function () {
     }
 
     foreach (config('coming_soon') as $config) {
-        $response->assertSee($config['label'])->assertSee('Coming Soon');
+        $response->assertSee($config['label'])->assertSee('Coming soon');
     }
 });
 

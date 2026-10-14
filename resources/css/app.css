@@ -455,6 +455,23 @@ html:not(.js) .js-only {
             @apply border-ok-line bg-ok-bg text-ok;
         }
     }
+
+    /* A game on the home page: a cream card shape in both themes (as on the board). Live ones are links. */
+    .game-tile {
+        @apply flex aspect-[63/88] w-full rounded-[18px] bg-[#F4EFE6] p-2.5 text-[#1A1715] shadow-[0_12px_28px_rgba(0,0,0,0.35)];
+
+        &:is(a) {
+            @apply focus-ring transition motion-safe:hover:-translate-y-1.5 motion-safe:focus-visible:-translate-y-1.5;
+        }
+
+        &[aria-disabled="true"] {
+            @apply opacity-70;
+        }
+    }
+
+    .game-tile-inner {
+        @apply flex w-full flex-col justify-between rounded-xl border-[1.5px] border-[#1A1715]/15 p-4;
+    }
 }
 
 /*

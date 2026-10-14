@@ -26,7 +26,7 @@ function fakeScryfall(array $cards = []): void
 }
 
 test('the homepage loads', function () {
-    $this->get('/')->assertOk()->assertSee('Welcome to DeckTrove');
+    $this->get('/')->assertOk()->assertSee('Every card.');
 });
 
 test('the yugioh card database lists, searches and filters cards', function () {

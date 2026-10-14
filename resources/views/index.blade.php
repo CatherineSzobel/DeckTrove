@@ -1,94 +1,79 @@
-<x-layout class="bg-gradient-to-b from-gray-100 to-gray-400" :hideNav="true">
-    <div class=" px-6">
-        <div class="text-center mb-4">
-            <h1 class="text-6xl font-extrabold text-gray-900 mb-6 drop-shadow-lg"> Welcome to DeckTrove </h1>
-            <p class="text-lg text-gray-700 max-w-3xl mx-auto"> Explore your favorite trading card games, build unique decks, and share them with the global community. Stay ahead with the latest series and exclusive updates! </p>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto mt-6 mb-6">
-            <x-action-component
-                title="Browse Your Favorite Cards"
-                desc="Explore an extensive card database, learn detailed card info, and stay up to date with the newest and upcoming sets."
-                color="bg-gradient-to-r from-indigo-500 to-purple-600" />
+{{-- The home page (App\Home\HomePage): hero, the games, three steps and a call to action. Full-width sections. --}}
 
-            <x-action-component
-                title="Build and Share Decks"
-                desc="Drag and drop cards into your deck, check it against the game rules, and share it with the community."
-                color="bg-gradient-to-r from-emerald-500 to-teal-600" />
-
-            <x-action-component
-                title="Discover New TCGs"
-                desc="Maybe you want to get into a new TCG? Explore new series, and expand your collection beyond your comfort zone."
-                color="bg-gradient-to-r from-amber-500 to-orange-600" />
-
+<x-layout :contained="false">
+    <section aria-labelledby="hero-title" class="mx-auto flex max-w-7xl flex-wrap items-center gap-14 px-4 py-12 sm:px-6 lg:py-[88px]">
+        <div class="flex min-w-0 flex-[1_1_440px] flex-col gap-6">
+            <p class="eyebrow">{{ $home->eyebrow() }}</p>
+            <h1 id="hero-title" class="heading-display text-[clamp(52px,7vw,96px)] text-ink">Every card.<br>Every deck.<br><span class="text-accent-ink">One trove.</span></h1>
+            <p class="max-w-[34rem] text-lg leading-relaxed text-body">Search full card databases, build decks that are checked against each game’s rules, and share them with the community.</p>
+            <div class="flex flex-wrap gap-3">
+                <a href="#games" class="btn-primary">
+                    Browse cards
+                    <x-heroicon-o-arrow-right class="h-5 w-5" aria-hidden="true" />
+                </a>
+                <a href="{{ $home->builderUrl() }}" class="btn-secondary">Open the deck builder</a>
+            </div>
+            @if ($home->showGuestNote())
+            <p class="text-sm text-muted">Browsing cards is open to everyone — sign in to build and save decks.</p>
+            @endif
         </div>
 
-        <div id="sectionHeading" class="text-center mb-4">
-            <h2 class="text-4xl font-extrabold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                Explore Trading Card Games
-            </h2>
-            <p class="text-gray-600 mt-2">
-                Choose a game and start building your deck
-            </p>
-        </div>
+        <x-showcase-shots class="min-w-0 flex-[1_1_440px]"
+            :alts="['DeckTrove card database showing Yu-Gi-Oh! search results', 'DeckTrove deck builder with main, extra and side deck zones']" />
+    </section>
 
-        <div
-            class="relative mt-6 px-6 py-16 rounded-[3rem] 
-            bg-gradient-to-b from-gray-100 to-gray-400  
-            shadow-inner">
-
-            <div class="flex justify-center items-center gap-6 max-w-6xl mx-auto flex-wrap">
-                @foreach ($tcgs as $tcg)
-                <div
-                    class="relative flex-1 h-96 min-w-[240px] rounded-[1.35rem] p-[3px]
-                    bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500
-                    shadow-lg hover:shadow-[0_0_35px_rgba(168,85,247,0.35)]
-                    transition-all duration-500 hover:flex-[2] group">
-
-                    <div class="relative h-full rounded-[1.35rem] overflow-hidden bg-black flex items-center justify-center">
-
-                        @if (!$tcg['comingSoon'])
-                        <a href="{{ route('cards.index', $tcg['link']) }}" class="w-4/5 h-4/5 flex items-center justify-center">
-                            <img src="{{ Vite::asset('resources/img/' . $tcg['src']) }}"
-                                alt="{{ $tcg['series'] }}"
-                                class="w-full h-full object-contain block drop-shadow-[0_0_8px_rgba(255,255,255,1)] transition-transform duration-500 group-hover:scale-105 rounded-[1.35rem]" />
-                        </a>
-                        @else
-                        <img
-                            src="{{ Vite::asset('resources/img/' . $tcg['src']) }}"
-                            alt="{{ $tcg['series'] }} Logo"
-                            class="w-4/5 h-4/5 object-contain block drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] 
-                            transition-transform duration-500 group-hover:scale-105 rounded-[1.35rem]" />
-                        @endif
-
-                        @if ($tcg['comingSoon'])
-                        <div
-                            class="absolute inset-0 flex items-center justify-center
-                            bg-gradient-to-t from-black/40 to-black/10 text-white text-xl font-bold
-                            opacity-0 group-hover:opacity-100 transition-opacity duration-300
-                            pointer-events-none rounded-3xl">
-                            Coming Soon
-                        </div>
-                        @endif
-
-                        <div
-                            class="absolute top-0 left-0 right-0 
-                            bg-gradient-to-r from-indigo-600/80 to-purple-600/80
-                            text-white text-center font-semibold text-sm
-                            py-2 px-4 opacity-0 group-hover:opacity-100
-                            transition-opacity duration-300 rounded-t-[1.35rem] pointer-events-none">
-                            {{ $tcg['description'] }}
-                        </div>
-
-                        <div
-                            class="absolute bottom-0 left-0 right-0 
-                            bg-gradient-to-t from-black/90 via-black/60 to-transparent
-                            text-white text-center font-semibold py-2 tracking-wide">
-                            {{ $tcg['series'] }}
-                        </div>
-                    </div>
+    <section id="games" aria-labelledby="games-title" class="scroll-mt-6 border-y border-line bg-surface">
+        <div class="mx-auto flex max-w-7xl flex-col gap-10 px-4 py-16 sm:px-6 lg:py-24">
+            <div class="flex flex-wrap items-end justify-between gap-6">
+                <div class="flex flex-col gap-2">
+                    <p class="eyebrow">Draw a card</p>
+                    <h2 id="games-title" class="heading-display text-[clamp(40px,5vw,64px)] text-ink">Pick your game</h2>
                 </div>
+                <p class="max-w-[26rem] text-body">Start in the card database, then take what you find straight into the deck builder.</p>
+            </div>
+
+            <div class="grid grid-cols-[repeat(auto-fill,minmax(min(220px,100%),1fr))] gap-6">
+                @foreach ($home->games() as $game)
+                @if ($game['live'])
+                <a href="{{ $game['href'] }}" class="game-tile">
+                    @include('partials.game-tile', ['game' => $game])
+                </a>
+                @else
+                <div aria-disabled="true" class="game-tile">
+                    @include('partials.game-tile', ['game' => $game])
+                </div>
+                @endif
                 @endforeach
             </div>
         </div>
+    </section>
+
+    <section aria-labelledby="steps-title" class="mx-auto flex max-w-7xl flex-col gap-12 px-4 py-16 sm:px-6 lg:py-24">
+        <h2 id="steps-title" class="heading-display text-[clamp(36px,4vw,52px)] text-ink">From first search to finished deck</h2>
+        <ol class="grid grid-cols-[repeat(auto-fit,minmax(min(260px,100%),1fr))] gap-8">
+            @foreach ($home->steps() as $step)
+            <li class="flex flex-col gap-3 border-t border-line pt-6">
+                <span class="font-mono text-[13px] text-accent-ink">{{ $step['number'] }}</span>
+                <h3 class="heading-display text-[28px] text-ink">{{ $step['title'] }}</h3>
+                <p class="text-base leading-relaxed text-body">{{ $step['text'] }}</p>
+            </li>
+            @endforeach
+        </ol>
+    </section>
+
+    <div class="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:pb-24">
+        <section aria-labelledby="cta-title" class="flex flex-wrap items-center justify-between gap-8 rounded-3xl border border-line bg-surface p-8 sm:p-12">
+            <div class="flex items-center gap-5">
+                <img src="{{ Vite::asset('resources/img/decktrove-logo.png') }}" alt="" class="h-16 w-16 shrink-0 object-contain">
+                <div class="flex flex-col gap-2">
+                    <h2 id="cta-title" class="heading-display text-[40px] text-ink">{{ $home->cta()['title'] }}</h2>
+                    <p class="text-body">{{ $home->cta()['text'] }}</p>
+                </div>
+            </div>
+            <div class="flex flex-wrap gap-3">
+                <a href="{{ $home->cta()['primary']['href'] }}" class="btn-primary">{{ $home->cta()['primary']['label'] }}</a>
+                <a href="{{ $home->cta()['secondary']['href'] }}" class="btn-secondary">{{ $home->cta()['secondary']['label'] }}</a>
+            </div>
+        </section>
     </div>
 </x-layout>

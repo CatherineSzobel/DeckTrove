@@ -2,26 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Home\HomePage;
+use Illuminate\Http\Request;
+
 class IndexController extends Controller
 {
-    public function __invoke()
+    public function __invoke(Request $request)
     {
-        $live = collect(config('series'))->map(fn (array $config, string $series) => [
-            'src' => $config['logo'],
-            'series' => $config['label'],
-            'comingSoon' => false,
-            'link' => $series,
-            'description' => $config['tagline'],
-        ]);
-
-        $upcoming = collect(config('coming_soon'))->map(fn (array $config, string $series) => [
-            'src' => $config['logo'],
-            'series' => $config['label'],
-            'comingSoon' => true,
-            'link' => $series,
-            'description' => $config['tagline'],
-        ]);
-
-        return view('index', ['tcgs' => $live->merge($upcoming)->values()]);
+        return view('index', ['home' => HomePage::for($request->user(), session('series'))]);
     }
 }
