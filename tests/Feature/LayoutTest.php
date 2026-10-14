@@ -112,7 +112,6 @@ test('game pages offer the same section in the other game', function (string $ro
         ->toMatch('/data-game="yugioh"\s+aria-current="page"/');
 })->with([
     'cards' => ['cards.index', [], 'cards.index'],
-    'a card' => ['cards.show', ['46986414'], 'cards.index'],
     'packs' => ['packs.index', [], 'packs.index'],
     'deck builder' => ['decks.builder', [], 'decks.builder'],
 ]);

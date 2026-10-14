@@ -46,6 +46,8 @@ class CardsController extends Controller
 
         return view('cards.card', [
             'series' => $series,
+            'seriesLabel' => $config['label'],
+            'relatedLabel' => $config['related_label'],
             'card' => new CardViewModel($card, $config),
             'setCards' => $provider->related($card)->map(fn ($c) => new CardViewModel($c, $config)),
         ]);

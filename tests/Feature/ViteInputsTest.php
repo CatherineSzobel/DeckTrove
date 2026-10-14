@@ -24,6 +24,11 @@ test('the old dashboard carousel and quick link component are gone', function ()
         ->and(file_get_contents(base_path('vite.config.js')))->not->toContain('moving-carousel.js')->not->toContain('dashboard.css');
 });
 
+test('the old card page script is gone', function () {
+    expect(file_exists(resource_path('js/card.js')))->toBeFalse()
+        ->and(file_get_contents(base_path('vite.config.js')))->not->toContain("'resources/js/card.js'")->toContain('card-page.js');
+});
+
 test('the old card database filter script is gone', function () {
     expect(file_exists(resource_path('js/filter.js')))->toBeFalse()
         ->and(file_get_contents(base_path('vite.config.js')))->not->toContain('filter.js');

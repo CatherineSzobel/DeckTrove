@@ -46,6 +46,14 @@ class CardViewModel
         return $this->mapper->faceImages($this->card);
     }
 
+    /**
+     * Whether the card has more than one face to flip between.
+     */
+    public function hasFaces(): bool
+    {
+        return count($this->faceImages()) > 1;
+    }
+
     public function link(): string
     {
         return url(($this->config['link_prefix'] ?? '').'/card/'.$this->id());

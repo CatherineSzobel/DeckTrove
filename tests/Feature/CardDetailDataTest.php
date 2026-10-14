@@ -54,6 +54,15 @@ test('a magic creature shows its mana cost, power, toughness and price', functio
         ]);
 });
 
+test('only a card with more than one face image is double-faced', function () {
+    $face = fn (string $name) => ['image_uris' => ['normal' => "https://cards.scryfall.io/normal/$name.jpg"]];
+
+    expect(detailCard('magic', ['card_faces' => [$face('front'), $face('back')]])->hasFaces())->toBeTrue()
+        ->and(detailCard('magic', ['card_faces' => [$face('front'), ['mana_cost' => '']]])->hasFaces())->toBeFalse()
+        ->and(detailCard('magic', [])->hasFaces())->toBeFalse()
+        ->and(detailCard('yugioh', ['name' => 'Dark Magician'])->hasFaces())->toBeFalse();
+});
+
 test('a magic land has no mana cost box', function () {
     expect(detailCard('magic', ['mana_cost' => '', 'type_line' => 'Basic Land — Forest'])->detailStats())
         ->toBe([['label' => 'Price', 'value' => 'N/A']]);

@@ -202,6 +202,15 @@ html:not(.js) .js-only {
         @apply opacity-100;
     }
 
+    /* The card page's big image: a soft accent glow behind it (the image itself is `relative`, so it sits on top). */
+    .card-glow {
+        @apply relative;
+
+        &::before {
+            @apply absolute inset-[10%] rounded-3xl bg-accent opacity-20 blur-[48px] content-[''];
+        }
+    }
+
     /* Results that are being replaced (aria-busy while the new ones load). */
     .results-region[aria-busy="true"] {
         @apply opacity-60 transition-opacity;

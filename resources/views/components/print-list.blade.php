@@ -1,27 +1,23 @@
-@props(['packs', 'listId'])
+{{-- Printings on the card page; App\View\Components\PrintList splits them into the first four and the rest. --}}
 
-{{-- The sets a card was printed in (CardViewModel::printPacks()): the first four, the rest behind "Show more". --}}
-
-<div class="mb-4">
-    @if ($packs->isNotEmpty())
-    <ul class="list-inside list-disc text-blue-500 font-bold">
-        @foreach ($packs->take(4) as $pack)
-        <li><a href="{{ $pack['url'] }}" class="hover:text-blue-800">{{ $pack['set_name'] }}</a></li>
+@if ($first->isEmpty())
+<p class="text-muted">No printings listed.</p>
+@else
+<div x-data="printList({{ $more->count() }})" class="flex flex-col gap-1">
+    <ul class="border-t border-line">
+        @foreach ($first as $pack)
+        <x-print-list-row :pack="$pack" />
         @endforeach
     </ul>
 
-    @if ($packs->count() > 4)
-    <ul id="{{ $listId }}" class="hidden list-inside list-disc text-blue-500 font-bold mt-2">
-        @foreach ($packs->slice(4) as $pack)
-        <li><a href="{{ $pack['url'] }}" class="hover:text-blue-800">{{ $pack['set_name'] }}</a></li>
+    @if ($more->isNotEmpty())
+    <ul id="more-printings" data-collapsed="true" :data-collapsed="!open">
+        @foreach ($more as $pack)
+        <x-print-list-row :pack="$pack" />
         @endforeach
     </ul>
-
-    <button type="button" class="text-blue-600 underline mt-1" data-toggle-target="{{ $listId }}" aria-expanded="false" aria-controls="{{ $listId }}">
-        Show more
-    </button>
-    @endif
-    @else
-    <p class="text-slate-500">No prints available</p>
+    <button type="button" @click="toggle()" :aria-expanded="open" aria-controls="more-printings" x-text="label"
+        class="js-only focus-ring inline-flex min-h-11 items-center self-start rounded-sm text-sm font-bold text-accent-ink">Show {{ $more->count() }} more</button>
     @endif
 </div>
+@endif
