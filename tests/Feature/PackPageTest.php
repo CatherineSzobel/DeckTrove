@@ -47,7 +47,7 @@ test('the cards are tiles with their name and rarity for filtering', function ()
         ->toContain('<span class="rarity-pill max-w-full self-start" title="Ultra Rare"><span class="min-w-0 truncate">Ultra Rare</span></span>')
         ->toContain('<option value="Secret Rare"')
         ->toContain('>2 cards</p>')
-        ->toMatch('/data-no-matches\s+hidden/');
+        ->toMatch('/data-no-matches x-ref="noMatches"\s+hidden/');
 });
 
 test('the name filter hides the other cards on the server', function () {
@@ -68,7 +68,7 @@ test('a filter that matches nothing says so', function () {
     expect(lobPage(['name' => 'zzz']))
         ->toContain('>0 of 2 cards</p>')
         ->toContain('No cards match. Try another name or rarity.')
-        ->not->toMatch('/data-no-matches\s+hidden/');
+        ->not->toMatch('/data-no-matches x-ref="noMatches"\s+hidden/');
 });
 
 test('array filter values are ignored', function () {
@@ -100,4 +100,16 @@ test('a magic pack has a type fact and capitalised rarities', function () {
         ->toContain('<option value="common"')
         ->toContain('>Common</option>')
         ->toContain('data-rarity="common"');
+});
+
+test('the filter runs live with the pack cards component', function () {
+    expect(lobPage())
+        ->toContain('x-data="packCards"')
+        ->toContain('x-ref="form" @submit.prevent="filter()"')
+        ->toContain('@input="filter()"')
+        ->toContain('@change="filter()"')
+        ->toContain('class="btn-secondary no-js-only">Filter</button>')
+        ->toContain('x-text="countLabel"')
+        ->toContain('x-ref="grid"')
+        ->toContain('x-ref="noMatches"');
 });
