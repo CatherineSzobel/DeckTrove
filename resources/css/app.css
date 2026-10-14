@@ -107,6 +107,11 @@ html:not(.js) .js-only {
 
     .input {
         @apply focus-ring min-h-12 rounded-xl border-[1.5px] border-line-strong bg-canvas px-3.5 py-2.5 text-ink placeholder:text-muted;
+
+        /* x-field marks inputs with an error. */
+        &[aria-invalid="true"] {
+            @apply border-danger;
+        }
     }
 
     /* One option in a segmented control (series, sort, zone). The selected one has aria-current or aria-pressed="true". */
