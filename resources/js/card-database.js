@@ -31,18 +31,6 @@ document.addEventListener("alpine:init", () => {
             window.addEventListener("popstate", () => this.refresh(location.href));
         },
 
-        /** Scrolling hides the preview, except when the scroll comes from keyboard focus on a tile: then it follows the tile. */
-        hideOnScroll() {
-            const tile = document.activeElement;
-
-            if (tile?.matches(".card-tile:focus-visible")) {
-                if (this.preview) this.showPreview(this.preview, tile);
-                return;
-            }
-
-            this.hidePreview();
-        },
-
         // Outside init(), $el is the element that fired the event (a select, a chip link), not the component's root,
         // so methods find their elements through $refs. init() passes its root, as $refs aren't ready there.
         filterKeys(root = this.$refs.form) {

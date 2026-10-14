@@ -1,7 +1,8 @@
 {{--
     A pack's page: cover, facts and its cards, with a name / rarity filter. The filter is a GET form the server
     applies (App\Packs\PackCardFilter); non-matching tiles are rendered `hidden`; resources/js/pack-page.js filters
-    the same tiles live.
+    the same tiles live and shows the shared card preview (cardPreview() in resources/js/deckbuilder/preview.js) on
+    hover and keyboard focus.
 --}}
 
 <x-layout :title="$pack->name()" :js="['resources/js/pack-page.js']">
@@ -30,7 +31,7 @@
         @if ($cards->isEmpty())
         <x-empty-state title="No cards in this pack yet" />
         @else
-        <div x-data="packCards" class="flex flex-col gap-6">
+        <div x-data="packCards" @scroll.window.passive="hideOnScroll()" class="flex flex-col gap-6">
             <form method="GET" action="{{ $pack->link() }}" role="search" aria-label="Filter cards" x-ref="form" @submit.prevent="filter()"
                 class="flex flex-wrap items-center gap-3 rounded-[18px] border border-line bg-surface p-4">
                 <div class="relative min-w-0 flex-[1_1_320px]">
@@ -53,7 +54,8 @@
             <div x-ref="grid" class="grid grid-cols-[repeat(auto-fill,minmax(min(180px,100%),1fr))] gap-5">
                 @foreach ($cards as $card)
                 <a href="{{ $card->link() }}" data-name="{{ $card->searchName() }}" data-rarity="{{ $card->rarity() }}" @unless ($filter->matches($card)) hidden @endunless
-                    class="pack-tile flex flex-col gap-3 p-3">
+                    x-data="{ card: @js($card->builderCard()) }" @mouseenter="showPreview(card, $el)" @mouseleave="hidePreview()"
+                    @focus="showPreview(card, $el)" @blur="hidePreview()" class="pack-tile flex flex-col gap-3 p-3">
                     <img src="{{ $card->imageSmall() }}" alt="" loading="lazy" class="aspect-[59/86] w-full rounded-md object-cover">
                     <span class="flex min-w-0 flex-col gap-1.5 px-0.5 pb-0.5">
                         <span class="truncate text-[15px] font-bold text-ink">{{ $card->name() }}</span>
@@ -65,6 +67,8 @@
             </div>
 
             <p data-no-matches x-ref="noMatches" @unless ($noMatches) hidden @endunless class="py-8 text-center text-muted">No cards match. Try another name or rarity.</p>
+
+            <x-deck.card-preview />
         </div>
         @endif
     </div>

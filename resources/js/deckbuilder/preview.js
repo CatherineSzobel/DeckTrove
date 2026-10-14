@@ -8,15 +8,18 @@
  */
 /**
  * Alpine state for the shared card preview (resources/views/components/deck/card-preview.blade.php): one panel,
- * shown next to the hovered or focused card. Used by the deck builder and the deck page.
+ * shown next to the hovered or focused card. Used by the deck builder, the deck page, the card database and
+ * the pack page.
  */
 export function cardPreview() {
     return {
         preview: null,
         previewPos: { left: 0, top: 0 },
+        previewFor: null,
 
         showPreview(card, element) {
             this.preview = card;
+            this.previewFor = element;
 
             // Measure the panel once it shows this card, then place it beside the card.
             this.$nextTick(() => {
@@ -31,6 +34,18 @@ export function cardPreview() {
 
         hidePreview() {
             this.preview = null;
+        },
+
+        /** Scrolling hides the preview, unless keyboard focus is on its card (focus scrolls it into view): then it follows. */
+        hideOnScroll() {
+            const element = document.activeElement;
+
+            if (this.preview && element === this.previewFor && element.matches(":focus-visible")) {
+                this.showPreview(this.preview, element);
+                return;
+            }
+
+            this.hidePreview();
         },
 
         // A method, not a getter: the deck builder spreads this object into its own, which would freeze a getter.

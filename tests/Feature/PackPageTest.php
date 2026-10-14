@@ -11,7 +11,7 @@ uses(RefreshDatabase::class);
 beforeEach(function () {
     $set = YugiohSet::factory()->create(['code' => 'LOB', 'name' => 'Legend of Blue Eyes White Dragon', 'slug' => 'legend-of-blue-eyes-white-dragon',
         'card_count' => 126, 'released_at' => '2002-03-08', 'image_url' => null]);
-    YugiohCard::factory()->fromCard(['id' => 46986414, 'name' => 'Dark Magician', 'type' => 'Normal Monster', 'race' => 'Spellcaster'])->create();
+    YugiohCard::factory()->fromCard(['id' => 46986414, 'name' => 'Dark Magician', 'type' => 'Normal Monster', 'race' => 'Spellcaster', 'desc' => 'The ultimate wizard.'])->create();
     YugiohCard::factory()->fromCard(['id' => 89631139, 'name' => 'Blue-Eyes White Dragon', 'race' => 'Dragon'])->create();
     YugiohPrinting::create(['yugioh_card_id' => 46986414, 'yugioh_set_id' => $set->id, 'code' => 'LOB-EN005', 'rarity' => 'Ultra Rare']);
     YugiohPrinting::create(['yugioh_card_id' => 89631139, 'yugioh_set_id' => $set->id, 'code' => 'LOB-EN001', 'rarity' => 'Secret Rare']);
@@ -43,6 +43,7 @@ test('the facts are stat boxes, with no type for yugioh', function () {
 test('the cards are tiles with their name and rarity for filtering', function () {
     expect(lobPage())
         ->toContain('data-name="dark magician" data-rarity="Ultra Rare"')
+        ->toContain('<span class="truncate text-[15px] font-bold text-ink">Dark Magician</span>')
         ->toContain('<span class="truncate text-xs text-muted">Normal Monster')
         ->toContain('<span class="rarity-pill max-w-full self-start" title="Ultra Rare"><span class="min-w-0 truncate">Ultra Rare</span></span>')
         ->toContain('<option value="Secret Rare"')
@@ -112,4 +113,15 @@ test('the filter runs live with the pack cards component', function () {
         ->toContain('x-text="countLabel"')
         ->toContain('x-ref="grid"')
         ->toContain('x-ref="noMatches"');
+});
+
+test('card tiles show the card preview on hover and focus, with the description', function () {
+    $html = lobPage();
+
+    expect($html)->toContain('x-data="{ card: ')
+        ->toContain('@mouseenter="showPreview(card, $el)" @mouseleave="hidePreview()"')
+        ->toContain('@focus="showPreview(card, $el)" @blur="hidePreview()"')
+        ->toContain('The ultimate wizard.')
+        ->toContain('@scroll.window.passive="hideOnScroll()"')
+        ->and(substr_count($html, 'data-card-preview'))->toBe(1);
 });
