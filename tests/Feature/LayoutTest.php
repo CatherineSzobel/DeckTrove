@@ -49,6 +49,7 @@ test('logged in users see the deck builder and the account menu', function () {
         ->toContain('id="userMenu"')
         ->toContain('href="'.route('dashboard').'"')
         ->toContain('href="'.route('profile').'"')
+        ->toContain('href="'.route('settings').'"')
         ->toContain('action="'.route('logout').'"')
         ->toContain('>C</span>')
         ->not->toContain('Create account');

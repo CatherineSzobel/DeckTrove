@@ -54,7 +54,7 @@ test('profile can be updated without an avatar', function () {
 
     $this->actingAs($user)
         ->put(route('profile.update'), ['username' => 'renamed', 'about' => 'Hi'])
-        ->assertRedirect(route('profile'));
+        ->assertRedirect(route('profile.edit').'#edit-profile');
 
     expect($user->fresh())->username->toBe('renamed')->about->toBe('Hi');
 });

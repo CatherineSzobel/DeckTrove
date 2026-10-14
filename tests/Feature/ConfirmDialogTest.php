@@ -19,7 +19,7 @@ test('deleting a deck or the account asks in the styled dialog', function () {
         ->assertSee('data-confirm-title="Delete this deck?"', false)
         ->assertSee('data-confirm-button="Delete deck"', false);
 
-    $this->actingAs($user)->get(route('profile.edit'))
+    $this->actingAs($user)->get(route('settings'))
         ->assertSee('data-confirm-title="Delete your account?"', false)
         ->assertSee('data-confirm-button="Delete account"', false);
 });

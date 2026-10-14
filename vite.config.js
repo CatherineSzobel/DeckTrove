@@ -9,7 +9,6 @@ export default defineConfig({
             input: [
                 'resources/css/app.css',
                 'resources/js/layout.js',
-                'resources/js/account.js',
                 'resources/js/card-database.js',
                 'resources/js/card-page.js',
                 'resources/js/deck-builder.js',

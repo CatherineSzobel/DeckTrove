@@ -5,19 +5,49 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
 class ProfileController extends Controller
 {
+    /**
+     * "Profile" is your public profile.
+     */
     public function show(Request $request)
     {
-        return view('account.profile', ['user' => $request->user()]);
+        return redirect()->route('users.show', $request->user());
     }
 
+    /**
+     * Account things: change password, delete account.
+     */
+    public function settings()
+    {
+        return view('account.settings');
+    }
+
+    /**
+     * What others see: the profile card, then picture, username and About.
+     */
     public function edit(Request $request)
     {
-        return view('account.edit', ['user' => $request->user()]);
+        $user = $request->user();
+        $decks = $user->decks()->count();
+        $public = $user->decks()->public()->count();
+        // After a failed save the form shows what was typed, so the counter counts that.
+        $aboutLength = mb_strlen((string) $request->old('about', $user->about));
+
+        return view('account.edit-profile', [
+            'user' => $user,
+            'stats' => [
+                ['value' => $decks, 'label' => Str::plural('deck', $decks), 'accent' => true],
+                ['value' => $public, 'label' => 'public', 'accent' => false],
+                ['value' => $decks - $public, 'label' => 'private', 'accent' => false],
+            ],
+            'aboutLength' => $aboutLength,
+            'aboutCounter' => "{$aboutLength} / 500",
+        ]);
     }
 
     public function update(Request $request)
@@ -46,7 +76,7 @@ class ProfileController extends Controller
             $disk->delete($oldAvatar);
         }
 
-        return redirect()->route('profile')->with('success', 'Profile updated successfully!');
+        return redirect()->to(route('profile.edit').'#edit-profile')->with('success', 'Profile updated successfully!');
     }
 
     public function updatePassword(Request $request)
@@ -62,7 +92,7 @@ class ProfileController extends Controller
         $request->user()->update(['password' => $validated['password']]);
         Auth::logoutOtherDevices($validated['password']);
 
-        return redirect()->route('profile.edit')->with('success', 'Password changed.');
+        return redirect()->to(route('settings').'#change-password')->with('success', 'Password changed.');
     }
 
     /**

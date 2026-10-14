@@ -122,8 +122,8 @@ test('an empty profile says so, and points the owner to their decks', function (
         ->assertSee(route('decks'));
 });
 
-test('your account page links to your public profile', function () {
+test('your edit profile page links to your public profile', function () {
     $user = User::factory()->create(['username' => 'deckmaster']);
 
-    $this->actingAs($user)->get(route('profile'))->assertSee(route('users.show', $user));
+    $this->actingAs($user)->get(route('profile.edit'))->assertSee(route('users.show', $user));
 });

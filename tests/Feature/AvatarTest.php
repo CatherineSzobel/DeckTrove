@@ -18,7 +18,7 @@ test('avatars are stored on the configured media disk', function () {
     $this->actingAs($user)->put(route('profile.update'), [
         'username' => $user->username,
         'avatar' => UploadedFile::fake()->image('me.png'),
-    ])->assertRedirect(route('profile'));
+    ])->assertRedirect(route('profile.edit').'#edit-profile');
 
     $path = $user->fresh()->avatar;
     Storage::disk('r2')->assertExists($path);

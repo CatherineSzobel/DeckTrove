@@ -46,6 +46,7 @@
     --color-danger: #A82B22;
     --color-danger-bg: #FDECEC;
     --color-danger-line: #F3B7B7;
+    --color-on-danger: #FFFFFF;
 
     --color-gray-50: #FBFAF7;
     --color-gray-100: #F6F3EE;
@@ -425,6 +426,21 @@ html:not(.js) .js-only {
             @apply -right-1.5 top-[50px] rotate-12 bg-[#B5432F];
         }
     }
+
+    /* Destructive actions (Delete my account). Text colour flips with the theme so the label keeps its contrast. */
+    .btn-danger {
+        @apply focus-ring inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-danger px-6 font-bold text-on-danger transition hover:brightness-110;
+    }
+
+    /* "Change picture": a label-button around a visually hidden file input; shows focus when the input has it. */
+    .avatar-pick {
+        @apply inline-flex min-h-11 cursor-pointer items-center self-start rounded-[10px] border-[1.5px] border-line-strong px-4 text-sm font-bold text-ink transition hover:bg-surface-2 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent-ink;
+    }
+
+    /* A panel on the account page (Edit profile, Change password, Delete account). */
+    .account-panel {
+        @apply flex scroll-mt-6 flex-col gap-6 rounded-3xl border border-line bg-surface p-6 sm:p-8;
+    }
 }
 
 /*
@@ -454,6 +470,7 @@ html:not(.js) .js-only {
     --color-danger: #F08A83;
     --color-danger-bg: rgba(229, 98, 90, 0.12);
     --color-danger-line: rgba(229, 98, 90, 0.40);
+    --color-on-danger: #131211;
 }
 
 .dark {

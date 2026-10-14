@@ -30,14 +30,15 @@ test('guests are sent to the login page', function () {
     $this->get(route('dashboard'))->assertRedirect(route('login'));
 });
 
-test('the header welcomes the user and links to a new deck and the profile', function () {
+test('the header welcomes the user and links to a new deck, the profile and settings', function () {
     fakeRandomMagicCard();
 
     $this->actingAs(dashboardUser())->withSession(['series' => 'magic'])
         ->get(route('dashboard'))->assertOk()
         ->assertSee('Welcome back, duelist')
         ->assertSee('href="'.route('decks.builder', 'magic').'" class="btn-primary"', false)
-        ->assertSee('href="'.route('profile').'" class="btn-secondary"', false);
+        ->assertSee('href="'.route('profile').'" class="btn-secondary">Profile</a>', false)
+        ->assertSee('href="'.route('settings').'" class="btn-secondary">Settings</a>', false);
 });
 
 test('without a series in the session, New deck and the random cards use the first series', function () {

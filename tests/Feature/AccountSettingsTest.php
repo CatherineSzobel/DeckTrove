@@ -12,7 +12,7 @@ uses(RefreshDatabase::class);
 
 test('the edit profile page has password and delete account sections', function () {
     $this->actingAs(User::factory()->create())
-        ->get(route('profile.edit'))
+        ->get(route('settings'))
         ->assertOk()
         ->assertSee(route('profile.password'))
         ->assertSee(route('profile.destroy'));
@@ -25,7 +25,7 @@ test('users can change their password with their current password', function () 
         'current_password' => 'password',
         'password' => 'brand-new-password',
         'password_confirmation' => 'brand-new-password',
-    ])->assertRedirect(route('profile.edit'))->assertSessionHas('success');
+    ])->assertRedirect(route('settings').'#change-password')->assertSessionHas('success');
 
     expect(Hash::check('brand-new-password', $user->fresh()->password))->toBeTrue();
 });
@@ -71,7 +71,7 @@ test('the device that changes the password stays logged in, keep me logged in in
         'current_password' => 'password',
         'password' => 'brand-new-password',
         'password_confirmation' => 'brand-new-password',
-    ])->assertRedirect(route('profile.edit'))->getCookie(Auth::guard()->getRecallerName());
+    ])->assertRedirect(route('settings').'#change-password')->getCookie(Auth::guard()->getRecallerName());
     Auth::forgetGuards();
 
     $this->get(route('dashboard'))->assertOk();

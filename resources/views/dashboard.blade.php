@@ -18,6 +18,7 @@
                     New deck
                 </a>
                 <a href="{{ route('profile') }}" class="btn-secondary">Profile</a>
+                <a href="{{ route('settings') }}" class="btn-secondary">Settings</a>
             </div>
         </div>
 
