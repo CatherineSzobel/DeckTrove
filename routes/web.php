@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BulkDeckController;
 use App\Http\Controllers\CardsController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DeckController;
@@ -42,6 +43,7 @@ Route::middleware('auth')->group(function () {
 
     // Deck management
     Route::get('/decks', [DeckController::class, 'mine'])->name('decks');
+    Route::post('/decks/bulk', BulkDeckController::class)->name('decks.bulk');
     Route::post('/{series}/deck-builder', [DeckController::class, 'store'])->name('decks.store');
     Route::get('/decks/{deck}/edit', [DeckController::class, 'edit'])->can('update', 'deck')->name('decks.edit');
     Route::patch('/decks/{deck}', [DeckController::class, 'update'])->can('update', 'deck')->name('decks.update');
