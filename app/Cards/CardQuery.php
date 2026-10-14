@@ -15,7 +15,7 @@ final class CardQuery
     /** The result views, in the order the switch shows them. */
     public const VIEWS = ['full' => 'Full', 'images' => 'Images', 'list' => 'List'];
 
-    public const DEFAULT_VIEW = 'images';
+    public const DEFAULT_VIEW = 'full';
 
     private const SEARCH_LENGTH = 100;
 

@@ -1,130 +1,119 @@
 /**
- * Card database page: live search, filters and view switching without full page reloads.
- * The server returns {html, count} for AJAX requests (see CardsController@index).
+ * Card database (resources/views/cards/cards.blade.php). The page works without JS (GET form and links); this loads
+ * results in place: filters apply on change, the search on submit, chips and Clear all without a reload, Back and
+ * Forward restore the form, and the next page is appended when the "Load more cards" link comes into view.
+ * The server answers AJAX requests with cards/partials/results.blade.php.
  */
-import { initFilters, appendFilterParams, applyFiltersFromURL } from "./filter.js";
-import { debounce } from "./utils.js";
+import { buildUrl, countFilters, syncValues, viewUrl } from "./cards/query.js";
 
-const viewSelectors = document.querySelectorAll(".viewtype-selector");
-const searchForm = document.getElementById("search-form");
-const searchInput = document.getElementById("search-input");
-const cardsInner = document.getElementById("cards-inner");
-const cardsLoader = document.getElementById("cards-loader");
-const resultCount = document.getElementById("result-count");
+document.addEventListener("alpine:init", () => {
+    window.Alpine.data("cardDatabase", () => ({
+        showFilters: false,
+        loading: false,
+        loadingMore: false,
+        activeCount: 0,
+        request: null,
+        moreRequest: null,
+        observer: null,
 
-const initialParams = new URLSearchParams(window.location.search);
-let currentView = initialParams.get("view") || document.querySelector('.viewtype-selector[aria-pressed="true"]')?.dataset.view || "full";
-let currentSearch = initialParams.get("search") || "";
-let activeRequest = null;
+        init() {
+            // $refs aren't registered yet inside init(), so the panel's server state is read through $el, and the
+            // load-more link is watched on the next tick.
+            this.showFilters = !this.$el.querySelector("#filters").hasAttribute("data-collapsed");
+            this.activeCount = countFilters(new URLSearchParams(location.search), this.filterKeys());
+            this.observer = new IntersectionObserver(
+                (entries) => entries.some((entry) => entry.isIntersecting) && this.loadMore(),
+                { rootMargin: "400px" }
+            );
+            this.$nextTick(() => this.watchLoadMore());
+            window.addEventListener("popstate", () => this.refresh(location.href));
+        },
 
-function buildURL() {
-    const params = new URLSearchParams();
-    if (currentView) params.set("view", currentView);
-    if (currentSearch) params.set("search", currentSearch);
-    appendFilterParams(params);
-    return `${window.location.pathname}?${params}`;
-}
+        filterKeys() {
+            return [...this.$el.querySelectorAll("#filters select[name]")].map((select) => select.name);
+        },
 
-function setLoading(loading) {
-    cardsLoader?.classList.toggle("opacity-0", !loading);
-    cardsLoader?.classList.toggle("pointer-events-none", !loading);
-}
+        /** Shows the results for a link (chip, Clear all) or, without one, for the search form. */
+        apply(href = null) {
+            const url = href ?? buildUrl(location.pathname, new FormData(this.$refs.form));
+            history.pushState({}, "", url);
+            this.refresh(url);
+        },
 
-async function loadCards(url, { push = true } = {}) {
-    if (push) history.pushState({}, "", url);
+        async refresh(url) {
+            this.request?.abort();
+            this.moreRequest?.abort();
+            this.loadingMore = false;
+            const request = (this.request = new AbortController());
+            this.loading = true;
 
-    // Cancel an older request so slow responses never overwrite newer results.
-    activeRequest?.abort();
-    activeRequest = new AbortController();
-    setLoading(true);
-
-    try {
-        const response = await fetch(url, {
-            headers: { "X-Requested-With": "XMLHttpRequest", Accept: "application/json" },
-            signal: activeRequest.signal,
-        });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-        const data = await response.json();
-        cardsInner.innerHTML = data.html;
-        if (resultCount) resultCount.innerHTML = data.count;
-    } catch (error) {
-        if (error.name === "AbortError") return;
-        console.error(error);
-        window.location.href = url;
-    } finally {
-        setLoading(false);
-    }
-}
-
-const updateCards = () => loadCards(buildURL());
-
-function highlightView() {
-    viewSelectors.forEach((button) => {
-        const active = button.dataset.view === currentView;
-        button.setAttribute("aria-pressed", String(active));
-        button.classList.toggle("bg-blue-600", active);
-        button.classList.toggle("text-white", active);
-        button.classList.toggle("shadow-sm", active);
-        button.classList.toggle("text-gray-700", !active);
-        button.classList.toggle("hover:bg-white", !active);
-    });
-}
-
-function setupEventListeners() {
-    viewSelectors.forEach((button) =>
-        button.addEventListener("click", () => {
-            currentView = button.dataset.view;
-            highlightView();
-            updateCards();
-        })
-    );
-
-    searchInput?.addEventListener(
-        "input",
-        debounce(() => {
-            const value = searchInput.value.trim();
-            if (value.length >= 3 || value.length === 0) {
-                currentSearch = value;
-                updateCards();
+            try {
+                this.$refs.region.innerHTML = await this.fetchHtml(url, request.signal);
+                this.syncForm(new URL(url, location.origin).searchParams);
+                this.watchLoadMore();
+            } catch (error) {
+                if (error.name !== "AbortError") location.href = url;
+            } finally {
+                if (this.request === request) this.loading = false;
             }
-        }, 350)
-    );
+        },
 
-    searchForm?.addEventListener("submit", (event) => {
-        event.preventDefault();
-        currentSearch = searchInput.value.trim();
-        updateCards();
-    });
+        async fetchHtml(url, signal) {
+            const response = await fetch(url, { headers: { "X-Requested-With": "XMLHttpRequest" }, signal });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            return response.text();
+        },
 
-    // Pagination links inside the results are loaded in place too.
-    cardsInner?.addEventListener("click", (event) => {
-        const link = event.target.closest("nav[role=navigation] a[href]");
-        if (!link) return;
-        event.preventDefault();
-        loadCards(link.href);
-        cardsInner.scrollIntoView({ behavior: "smooth" });
-    });
+        syncForm(params) {
+            const fields = this.$refs.form.elements;
+            const values = syncValues(params, [...this.filterKeys(), "search"]);
 
-    window.addEventListener("popstate", () => {
-        const params = new URLSearchParams(window.location.search);
-        currentView = params.get("view") || "full";
-        currentSearch = params.get("search") || "";
-        if (searchInput) searchInput.value = currentSearch;
-        applyFiltersFromURL(params);
-        highlightView();
-        loadCards(window.location.href, { push: false });
-    });
-}
+            Object.entries(values).forEach(([name, value]) => (fields.namedItem(name).value = value));
+            this.activeCount = countFilters(params, this.filterKeys());
 
-document.addEventListener("DOMContentLoaded", () => {
-    initFilters({
-        selects: document.querySelectorAll(".filter-select"),
-        button: document.getElementById("filter-button"),
-        details: document.getElementById("filterDetails"),
-        clearButton: document.getElementById("clear-filter-button"),
-        onChange: updateCards,
-    });
+            // The view switch sits outside the results, so its links are rewritten to keep the new filters.
+            this.$el.querySelectorAll("a[data-view]").forEach((link) => (link.href = viewUrl(location.pathname, params, link.dataset.view)));
+        },
 
-    setupEventListeners();
+        onRegionClick(event) {
+            const link = event.target.closest("a[data-apply-link], a[data-load-more]");
+            if (!link || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+            event.preventDefault();
+            link.hasAttribute("data-load-more") ? this.loadMore() : this.apply(link.href);
+        },
+
+        watchLoadMore() {
+            this.observer.disconnect();
+            const link = this.$refs.region.querySelector("[data-load-more]");
+            if (link) this.observer.observe(link);
+        },
+
+        /** Appends the next page's cards, and takes its count and next-page link. */
+        async loadMore() {
+            const link = this.$refs.region.querySelector("[data-load-more]");
+            const results = this.$refs.region.querySelector("[data-results]");
+            if (!link || !results || this.loadingMore) return;
+            this.loadingMore = true;
+            const request = (this.moreRequest = new AbortController());
+
+            try {
+                const page = document.createElement("template");
+                page.innerHTML = await this.fetchHtml(link.href, request.signal);
+
+                // The results were replaced (new search or filter) while this page loaded: drop it.
+                if (!results.isConnected) return;
+
+                results.append(...page.content.querySelector("[data-results]").children);
+                this.$refs.region.querySelector("[data-result-count]").replaceWith(page.content.querySelector("[data-result-count]"));
+                const next = page.content.querySelector("[data-load-more]");
+                next ? link.replaceWith(next) : link.remove();
+                this.watchLoadMore();
+            } catch (error) {
+                if (error.name !== "AbortError") location.href = link.href;
+            } finally {
+                if (this.moreRequest === request) this.loadingMore = false;
+            }
+        },
+    }));
 });

@@ -23,3 +23,8 @@ test('the old dashboard carousel and quick link component are gone', function ()
         ->and(file_exists(resource_path('views/components/dashboard-quick-link.blade.php')))->toBeFalse()
         ->and(file_get_contents(base_path('vite.config.js')))->not->toContain('moving-carousel.js')->not->toContain('dashboard.css');
 });
+
+test('the old card database filter script is gone', function () {
+    expect(file_exists(resource_path('js/filter.js')))->toBeFalse()
+        ->and(file_get_contents(base_path('vite.config.js')))->not->toContain('filter.js');
+});

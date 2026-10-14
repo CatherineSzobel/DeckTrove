@@ -10,11 +10,11 @@ function cardQuery(array $params = [], string $series = 'yugioh', array $options
     return CardQuery::fromRequest(Request::create("/$series/cards", 'GET', $params), $series, FilterChoices::for($series, $options));
 }
 
-test('the view falls back to images', function () {
-    expect(cardQuery()->view())->toBe('images')
+test('the view falls back to full', function () {
+    expect(cardQuery()->view())->toBe('full')
         ->and(cardQuery(['view' => 'list'])->view())->toBe('list')
-        ->and(cardQuery(['view' => 'inner'])->view())->toBe('images')
-        ->and(cardQuery(['view' => ['list']])->view())->toBe('images');
+        ->and(cardQuery(['view' => 'inner'])->view())->toBe('full')
+        ->and(cardQuery(['view' => ['list']])->view())->toBe('full');
 });
 
 test('the search is trimmed, cut to 100 characters and null when empty', function () {
@@ -32,9 +32,9 @@ test('only the series filters with a text value are kept, in config order', func
 
 test('the provider gets the filters, search, view and page', function () {
     expect(cardQuery(['race' => 'Dragon', 'search' => 'blue', 'page' => '3'])->params())
-        ->toBe(['race' => 'Dragon', 'search' => 'blue', 'view' => 'images', 'page' => 3])
-        ->and(cardQuery(['page' => '-2'])->params())->toBe(['view' => 'images', 'page' => 1])
-        ->and(cardQuery(['page' => ['2']])->params())->toBe(['view' => 'images', 'page' => 1]);
+        ->toBe(['race' => 'Dragon', 'search' => 'blue', 'view' => 'full', 'page' => 3])
+        ->and(cardQuery(['page' => '-2'])->params())->toBe(['view' => 'full', 'page' => 1])
+        ->and(cardQuery(['page' => ['2']])->params())->toBe(['view' => 'full', 'page' => 1]);
 });
 
 test('links keep the search and filters, and drop the page and the default view', function () {
@@ -43,7 +43,8 @@ test('links keep the search and filters, and drop the page and the default view'
     expect($query->url())->toBe(route('cards.index', ['yugioh', 'search' => 'blue', 'race' => 'Dragon']))
         ->and($query->url(['race' => null]))->toBe(route('cards.index', ['yugioh', 'search' => 'blue']))
         ->and($query->url(['view' => 'list']))->toBe(route('cards.index', ['yugioh', 'view' => 'list', 'search' => 'blue', 'race' => 'Dragon']))
-        ->and($query->url(['view' => 'images']))->toBe(route('cards.index', ['yugioh', 'search' => 'blue', 'race' => 'Dragon']))
+        ->and($query->url(['view' => 'images']))->toBe(route('cards.index', ['yugioh', 'view' => 'images', 'search' => 'blue', 'race' => 'Dragon']))
+        ->and($query->url(['view' => 'full']))->toBe(route('cards.index', ['yugioh', 'search' => 'blue', 'race' => 'Dragon']))
         ->and($query->pageUrl(3))->toBe(route('cards.index', ['yugioh', 'search' => 'blue', 'race' => 'Dragon', 'page' => 3]));
 });
 
@@ -61,8 +62,8 @@ test('view links come in the order Full, Images, List and mark the current one',
     expect(array_column($links, 'key'))->toBe(['full', 'images', 'list'])
         ->and(array_column($links, 'label'))->toBe(['Full', 'Images', 'List'])
         ->and(array_column($links, 'current'))->toBe([false, false, true])
-        ->and($links[0]['href'])->toBe(route('cards.index', ['yugioh', 'view' => 'full', 'search' => 'blue']))
-        ->and($links[1]['href'])->toBe(route('cards.index', ['yugioh', 'search' => 'blue']));
+        ->and($links[0]['href'])->toBe(route('cards.index', ['yugioh', 'search' => 'blue']))
+        ->and($links[1]['href'])->toBe(route('cards.index', ['yugioh', 'view' => 'images', 'search' => 'blue']));
 });
 
 test('each filter is a chip with nice labels and a link without it', function () {
@@ -90,11 +91,11 @@ test('the filter count, the filtering state and the clear link', function () {
 });
 
 test('the form knows the selected options and the hidden view field', function () {
-    $query = cardQuery(['race' => 'Dragon', 'view' => 'full']);
+    $query = cardQuery(['race' => 'Dragon', 'view' => 'images']);
 
     expect($query->isSelected('race', 'Dragon'))->toBeTrue()
         ->and($query->isSelected('race', 'Fiend'))->toBeFalse()
         ->and($query->isSelected('type', 'Effect Monster'))->toBeFalse()
-        ->and($query->hiddenFields())->toBe(['view' => 'full'])
+        ->and($query->hiddenFields())->toBe(['view' => 'images'])
         ->and(cardQuery()->hiddenFields())->toBe([]);
 });

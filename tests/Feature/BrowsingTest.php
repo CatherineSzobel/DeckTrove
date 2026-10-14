@@ -43,11 +43,12 @@ test('the yugioh card database lists, searches and filters cards', function () {
         ->assertOk()->assertSee('Blue-Eyes White Dragon')->assertDontSee('Dark Magician Girl');
 });
 
-test('the card database answers AJAX requests with JSON', function () {
-    $this->getJson(route('cards.index', ['yugioh', 'search' => 'blue']), ['X-Requested-With' => 'XMLHttpRequest'])
+test('the card database answers AJAX requests with the results as HTML', function () {
+    $this->get(route('cards.index', ['yugioh', 'search' => 'blue']), ['X-Requested-With' => 'XMLHttpRequest'])
         ->assertOk()
-        ->assertJsonStructure(['html', 'count'])
-        ->assertJsonPath('html', fn ($html) => str_contains($html, 'Blue-Eyes White Dragon'));
+        ->assertSee('Blue-Eyes White Dragon')
+        ->assertSee('data-results', false)
+        ->assertDontSee('<html', false);
 });
 
 test('unknown view names fall back to the default view', function () {

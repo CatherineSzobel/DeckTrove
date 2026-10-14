@@ -130,11 +130,6 @@ class CardViewModel
         return ucfirst($this->rarity());
     }
 
-    public function rarityColor(): string
-    {
-        return $this->config['rarity_colors'][strtolower($this->rarity())] ?? 'text-gray-500';
-    }
-
     public function priceValue(): ?float
     {
         return $this->mapper->priceValue($this->card);

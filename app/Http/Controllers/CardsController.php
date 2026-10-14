@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Cards\CardQuery;
 use App\Cards\FilterChoices;
 use App\Services\CardService;
 use App\ViewModels\CardViewModel;
@@ -9,39 +10,31 @@ use Illuminate\Http\Request;
 
 class CardsController extends Controller
 {
-    private const VIEWS = ['full', 'images', 'list'];
-
     public function __construct(protected CardService $cardService) {}
 
     /**
-     * The card database. AJAX requests (live search/filter) get just the results as JSON.
+     * The card database. AJAX requests (resources/js/card-database.js) get just the results region as HTML.
      */
     public function index(Request $request, string $series)
     {
         $config = config("series.$series");
         $provider = $this->cardService->for($series);
+        $filterChoices = FilterChoices::for($series, $provider->filterOptions());
+        $query = CardQuery::fromRequest($request, $series, $filterChoices);
 
-        $currentView = in_array($request->query('view'), self::VIEWS, true) ? $request->query('view') : 'full';
-
-        $params = $request->only([...array_keys($config['filters']), 'search', 'page']);
-        $params['view'] = $currentView;
-
-        $cards = $provider->search($params)->through(fn ($card) => new CardViewModel($card, $config));
+        $cards = $provider->search($query->params())->through(fn ($card) => new CardViewModel($card, $config));
 
         if ($request->ajax()) {
-            return response()->json([
-                'html' => view('cards.partials.cards-inner', compact('cards', 'series', 'currentView'))->render(),
-                'count' => view('cards.partials.result-count', compact('cards'))->render(),
-            ]);
+            return response()->view('cards.partials.results', compact('cards', 'query'))->header('Vary', 'X-Requested-With');
         }
 
-        return view('cards.cards', [
+        return response()->view('cards.cards', [
             'cards' => $cards,
+            'query' => $query,
             'series' => $series,
-            'currentView' => $currentView,
-            'seriesLabel' => config("series.$series.label"),
-            'filterChoices' => FilterChoices::for($series, $provider->filterOptions()),
-        ]);
+            'seriesLabel' => $config['label'],
+            'filterChoices' => $filterChoices,
+        ])->header('Vary', 'X-Requested-With');
     }
 
     public function show(string $series, string $id)

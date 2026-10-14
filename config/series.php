@@ -32,14 +32,6 @@ return [
         'deck_format' => YdkFormat::class,
         'link_prefix' => '/yugioh',
 
-        'rarity_colors' => [
-            'common' => 'text-gray-600',
-            'rare' => 'text-yellow-600',
-            'super' => 'text-green-700',
-            'ultra' => 'text-orange-600',
-            'secret' => 'text-purple-600',
-        ],
-
         // Order matters: it is the order the filter dropdowns are rendered in.
         'filters' => [
             'type' => ['label' => 'Type'],
@@ -100,15 +92,6 @@ return [
         'mapper' => MagicCardMapper::class,
         'deck_format' => MagicTextFormat::class,
         'link_prefix' => '/magic',
-
-        'rarity_colors' => [
-            'common' => 'text-gray-600',
-            'uncommon' => 'text-green-700',
-            'rare' => 'text-yellow-600',
-            'mythic' => 'text-orange-600',
-            'special' => 'text-purple-600',
-            'bonus' => 'text-blue-600',
-        ],
 
         'filters' => [
             'type' => ['label' => 'Type'],

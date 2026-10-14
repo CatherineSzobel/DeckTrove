@@ -82,8 +82,6 @@ Add an entry to `config/series.php` (and remove it from `config/coming_soon.php`
     'deck_format' => PokemonLiveFormat::class,
     'link_prefix' => '/pokemon',
 
-    'rarity_colors' => ['common' => 'text-gray-600', 'uncommon' => 'text-green-700', 'rare' => 'text-yellow-600'],
-
     // Filter dropdowns, in display order. Keys are the search params your provider understands.
     'filters' => [
         'supertype' => ['label' => 'Card type'],
