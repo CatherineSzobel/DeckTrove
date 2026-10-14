@@ -4,6 +4,7 @@
  */
 import Alpine from "alpinejs";
 import { createConfirmStore } from "./confirm.js";
+import { confirmSubmit } from "./confirm-submit.js";
 import { deckSearch } from "./deck-search.js";
 import { likeButton } from "./likes.js";
 
@@ -36,22 +37,9 @@ function initThemeToggle() {
 }
 
 function initFormHelpers() {
-    // <form data-confirm="Message" data-confirm-title="Title?" data-confirm-button="Label"> asks in the confirm dialog
-    // before submitting.
-    document.querySelectorAll("form[data-confirm]").forEach((form) => {
-        form.addEventListener("submit", async (event) => {
-            event.preventDefault();
-
-            const confirmed = await window.confirmDialog({
-                title: form.dataset.confirmTitle,
-                message: form.dataset.confirm,
-                confirmLabel: form.dataset.confirmButton,
-            });
-
-            // submit() doesn't fire this listener again.
-            if (confirmed) form.submit();
-        });
-    });
+    // data-confirm="Message" data-confirm-title="Title?" data-confirm-button="Label" on a <form> or on one of its
+    // submit buttons asks in the confirm dialog before submitting.
+    document.addEventListener("submit", confirmSubmit((options) => window.confirmDialog(options)));
 
     // <select data-autosubmit> submits its form when changed.
     document.querySelectorAll("select[data-autosubmit]").forEach((select) => {

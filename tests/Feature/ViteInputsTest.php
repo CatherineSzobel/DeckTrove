@@ -43,3 +43,8 @@ test('the old auth carousel is gone', function () {
     expect(file_exists(resource_path('js/carousel.js')))->toBeFalse()
         ->and(file_get_contents(base_path('vite.config.js')))->not->toContain('carousel.js');
 });
+
+test('the old account script is gone and the edit profile script is listed', function () {
+    expect(file_exists(resource_path('js/account.js')))->toBeFalse()
+        ->and(file_get_contents(base_path('vite.config.js')))->not->toContain("'resources/js/account.js'")->toContain("'resources/js/edit-profile-page.js'");
+});

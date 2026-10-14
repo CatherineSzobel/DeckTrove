@@ -437,9 +437,23 @@ html:not(.js) .js-only {
         @apply inline-flex min-h-11 cursor-pointer items-center self-start rounded-[10px] border-[1.5px] border-line-strong px-4 text-sm font-bold text-ink transition hover:bg-surface-2 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent-ink;
     }
 
-    /* A panel on the account page (Edit profile, Change password, Delete account). */
+    /* A panel on Settings and Edit profile (Edit profile, Your decks, Change password, Delete account). */
     .account-panel {
         @apply flex scroll-mt-6 flex-col gap-6 rounded-3xl border border-line bg-surface p-6 sm:p-8;
+    }
+
+    /* A disabled button (Edit profile's deck actions until a deck is ticked). */
+    :is(.btn-primary, .btn-secondary, .btn-danger):disabled {
+        @apply cursor-not-allowed opacity-50 hover:brightness-100;
+    }
+
+    /* "Public" / "Private" next to a deck in Edit profile's Your decks list; data-public makes it green. */
+    .visibility-badge {
+        @apply shrink-0 rounded-full border border-line bg-surface-2 px-2.5 py-0.5 text-xs font-bold text-muted;
+
+        &[data-public] {
+            @apply border-ok-line bg-ok-bg text-ok;
+        }
     }
 }
 

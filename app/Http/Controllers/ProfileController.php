@@ -33,20 +33,23 @@ class ProfileController extends Controller
     public function edit(Request $request)
     {
         $user = $request->user();
-        $decks = $user->decks()->count();
-        $public = $user->decks()->public()->count();
+        $decks = $user->decks()->latest()->get();
+        $public = $decks->where('is_public', true)->count();
         // After a failed save the form shows what was typed, so the counter counts that.
         $aboutLength = mb_strlen((string) $request->old('about', $user->about));
 
         return view('account.edit-profile', [
             'user' => $user,
             'stats' => [
-                ['value' => $decks, 'label' => Str::plural('deck', $decks), 'accent' => true],
+                ['value' => $decks->count(), 'label' => Str::plural('deck', $decks->count()), 'accent' => true],
                 ['value' => $public, 'label' => 'public', 'accent' => false],
-                ['value' => $decks - $public, 'label' => 'private', 'accent' => false],
+                ['value' => $decks->count() - $public, 'label' => 'private', 'accent' => false],
             ],
             'aboutLength' => $aboutLength,
             'aboutCounter' => "{$aboutLength} / 500",
+            // "Your decks": newest first, as on My decks.
+            'decks' => $decks,
+            'deckTotal' => $decks->count(),
         ]);
     }
 

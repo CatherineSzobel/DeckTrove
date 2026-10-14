@@ -13,6 +13,7 @@ export default defineConfig({
                 'resources/js/card-page.js',
                 'resources/js/deck-builder.js',
                 'resources/js/deck-page.js',
+                'resources/js/edit-profile-page.js',
                 'resources/js/pack-page.js',
             ],
             refresh: true,

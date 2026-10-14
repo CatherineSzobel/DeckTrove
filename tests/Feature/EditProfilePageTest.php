@@ -84,3 +84,75 @@ test('a failed profile save shows the error and keeps what you typed', function 
         ->toContain('>New text</textarea>')
         ->toContain('8 / 500');
 });
+
+test('your decks are listed with their series and visibility, newest first', function () {
+    $user = User::factory()->create();
+    $old = Deck::factory()->for($user)->public()->create(['name' => 'Old Dragons', 'game' => 'yugioh', 'created_at' => now()->subDay()]);
+    $new = Deck::factory()->for($user)->create(['name' => 'New Spells', 'game' => 'magic']);
+    Deck::factory()->create(['name' => 'Not Mine']);
+
+    $html = editProfilePage($user);
+
+    expect($html)
+        ->toContain('<section id="your-decks" aria-labelledby="your-decks-title"')
+        ->toContain('action="'.route('decks.bulk').'"')
+        ->toContain('<input type="checkbox" name="decks[]" value="'.$old->id.'" id="deck-'.$old->id.'"')
+        ->toContain('<label for="deck-'.$new->id.'"')
+        ->toMatch('/Old Dragons<\/span>\s*<span[^>]*>'.config('series.yugioh.label').'<\/span>\s*<span class="visibility-badge"\s+data-public\s*>Public<\/span>/')
+        ->toMatch('/New Spells<\/span>\s*<span[^>]*>'.config('series.magic.label').'<\/span>\s*<span class="visibility-badge"\s*>Private<\/span>/')
+        ->toContain('href="'.route('decks.show', $old).'"')
+        ->toContain('aria-label="Open Old Dragons"')
+        ->not->toContain('Not Mine')
+        ->and(strpos($html, 'New Spells'))->toBeLessThan(strpos($html, 'Old Dragons'));
+});
+
+test('the deck form has make public, make private and a delete that asks first', function () {
+    $user = User::factory()->create();
+    Deck::factory()->for($user)->create();
+
+    expect(editProfilePage($user))
+        ->toContain('name="action" value="public"')
+        ->toContain('>Make public</button>')
+        ->toContain('name="action" value="private"')
+        ->toContain('>Make private</button>')
+        ->toContain('name="action" value="delete"')
+        ->toContain('data-confirm-title="Delete the selected decks?"')
+        ->toContain('data-confirm-button="Delete decks"')
+        ->toContain('>Delete selected</button>');
+});
+
+test('without decks the panel points to my decks and has no form', function () {
+    expect(editProfilePage(User::factory()->create()))
+        ->toContain('<section id="your-decks"')
+        ->toContain('No decks yet')
+        ->toContain('href="'.route('decks').'" class="btn-primary">Go to my decks</a>')
+        ->not->toContain('action="'.route('decks.bulk').'"');
+});
+
+test('selecting nothing shows the error under the list', function () {
+    $user = User::factory()->create();
+    Deck::factory()->for($user)->create();
+
+    $html = $this->actingAs($user)->from(route('profile.edit'))->followingRedirects()
+        ->post(route('decks.bulk'), ['action' => 'public'])
+        ->getContent();
+
+    expect($html)->toContain('<p id="decks-error" role="alert"')
+        ->toContain('Select at least one deck.');
+});
+
+test('the page script previews the picture, counts the about text and handles the deck selection', function () {
+    $user = User::factory()->create(['about' => 'Blue-Eyes fan.']);
+    Deck::factory()->for($user)->count(2)->create();
+
+    expect(editProfilePage($user))
+        ->toContain('x-data="profileForm(14)"')
+        ->toContain('<img x-show="preview" x-cloak :src="preview" alt=""')
+        ->toContain('@change="pick($event)"')
+        ->toContain('x-text="counter">14 / 500</span>')
+        ->toContain('@input="count($event)"')
+        ->toContain('x-data="deckSelection(2)" @change="sync($el)"')
+        ->toContain(':checked="allSelected" @change.stop="toggleAll($event)"')
+        ->toContain('aria-live="polite" x-text="summary"')
+        ->toContain(':disabled="! count"');
+});
