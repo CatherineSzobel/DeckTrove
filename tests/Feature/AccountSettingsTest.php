@@ -4,6 +4,7 @@ use App\Models\Deck;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 
@@ -27,6 +28,58 @@ test('users can change their password with their current password', function () 
     ])->assertRedirect(route('profile.edit'))->assertSessionHas('success');
 
     expect(Hash::check('brand-new-password', $user->fresh()->password))->toBeTrue();
+});
+
+// Auth::forgetGuards() between requests stands in for a new request: the test app otherwise keeps the logged-in
+// user (and its old password hash) in memory.
+
+test('a password change signs out sessions on other devices', function () {
+    $user = User::factory()->create();
+
+    $this->post(route('login'), ['username' => $user->username, 'password' => 'password']);
+    $this->get(route('dashboard'))->assertOk();
+
+    $user->update(['password' => 'brand-new-password']);
+    Auth::forgetGuards();
+
+    $this->get(route('dashboard'))->assertRedirect(route('login'));
+});
+
+test('a password change stops keep me logged in on other devices', function () {
+    $user = User::factory()->create();
+    $recaller = $this->post(route('login'), ['username' => $user->username, 'password' => 'password', 'remember' => '1'])
+        ->getCookie(Auth::guard()->getRecallerName());
+
+    $this->flushSession();
+    Auth::forgetGuards();
+    $this->withCookie($recaller->getName(), $recaller->getValue())->get(route('dashboard'))->assertOk();
+
+    $user->update(['password' => 'brand-new-password']);
+    $this->flushSession();
+    Auth::forgetGuards();
+
+    $this->get(route('dashboard'))->assertRedirect(route('login'));
+});
+
+test('the device that changes the password stays logged in, keep me logged in included', function () {
+    $user = User::factory()->create();
+    $recaller = $this->post(route('login'), ['username' => $user->username, 'password' => 'password', 'remember' => '1'])
+        ->getCookie(Auth::guard()->getRecallerName());
+    Auth::forgetGuards();
+
+    $renewed = $this->withCookie($recaller->getName(), $recaller->getValue())->put(route('profile.password'), [
+        'current_password' => 'password',
+        'password' => 'brand-new-password',
+        'password_confirmation' => 'brand-new-password',
+    ])->assertRedirect(route('profile.edit'))->getCookie(Auth::guard()->getRecallerName());
+    Auth::forgetGuards();
+
+    $this->get(route('dashboard'))->assertOk();
+
+    $this->flushSession();
+    Auth::forgetGuards();
+    expect($renewed)->not->toBeNull();
+    $this->withCookie($renewed->getName(), $renewed->getValue())->get(route('dashboard'))->assertOk();
 });
 
 test('changing the password requires the correct current password', function () {

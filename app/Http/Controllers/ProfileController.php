@@ -57,8 +57,10 @@ class ProfileController extends Controller
             'password' => ['required', 'confirmed', Password::min(8)],
         ]);
 
-        // The model's "hashed" cast hashes the password.
+        // The model's "hashed" cast hashes the password. The new hash signs out other devices (AuthenticateSession,
+        // and their keep me logged in cookies); logoutOtherDevices renews this device's cookie so it stays logged in.
         $request->user()->update(['password' => $validated['password']]);
+        Auth::logoutOtherDevices($validated['password']);
 
         return redirect()->route('profile.edit')->with('success', 'Password changed.');
     }
