@@ -101,7 +101,7 @@ test('your decks are listed with their series and visibility, newest first', fun
         ->toMatch('/Old Dragons<\/span>\s*<span[^>]*>'.config('series.yugioh.label').'<\/span>\s*<span class="visibility-badge"\s+data-public\s*>Public<\/span>/')
         ->toMatch('/New Spells<\/span>\s*<span[^>]*>'.config('series.magic.label').'<\/span>\s*<span class="visibility-badge"\s*>Private<\/span>/')
         ->toContain('href="'.route('decks.show', $old).'"')
-        ->toContain('aria-label="Open Old Dragons"')
+        ->toContain('href="'.route('decks.show', $old).'" target="_blank" rel="noopener" aria-label="Open Old Dragons in a new tab"')
         ->not->toContain('Not Mine')
         ->and(strpos($html, 'New Spells'))->toBeLessThan(strpos($html, 'Old Dragons'));
 });
@@ -151,8 +151,15 @@ test('the page script previews the picture, counts the about text and handles th
         ->toContain('@change="pick($event)"')
         ->toContain('x-text="counter">14 / 500</span>')
         ->toContain('@input="count($event)"')
-        ->toContain('x-data="deckSelection(2)" @change="sync($el)"')
+        ->toContain('x-data="deckSelection(2)" x-init="sync($el)" @change="sync($el)"')
         ->toContain(':checked="allSelected" @change.stop="toggleAll($event)"')
         ->toContain('aria-live="polite" x-text="summary"')
         ->toContain(':disabled="! count"');
+});
+
+test('the deck selection counts boxes the browser ticked on reload', function () {
+    $user = User::factory()->create();
+    Deck::factory()->for($user)->create();
+
+    expect(editProfilePage($user))->toContain('x-data="deckSelection(1)" x-init="sync($el)" @change="sync($el)"');
 });

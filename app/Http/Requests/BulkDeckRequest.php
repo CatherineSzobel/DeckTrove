@@ -22,7 +22,7 @@ class BulkDeckRequest extends FormRequest
     {
         return [
             // One check for the whole list, so the message shows under the list rather than per id.
-            'decks' => ['required', 'array', 'min:1', function (string $attribute, mixed $ids, Closure $fail) {
+            'decks' => ['bail', 'required', 'array', 'min:1', function (string $attribute, mixed $ids, Closure $fail) {
                 $ids = array_unique(array_filter($ids, 'is_numeric'));
 
                 if (count($ids) !== count($this->input('decks')) || $this->user()->decks()->whereKey($ids)->count() !== count($ids)) {

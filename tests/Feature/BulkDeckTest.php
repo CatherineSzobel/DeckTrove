@@ -103,3 +103,11 @@ test('an unknown action is refused', function () {
 
     expect($deck->fresh()->is_public)->toBeFalse();
 });
+
+test('a decks value that is not a list is refused, not an error page', function () {
+    $user = User::factory()->create();
+
+    bulk($user, ['decks' => 'all', 'action' => 'delete'])
+        ->assertRedirect(route('profile.edit').'#your-decks')
+        ->assertSessionHasErrorsIn('bulkDecks', 'decks');
+});

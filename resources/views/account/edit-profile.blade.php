@@ -86,7 +86,7 @@
                     <x-slot:actions><a href="{{ route('decks') }}" class="btn-primary">Go to my decks</a></x-slot:actions>
                 </x-empty-state>
                 @else
-                <form method="POST" action="{{ route('decks.bulk') }}" x-data="deckSelection({{ $deckTotal }})" @change="sync($el)" class="flex flex-col gap-5">
+                <form method="POST" action="{{ route('decks.bulk') }}" x-data="deckSelection({{ $deckTotal }})" x-init="sync($el)" @change="sync($el)" class="flex flex-col gap-5">
                     @csrf
 
                     <fieldset class="flex flex-col">
@@ -109,7 +109,11 @@
                                     <span class="text-[13px] text-muted">{{ $deck->series_label }}</span>
                                     <span class="visibility-badge" @if ($deck->is_public) data-public @endif>{{ $deck->visibility_label }}</span>
                                 </label>
-                                <a href="{{ route('decks.show', $deck) }}" aria-label="Open {{ $deck->name }}" class="focus-ring flex min-h-11 items-center rounded-sm px-1 text-sm font-bold text-accent-ink">Open</a>
+                                <a href="{{ route('decks.show', $deck) }}" target="_blank" rel="noopener" aria-label="Open {{ $deck->name }} in a new tab"
+                                    class="focus-ring flex min-h-11 items-center gap-1 rounded-sm px-1 text-sm font-bold text-accent-ink">
+                                    Open
+                                    <x-heroicon-o-arrow-top-right-on-square class="h-4 w-4" aria-hidden="true" />
+                                </a>
                             </li>
                             @endforeach
                         </ul>
