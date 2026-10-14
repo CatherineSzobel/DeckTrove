@@ -2,9 +2,9 @@
     'js' => [], // page scripts, e.g. ['resources/js/deck-builder.js']
     'css' => [], // page styles, e.g. ['resources/css/page.css']
     'class' => '',
-    'hideNav' => false,
     'title' => null,
     'gameSwitch' => true, // false when the page places the game-switch component itself
+    'contained' => true, // false: the slot goes straight into <main> (full-width sections); notices stay boxed
 ])
 
 {{-- $navSeries and $routeSeries come from the layout's view composer (AppServiceProvider). --}}
@@ -40,15 +40,12 @@
     <a href="#content"
         class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-xl focus:bg-accent focus:px-4 focus:py-3 focus:font-bold focus:text-white">Skip to content</a>
 
-    @unless($hideNav)
     <x-site-header :series="$navSeries" />
-    @else
-    <x-theme-toggle class="fixed right-4 top-4 z-50 bg-surface shadow-lg" />
-    @endunless
 
     <main id="content" class="flex-1 {{ $class }}">
-        <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-            @if ($gameSwitch && ! $hideNav && $routeSeries)
+        @if ($contained)
+        <div data-content-box class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+            @if ($gameSwitch && $routeSeries)
             <div class="mb-6 flex justify-end">
                 <x-game-switch :series="$routeSeries" />
             </div>
@@ -56,11 +53,15 @@
             <x-flash />
             {{ $slot }}
         </div>
+        @else
+        <div data-content-box class="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8">
+            <x-flash />
+        </div>
+        {{ $slot }}
+        @endif
     </main>
 
-    @unless($hideNav)
     <x-site-footer />
-    @endunless
 
     <x-confirm-dialog />
 </body>

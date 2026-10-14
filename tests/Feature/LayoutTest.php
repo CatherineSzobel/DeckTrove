@@ -238,3 +238,23 @@ test('the page knows when JS runs, so collapsed content stays visible without it
         ->toContain('.js [data-collapsed="true"]')
         ->toContain('.js .no-js-only');
 });
+
+test('a page can leave the content box for full-width sections, and keeps its notices', function () {
+    Route::middleware('web')->get('/layout-contained', fn () => Blade::render('<x-layout><p id="inside">Body</p></x-layout>'));
+    Route::middleware('web')->get('/layout-full-width', fn () => Blade::render('<x-layout :contained="false"><p id="inside">Body</p></x-layout>'));
+
+    expect($this->get('/layout-contained')->getContent())
+        ->toMatch('/data-content-box[^>]*>\s*<p id="inside">/');
+
+    expect($this->get('/layout-full-width')->getContent())
+        ->toMatch('/data-content-box[^>]*>\s*<\/div>\s*<p id="inside">/');
+
+    $this->withSession(['success' => 'Your account has been deleted.'])->get('/layout-full-width')
+        ->assertSee('data-flash="success"', false);
+});
+
+test('every page has the header and footer', function () {
+    expect($this->get('/')->getContent())
+        ->toContain('<nav aria-label="Main"')
+        ->toContain('Source on GitHub');
+});
