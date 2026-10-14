@@ -33,3 +33,8 @@ test('the old card database filter script is gone', function () {
     expect(file_exists(resource_path('js/filter.js')))->toBeFalse()
         ->and(file_get_contents(base_path('vite.config.js')))->not->toContain('filter.js');
 });
+
+test('the old pack script is gone', function () {
+    expect(file_exists(resource_path('js/pack.js')))->toBeFalse()
+        ->and(file_get_contents(base_path('vite.config.js')))->not->toContain("'resources/js/pack.js'");
+});

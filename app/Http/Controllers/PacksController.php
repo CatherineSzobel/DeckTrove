@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Packs\PackCardFilter;
 use App\Services\PackService;
 use App\ViewModels\CardCollectionViewModel;
 use App\ViewModels\CardViewModel;
@@ -43,16 +44,26 @@ class PacksController extends Controller
         ]);
     }
 
-    public function show(string $series, string $setCode, ?string $slug = null)
+    public function show(Request $request, string $series, string $setCode, ?string $slug = null)
     {
         $config = config("series.$series");
         $provider = $this->packService->for($series);
 
         $pack = new PackViewModel($provider->find($setCode, $slug), $config['pack']);
         $cards = $provider->cards($setCode, $slug)->map(fn ($card) => new CardViewModel((array) $card, $config));
-        $cardCollection = new CardCollectionViewModel($cards);
+        $filter = PackCardFilter::fromRequest($request);
+        $shown = $filter->count($cards);
 
-        return view('packs.pack', compact('pack', 'cards', 'series', 'cardCollection'));
+        return view('packs.pack', [
+            'pack' => $pack,
+            'cards' => $cards,
+            'series' => $series,
+            'seriesLabel' => $config['label'],
+            'rarities' => (new CardCollectionViewModel($cards))->rarityOptions(),
+            'filter' => $filter,
+            'countLabel' => $filter->countLabel($shown, $cards->count()),
+            'noMatches' => $cards->isNotEmpty() && $shown === 0,
+        ]);
     }
 
     /**

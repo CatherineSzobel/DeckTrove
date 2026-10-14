@@ -28,6 +28,14 @@ class CardViewModel
         return $this->card['name'] ?? 'Unknown Card';
     }
 
+    /**
+     * The name in lower case, for filtering on the pack page.
+     */
+    public function searchName(): string
+    {
+        return mb_strtolower($this->name());
+    }
+
     public function image(): string
     {
         return $this->mapper->image($this->card);

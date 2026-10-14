@@ -15,7 +15,6 @@ export default defineConfig({
                 'resources/js/carousel.js',
                 'resources/js/deck-builder.js',
                 'resources/js/deck-page.js',
-                'resources/js/pack.js',
             ],
             refresh: true,
         }),
