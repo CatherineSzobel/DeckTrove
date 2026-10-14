@@ -22,7 +22,7 @@ document.addEventListener("alpine:init", () => {
             // $refs aren't registered yet inside init(), so the panel's server state is read through $el, and the
             // load-more link is watched on the next tick.
             this.showFilters = !this.$el.querySelector("#filters").hasAttribute("data-collapsed");
-            this.activeCount = countFilters(new URLSearchParams(location.search), this.filterKeys());
+            this.activeCount = countFilters(new URLSearchParams(location.search), this.filterKeys(this.$el));
             this.observer = new IntersectionObserver(
                 (entries) => entries.some((entry) => entry.isIntersecting) && this.loadMore(),
                 { rootMargin: "400px" }
@@ -43,8 +43,10 @@ document.addEventListener("alpine:init", () => {
             this.hidePreview();
         },
 
-        filterKeys() {
-            return [...this.$el.querySelectorAll("#filters select[name]")].map((select) => select.name);
+        // Outside init(), $el is the element that fired the event (a select, a chip link), not the component's root,
+        // so methods find their elements through $refs. init() passes its root, as $refs aren't ready there.
+        filterKeys(root = this.$refs.form) {
+            return [...root.querySelectorAll("#filters select[name]")].map((select) => select.name);
         },
 
         /** Shows the results for a link (chip, Clear all) or, without one, for the search form. */
@@ -88,7 +90,7 @@ document.addEventListener("alpine:init", () => {
             this.activeCount = countFilters(params, this.filterKeys());
 
             // The view switch sits outside the results, so its links are rewritten to keep the new filters.
-            this.$el.querySelectorAll("a[data-view]").forEach((link) => (link.href = viewUrl(location.pathname, params, link.dataset.view)));
+            this.$refs.views.querySelectorAll("a[data-view]").forEach((link) => (link.href = viewUrl(location.pathname, params, link.dataset.view)));
         },
 
         onRegionClick(event) {

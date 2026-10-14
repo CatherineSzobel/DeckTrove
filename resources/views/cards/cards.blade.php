@@ -32,7 +32,7 @@
                             <button type="submit" class="btn-primary">Search</button>
                         </div>
 
-                        <nav aria-label="Card view" class="inline-flex gap-1 rounded-xl border border-line bg-canvas p-1">
+                        <nav aria-label="Card view" x-ref="views" class="inline-flex gap-1 rounded-xl border border-line bg-canvas p-1">
                             @foreach ($query->viewLinks() as $link)
                             <a href="{{ $link['href'] }}" data-view="{{ $link['key'] }}" data-label="{{ $link['label'] }}" @if ($link['current']) aria-current="page" @endif class="segment">{{ $link['label'] }}</a>
                             @endforeach

@@ -212,3 +212,14 @@ test('the AJAX images response has the preview handlers too', function () {
     expect($html)->toContain('@mouseenter="showPreview(card, $el)"')
         ->not->toContain('data-card-preview');
 });
+
+test('the view nav is a ref, so the component finds it from any event', function () {
+    $this->get(route('cards.index', 'yugioh'))->assertSee('<nav aria-label="Card view" x-ref="views"', false);
+});
+
+test('on phones the list view drops the type column and shows the type under the name', function () {
+    $html = $this->get(route('cards.index', ['yugioh', 'view' => 'list']))->getContent();
+
+    expect($html)->toContain('<th scope="col" class="px-3 py-3 font-normal max-sm:hidden sm:px-4">Type</th>')
+        ->toContain('<span class="block text-xs font-normal text-muted sm:hidden">Normal Monster — Spellcaster</span>');
+});
