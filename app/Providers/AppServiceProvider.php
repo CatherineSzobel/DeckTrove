@@ -2,8 +2,11 @@
 
 namespace App\Providers;
 
+use App\Models\Deck;
+use App\Models\User;
 use App\Services\MagicService;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
@@ -26,6 +29,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Polymorphic types are stored as these keys, not class names. Enforced: an unmapped model fails loudly.
+        Relation::enforceMorphMap(['user' => User::class, 'deck' => Deck::class]);
+
         // Every {series} route segment must be a series from config/series.php.
         Route::pattern('series', implode('|', array_keys(config('series'))));
         Route::pattern('deck', '[0-9]+');
