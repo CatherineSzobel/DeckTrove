@@ -37,6 +37,10 @@ class ProfileController extends Controller
         $public = $decks->where('is_public', true)->count();
         // After a failed save the form shows what was typed, so the counter counts that.
         $aboutLength = mb_strlen((string) $request->old('about', $user->about));
+        // After a failed profile save the boxes show what was ticked; an unticked box isn't sent, so it reads as off.
+        // username is always sent by this form, so its presence in old input means the profile form was the one that failed
+        // (a failed deck bulk action redirects back with other old input and must not clear these boxes).
+        $hasOld = $request->old('username') !== null;
 
         return view('account.edit-profile', [
             'user' => $user,
@@ -47,6 +51,8 @@ class ProfileController extends Controller
             ],
             'aboutLength' => $aboutLength,
             'aboutCounter' => "{$aboutLength} / 500",
+            'showLikedDecks' => $hasOld ? (bool) $request->old('show_liked_decks') : $user->show_liked_decks,
+            'allowComments' => $hasOld ? (bool) $request->old('allow_comments') : $user->allow_comments,
             // "Your decks": newest first, as on My decks.
             'decks' => $decks,
             'deckTotal' => $decks->count(),
@@ -72,7 +78,12 @@ class ProfileController extends Controller
             unset($validated['avatar']);
         }
 
-        $user->update($validated);
+        // Checkboxes: an unticked box isn't sent, so a missing one means off.
+        $user->update([
+            ...$validated,
+            'show_liked_decks' => $request->boolean('show_liked_decks'),
+            'allow_comments' => $request->boolean('allow_comments'),
+        ]);
 
         // Only remove the old avatar once the new one is stored and saved.
         if ($oldAvatar && $user->avatar !== $oldAvatar) {

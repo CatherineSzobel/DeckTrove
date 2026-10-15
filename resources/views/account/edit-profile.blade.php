@@ -1,5 +1,5 @@
 {{--
-    Edit profile (/profile/edit): your profile card, then the picture, username and About form (a plain POST).
+    Edit profile (/profile/edit): your profile card, then the picture, username, About and Privacy form (a plain POST).
     Cancel goes back to your public profile. Settings (/settings) has Change password and Delete account.
 --}}
 
@@ -67,6 +67,21 @@
                             @input="count($event)" class="input w-full resize-y leading-normal">{{ old('about', $user->about) }}</textarea>
                         <x-form-error name="about" id="about-error" />
                     </div>
+
+                    <fieldset class="flex flex-col gap-1">
+                        <legend class="mb-1 text-sm font-bold text-ink">Privacy</legend>
+                        <label class="flex min-h-11 cursor-pointer items-center gap-3 text-[15px] text-body">
+                            <input type="checkbox" name="show_liked_decks" value="1" @checked($showLikedDecks) class="focus-ring h-5 w-5 shrink-0 accent-accent">
+                            Show my liked decks on my profile
+                        </label>
+                        <label class="flex min-h-11 cursor-pointer items-start gap-3 py-2 text-[15px] text-body">
+                            <input type="checkbox" name="allow_comments" value="1" @checked($allowComments) aria-describedby="allow-comments-hint" class="focus-ring mt-0.5 h-5 w-5 shrink-0 accent-accent">
+                            <span class="flex flex-col gap-0.5">
+                                Allow comments on my profile
+                                <span id="allow-comments-hint" class="text-xs text-muted">Turning this off hides comments; it doesn’t delete them.</span>
+                            </span>
+                        </label>
+                    </fieldset>
 
                     <div class="flex flex-wrap justify-end gap-3">
                         <a href="{{ route('users.show', $user) }}" class="btn-secondary">Cancel</a>

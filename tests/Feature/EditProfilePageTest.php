@@ -163,3 +163,58 @@ test('the deck selection counts boxes the browser ticked on reload', function ()
 
     expect(editProfilePage($user))->toContain('x-data="deckSelection(1)" x-init="sync($el)" @change="sync($el)"');
 });
+
+test('the privacy settings show your choices', function () {
+    $user = User::factory()->create(['show_liked_decks' => true, 'allow_comments' => false]);
+
+    expect(editProfilePage($user))
+        ->toContain('<legend class="mb-1 text-sm font-bold text-ink">Privacy</legend>')
+        ->toContain('Show my liked decks on my profile')
+        ->toContain('Allow comments on my profile')
+        ->toContain('Turning this off hides comments; it doesn’t delete them.')
+        ->toMatch('/name="show_liked_decks" value="1"\s+checked/')
+        ->not->toMatch('/name="allow_comments" value="1"\s+checked/');
+});
+
+test('by default liked decks are hidden and comments are allowed', function () {
+    expect(editProfilePage(User::factory()->create()))
+        ->not->toMatch('/name="show_liked_decks" value="1"\s+checked/')
+        ->toMatch('/name="allow_comments" value="1"\s+checked/');
+});
+
+test('saving stores the privacy settings, and an unticked box saves as off', function () {
+    $user = User::factory()->create(['show_liked_decks' => false, 'allow_comments' => true]);
+
+    $this->actingAs($user)->put(route('profile.update'), ['username' => $user->username, 'show_liked_decks' => '1'])
+        ->assertRedirect(route('profile.edit').'#edit-profile');
+
+    expect($user->fresh()->show_liked_decks)->toBeTrue()
+        ->and($user->fresh()->allow_comments)->toBeFalse();
+});
+
+test('a failed save keeps the privacy choices you made, unticked ones included', function () {
+    User::factory()->create(['username' => 'joey']);
+    $user = User::factory()->create(['username' => 'kaiba', 'show_liked_decks' => false, 'allow_comments' => true]);
+
+    $html = $this->actingAs($user)->from(route('profile.edit'))->followingRedirects()
+        ->put(route('profile.update'), ['username' => 'joey', 'show_liked_decks' => '1'])
+        ->getContent();
+
+    expect($html)
+        ->toMatch('/name="show_liked_decks" value="1"\s+checked/')
+        ->not->toMatch('/name="allow_comments" value="1"\s+checked/');
+});
+
+test('a failed deck selection keeps the saved privacy choices ticked', function () {
+    $user = User::factory()->create(['show_liked_decks' => true, 'allow_comments' => true]);
+    Deck::factory()->for($user)->create();
+
+    $html = $this->actingAs($user)->from(route('profile.edit'))->followingRedirects()
+        ->post(route('decks.bulk'), ['action' => 'public'])
+        ->getContent();
+
+    expect($html)
+        ->toContain('Select at least one deck.')
+        ->toMatch('/name="show_liked_decks" value="1"\s+checked/')
+        ->toMatch('/name="allow_comments" value="1"\s+checked/');
+});
