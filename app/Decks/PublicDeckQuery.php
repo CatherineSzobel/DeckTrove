@@ -24,6 +24,8 @@ class PublicDeckQuery
 
     private ?User $owner = null;
 
+    private ?User $liker = null;
+
     private function __construct(
         private ?User $viewer,
         private ?string $search,
@@ -76,6 +78,20 @@ class PublicDeckQuery
     }
 
     /**
+     * The public decks a user liked, for the Liked tab on their profile. Only the sort and the game apply there.
+     */
+    public function likedBy(User $liker): self
+    {
+        $query = clone $this;
+        $query->liker = $liker;
+        $query->search = null;
+        $query->format = null;
+        $query->liked = false;
+
+        return $query;
+    }
+
+    /**
      * The filters actually applied, so the page can preselect its controls.
      *
      * @return array{q: ?string, sort: string, game: ?string, format: ?string, liked: bool}
@@ -112,13 +128,16 @@ class PublicDeckQuery
     }
 
     /**
-     * A link to this list with some filters changed: the public deck page, or the owner's profile for forUser().
+     * A link to this list with some filters changed: the public deck page, the owner's profile for forUser(), or the
+     * Liked tab of the profile for likedBy().
      */
     public function url(array $changes = []): string
     {
-        return $this->owner
-            ? route('users.show', [$this->owner, ...$this->queryWith($changes)])
-            : route('public-deck', $this->queryWith($changes));
+        return match (true) {
+            $this->liker !== null => route('users.show', [$this->liker, 'tab' => 'liked', ...$this->queryWith($changes)]),
+            $this->owner !== null => route('users.show', [$this->owner, ...$this->queryWith($changes)]),
+            default => route('public-deck', $this->queryWith($changes)),
+        };
     }
 
     /**
@@ -165,6 +184,9 @@ class PublicDeckQuery
                 'likes as liked_by_viewer' => fn (Builder $likes) => $likes->where('user_id', $viewer->id),
             ]))
             ->when($this->owner, fn (Builder $query, User $owner) => $query->where('user_id', $owner->id))
+            ->when($this->liker, fn (Builder $query, User $liker) => $query->whereHas(
+                'likes', fn (Builder $likes) => $likes->where('user_id', $liker->id)
+            ))
             ->when($this->search, fn (Builder $query, string $search) => $query->where(fn (Builder $query) => $query
                 ->whereLike('name', "%{$search}%", caseSensitive: false)
                 ->orWhereLike('description', "%{$search}%", caseSensitive: false)
