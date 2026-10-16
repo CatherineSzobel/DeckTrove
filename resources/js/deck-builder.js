@@ -5,6 +5,7 @@
  */
 import * as deckRules from "./deckbuilder/rules.js";
 import { cardPreview } from "./deckbuilder/preview.js";
+import { searchFailedNotice } from "./deckbuilder/search.js";
 
 document.addEventListener("alpine:init", () => {
     window.Alpine.data("deckBuilder", () => ({
@@ -110,7 +111,7 @@ document.addEventListener("alpine:init", () => {
 
             try {
                 const response = await fetch(`${this.searchUrl}?${params}`, { headers: { "X-Requested-With": "XMLHttpRequest" } });
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                if (!response.ok) throw Object.assign(new Error(`HTTP ${response.status}`), { status: response.status });
 
                 // Alpine picks up the new results (and their x-data) as soon as they are in the page.
                 const template = document.createElement("template");
@@ -122,7 +123,7 @@ document.addEventListener("alpine:init", () => {
                 this.shown = this.countResults();
             } catch (error) {
                 console.error("Error loading cards:", error);
-                this.notice = "The card search failed. Please try again.";
+                this.notice = searchFailedNotice(error.status);
             } finally {
                 this.loading = false;
             }
