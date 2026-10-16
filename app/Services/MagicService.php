@@ -13,6 +13,8 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Sleep;
 use Illuminate\Support\Str;
 
 /**
@@ -29,6 +31,21 @@ class MagicService implements CardProvider
     private const COLLECTION_CHUNK = 75;
 
     private const CACHE_TTL = 600;
+
+    /** Site-wide limiter keys and Scryfall's rate limits (https://scryfall.com/docs/api, "Rate Limits"). */
+    public const SEARCH_LIMITER = 'scryfall-search';
+
+    public const LIMITER = 'scryfall';
+
+    public const SEARCH_PER_SECOND = 2;
+
+    public const PER_SECOND = 10;
+
+    /** How long one call may wait for a free slot before giving up with a 503. */
+    private const MAX_WAIT_SECONDS = 1;
+
+    /** Endpoints under Scryfall's stricter limit. */
+    private const SEARCH_PATHS = ['/cards/search', '/cards/named', '/cards/random', '/cards/collection'];
 
     public function scryfall(): PendingRequest
     {
@@ -97,7 +114,7 @@ class MagicService implements CardProvider
         return Cache::remember('scryfall-collection-'.md5(implode(',', $ids)), self::CACHE_TTL, function () use ($ids) {
             return collect(array_chunk($ids, self::COLLECTION_CHUNK))
                 ->flatMap(function (array $chunk) {
-                    $response = $this->request(fn () => $this->scryfall()->post('/cards/collection', [
+                    $response = $this->request('/cards/collection', fn () => $this->scryfall()->post('/cards/collection', [
                         'identifiers' => array_map(fn ($id) => ['id' => $id], $chunk),
                     ]));
 
@@ -121,7 +138,7 @@ class MagicService implements CardProvider
 
         $found = collect(array_chunk($identifiers, self::COLLECTION_CHUNK))
             ->flatMap(function (array $chunk) {
-                $response = $this->request(fn () => $this->scryfall()->post('/cards/collection', ['identifiers' => $chunk]));
+                $response = $this->request('/cards/collection', fn () => $this->scryfall()->post('/cards/collection', ['identifiers' => $chunk]));
 
                 return $this->json($response)['data'] ?? [];
             });
@@ -268,11 +285,13 @@ class MagicService implements CardProvider
 
     private function get(string $path, array $query = []): Response
     {
-        return $this->request(fn () => $this->scryfall()->get($path, $query));
+        return $this->request($path, fn () => $this->scryfall()->get($path, $query));
     }
 
-    private function request(callable $send): Response
+    private function request(string $path, callable $send): Response
     {
+        $this->throttle($path);
+
         $start = microtime(true);
 
         try {
@@ -290,6 +309,29 @@ class MagicService implements CardProvider
         ]);
 
         return $response;
+    }
+
+    /**
+     * Keeps the whole site under Scryfall's rate limits: waits for a free slot (at most MAX_WAIT_SECONDS), then
+     * counts the call. Still full after waiting → ScryfallUnavailableException, without calling Scryfall.
+     */
+    private function throttle(string $path): void
+    {
+        [$key, $perSecond] = in_array($path, self::SEARCH_PATHS, true)
+            ? [self::SEARCH_LIMITER, self::SEARCH_PER_SECOND]
+            : [self::LIMITER, self::PER_SECOND];
+
+        if (RateLimiter::tooManyAttempts($key, $perSecond)) {
+            Sleep::for(min(RateLimiter::availableIn($key), self::MAX_WAIT_SECONDS))->seconds();
+        }
+
+        if (RateLimiter::tooManyAttempts($key, $perSecond)) {
+            Log::warning('Scryfall call skipped: our own rate limit is full', ['path' => $path]);
+
+            throw new ScryfallUnavailableException;
+        }
+
+        RateLimiter::hit($key, 1);
     }
 
     private function json(Response $response): array
