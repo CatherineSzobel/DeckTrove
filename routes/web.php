@@ -76,15 +76,16 @@ Route::get('/u/{user:username}/comments', [PublicProfileController::class, 'comm
 
 // Per series
 Route::prefix('{series}')->group(function () {
-    Route::get('/cards', [CardsController::class, 'index'])->name('cards.index');
-    Route::get('/card/{id}', [CardsController::class, 'show'])->where('id', '[A-Za-z0-9._-]+')->name('cards.show');
+    Route::get('/cards', [CardsController::class, 'index'])->middleware('throttle:card-search')->name('cards.index');
+    Route::get('/card/{id}', [CardsController::class, 'show'])->where('id', '[A-Za-z0-9._-]+')->middleware('throttle:card-search')->name('cards.show');
 
     Route::get('/packs', [PacksController::class, 'index'])->name('packs.index');
     // The optional slug picks between Yu-Gi-Oh! products that share a set code.
     Route::get('/pack/{setCode}/{slug?}', [PacksController::class, 'show'])
         ->where(['setCode' => '[A-Za-z0-9-]+', 'slug' => '[a-z0-9-]+'])
+        ->middleware('throttle:card-search')
         ->name('packs.show');
 
     // Guests can browse the builder; saving requires login.
-    Route::get('/deck-builder', [DeckController::class, 'builder'])->name('decks.builder');
+    Route::get('/deck-builder', [DeckController::class, 'builder'])->middleware('throttle:card-search')->name('decks.builder');
 });

@@ -46,6 +46,13 @@ class AppServiceProvider extends ServiceProvider
         // Comments, per user: enough for a conversation, not for flooding a profile.
         RateLimiter::for('comments', fn (Request $request) => Limit::perMinute(5)->by($request->user()->id));
 
+        // Card search and lookups (the card database, card and pack pages, the builder's search), so bots can't burn
+        // the Scryfall allowance or load the database. Per account when logged in, else per IP; prefixed so the two
+        // never share a counter.
+        RateLimiter::for('card-search', fn (Request $request) => $request->user()
+            ? Limit::perMinute(120)->by('user:'.$request->user()->id)
+            : Limit::perMinute(60)->by('ip:'.$request->ip()));
+
         // The series the visitor is browsing, used by the navigation links.
         View::composer('components.layout', function ($view) {
             $routeSeries = request()->route('series');
