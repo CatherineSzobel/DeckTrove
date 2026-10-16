@@ -6,6 +6,7 @@ use App\Models\Deck;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 
 /**
@@ -61,6 +62,20 @@ class PublicDeckQuery
             $format,
             $viewer !== null && $request->boolean('liked'),
         );
+    }
+
+    /**
+     * Newest first, every series, no search: for short lists that take nothing from the URL (the profile overview).
+     */
+    public static function defaults(?User $viewer): self
+    {
+        return new self($viewer, null, 'newest', null, null, false);
+    }
+
+    /** The first $limit decks, for short lists without paging. */
+    public function take(int $limit): Collection
+    {
+        return $this->query()->limit($limit)->get();
     }
 
     /**
@@ -128,14 +143,14 @@ class PublicDeckQuery
     }
 
     /**
-     * A link to this list with some filters changed: the public deck page, the owner's profile for forUser(), or the
-     * Liked tab of the profile for likedBy().
+     * A link to this list with some filters changed: the public deck page, the owner's decks page for forUser(), or
+     * the liked page for likedBy().
      */
     public function url(array $changes = []): string
     {
         return match (true) {
-            $this->liker !== null => route('users.show', [$this->liker, 'tab' => 'liked', ...$this->queryWith($changes)]),
-            $this->owner !== null => route('users.show', [$this->owner, ...$this->queryWith($changes)]),
+            $this->liker !== null => route('users.liked', [$this->liker, ...$this->queryWith($changes)]),
+            $this->owner !== null => route('users.decks', [$this->owner, ...$this->queryWith($changes)]),
             default => route('public-deck', $this->queryWith($changes)),
         };
     }

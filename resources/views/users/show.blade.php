@@ -1,9 +1,10 @@
 {{--
-    A user's public profile: who they are, what they shared and the likes it got. Never the email, never private decks
-    (also not for the owner, who edits their account at /profile). Sort and series are plain links.
+    A user's public profile: the profile card with jump links, then Public decks, Liked decks and Comments, each a
+    short list with a link to its full page. Never the email, never private decks (also not for the owner, who edits
+    their profile at /profile/edit). App\Profiles\ProfilePage decides which sections show, their counts and lists.
 --}}
 
-<x-layout :title="$user->username">
+<x-layout :title="$user->username" :js="['resources/js/profile-page.js']">
     <div class="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6">
         <nav aria-label="Breadcrumb" class="flex flex-wrap items-center gap-2 text-sm text-muted">
             <a href="{{ route('public-deck') }}" class="focus-ring text-body hover:text-ink">Public decks</a>
@@ -11,8 +12,8 @@
             <span aria-current="page" class="text-ink">{{ $user->username }}</span>
         </nav>
 
-        <div class="flex flex-wrap items-start gap-6">
-            <x-profile.card :user="$user" class="flex-[1_1_300px] lg:max-w-[400px]">
+        <div class="flex flex-wrap items-start gap-8">
+            <x-profile.card :user="$user" class="flex-[1_1_300px] lg:sticky lg:top-6 lg:max-h-[calc(100dvh-3rem)] lg:overflow-y-auto lg:max-w-[380px]">
                 <div class="flex flex-col gap-2">
                     <p class="eyebrow">Player · joined {{ $user->created_at->format('F Y') }}</p>
                     <h1 class="heading-display break-words text-[44px] text-ink">{{ $user->username }}</h1>
@@ -22,12 +23,22 @@
                 <p class="text-[15px] leading-relaxed text-body">{{ $user->about }}</p>
                 @endif
 
-                <div class="flex flex-wrap gap-2.5">
-                    <x-stat-chip :value="$stats['public_decks']" :label="'public '.Str::plural('deck', $stats['public_decks'])" accent inset />
-                    <x-stat-chip :value="$stats['likes_received']" :label="Str::plural('like', $stats['likes_received']).' received'" inset />
+                <div class="flex flex-col border-t border-line pt-2">
+                    <nav aria-label="On this page" class="flex flex-col">
+                        @foreach ($page->sections() as $section)
+                        <a href="#{{ $section['id'] }}" class="focus-ring flex min-h-11 items-center justify-between gap-3 rounded-sm text-[15px] text-body hover:text-ink">
+                            {{ $section['label'] }}
+                            <b class="font-mono text-ink">{{ $section['count'] }}</b>
+                        </a>
+                        @endforeach
+                    </nav>
+                    <p class="flex min-h-11 items-center justify-between gap-3 text-[15px] text-muted">
+                        Likes received
+                        <b class="font-mono text-ink">{{ $page->likesReceived() }}</b>
+                    </p>
                 </div>
 
-                @if ($isOwner)
+                @if ($page->isOwner())
                 <a href="{{ route('profile.edit') }}" class="btn-secondary">
                     <x-heroicon-o-pencil-square class="h-5 w-5" aria-hidden="true" />
                     Edit profile
@@ -36,51 +47,58 @@
                 @endif
             </x-profile.card>
 
-            <section aria-labelledby="profile-decks" class="flex min-w-0 flex-[999_1_640px] flex-col gap-6">
-                <div class="flex flex-wrap items-end justify-between gap-4">
-                    <div class="flex flex-col gap-2">
-                        <p class="eyebrow">Shared by {{ $user->username }}</p>
-                        <h2 id="profile-decks" class="heading-display text-[44px] text-ink">Public decks</h2>
-                    </div>
+            <div class="flex min-w-0 flex-[999_1_640px] flex-col gap-14">
+                <section id="decks" aria-labelledby="decks-title" class="flex scroll-mt-6 flex-col gap-5">
+                    @include('users.partials.section-heading', ['id' => 'decks', 'title' => 'Public decks', 'more' => $page->moreLink('decks')])
 
-                    @if ($stats['public_decks'] > 0)
-                    <div class="flex flex-wrap gap-2.5">
-                        <nav aria-label="Series" class="inline-flex gap-1 rounded-xl border border-line bg-surface p-1">
-                            <a href="{{ $query->url(['game' => null]) }}" data-game="all" @if (! $filters['game']) aria-current="true" @endif class="segment">All</a>
-                            @foreach (config('series') as $key => $config)
-                            <a href="{{ $query->url(['game' => $key]) }}" data-game="{{ $key }}" @if ($filters['game'] === $key) aria-current="true" @endif class="segment">{{ $config['label'] }}</a>
-                            @endforeach
-                        </nav>
-                        <nav aria-label="Sort decks" class="inline-flex gap-1 rounded-xl border border-line bg-surface p-1 max-sm:w-full">
-                            @foreach ($sorts as $key => $label)
-                            <a href="{{ $query->url(['sort' => $key]) }}" data-sort="{{ $key }}" @if ($filters['sort'] === $key) aria-current="true" @endif
-                                class="segment max-sm:flex-1">{{ $label }}</a>
-                            @endforeach
-                        </nav>
+                    @if ($page->overviewDecks()->isNotEmpty())
+                    <div class="grid grid-cols-[repeat(auto-fill,minmax(min(260px,100%),1fr))] gap-5">
+                        @foreach ($page->overviewDecks() as $deck)
+                        <x-deck.card :deck="$deck" variant="profile" heading="h3" />
+                        @endforeach
                     </div>
+                    @elseif ($page->isOwner())
+                    <x-empty-state title="You haven’t shared a deck yet" heading="h3">
+                        Make a deck public from the deck builder and it shows up here for other players.
+                        <x-slot:actions><a href="{{ route('decks') }}" class="btn-primary">Go to my decks</a></x-slot:actions>
+                    </x-empty-state>
+                    @else
+                    <x-empty-state title="No public decks yet" heading="h3">{{ $user->username }} hasn’t shared any decks yet.</x-empty-state>
                     @endif
-                </div>
+                </section>
 
-                @if ($decks->isNotEmpty())
-                @include('decks.partials.deck-card', [
-                    'variant' => 'profile',
-                    'heading' => 'h3',
-                    'trending' => $filters['sort'] === 'trending',
-                    'decksPath' => route('users.show', $user),
-                ])
-                @elseif ($stats['public_decks'] > 0)
-                <x-empty-state title="No decks in this series" heading="h3">
-                    <x-slot:actions><a href="{{ $query->url(['game' => null]) }}" class="btn-secondary">Show all series</a></x-slot:actions>
-                </x-empty-state>
-                @elseif ($isOwner)
-                <x-empty-state title="You haven’t shared a deck yet" heading="h3">
-                    Make a deck public from the deck builder and it shows up here for other players.
-                    <x-slot:actions><a href="{{ route('decks') }}" class="btn-primary">Go to my decks</a></x-slot:actions>
-                </x-empty-state>
-                @else
-                <x-empty-state title="No public decks yet" heading="h3">{{ $user->username }} hasn’t shared any decks yet.</x-empty-state>
+                @if ($page->showsLiked())
+                <section id="liked" aria-labelledby="liked-title" class="flex scroll-mt-6 flex-col gap-5">
+                    @include('users.partials.section-heading', ['id' => 'liked', 'title' => 'Liked decks', 'more' => $page->moreLink('liked'), 'private' => $page->likedIsPrivate()])
+
+                    @if ($page->overviewLiked()->isNotEmpty())
+                    <ul class="grid grid-cols-[repeat(auto-fill,minmax(min(220px,100%),1fr))] gap-3">
+                        @foreach ($page->overviewLiked() as $deck)
+                        <x-deck.list-item :deck="$deck" />
+                        @endforeach
+                    </ul>
+                    @elseif ($page->isOwner())
+                    <x-empty-state title="You haven’t liked any decks yet" heading="h3">
+                        Like a deck on Public decks and it shows up here.
+                        <x-slot:actions><a href="{{ route('public-deck') }}" class="btn-primary">Browse public decks</a></x-slot:actions>
+                    </x-empty-state>
+                    @else
+                    <x-empty-state title="No liked decks yet" heading="h3">{{ $user->username }} hasn’t liked any decks yet.</x-empty-state>
+                    @endif
+                </section>
                 @endif
-            </section>
+
+                @if ($page->showsComments())
+                <section id="comments" aria-labelledby="comments-title" class="flex scroll-mt-6 flex-col gap-5">
+                    @include('users.partials.section-heading', ['id' => 'comments', 'title' => 'Comments', 'more' => null])
+                    @include('users.partials.comment-box')
+                    @include('users.partials.comment-list', ['comments' => $page->overviewComments()])
+                    @if ($page->moreLink('comments'))
+                    <a href="{{ $page->moreLink('comments')['href'] }}" class="focus-ring flex min-h-11 items-center self-start rounded-sm font-bold text-accent-ink">{{ $page->moreLink('comments')['label'] }}</a>
+                    @endif
+                </section>
+                @endif
+            </div>
         </div>
     </div>
 </x-layout>

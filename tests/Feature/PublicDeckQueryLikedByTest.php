@@ -38,9 +38,9 @@ test('likedBy keeps the sort and series but ignores search, format and the liked
     expect($filters)->toBe(['q' => null, 'sort' => 'liked', 'game' => 'magic', 'format' => null, 'liked' => false]);
 });
 
-test('likedBy links stay on the liked tab of the profile', function () {
+test('likedBy links stay on the liked page', function () {
     $liker = User::factory()->create(['username' => 'fan']);
 
     expect(likedByQuery($liker, ['game' => 'magic'])->url(['sort' => 'liked']))
-        ->toBe(route('users.show', [$liker, 'tab' => 'liked', 'sort' => 'liked', 'game' => 'magic']));
+        ->toBe(route('users.liked', [$liker, 'sort' => 'liked', 'game' => 'magic']));
 });

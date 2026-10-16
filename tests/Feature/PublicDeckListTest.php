@@ -212,7 +212,7 @@ test('url links to the page the query is for, with the changed filters', functio
     $query = publicDeckQuery(['q' => 'burn', 'sort' => 'liked', 'game' => 'magic']);
 
     expect($query->url(['sort' => 'trending']))->toBe(route('public-deck', ['q' => 'burn', 'sort' => 'trending', 'game' => 'magic']))
-        ->and($query->forUser($user)->url(['game' => null]))->toBe(route('users.show', [$user, 'sort' => 'liked']));
+        ->and($query->forUser($user)->url(['game' => null]))->toBe(route('users.decks', [$user, 'sort' => 'liked']));
 });
 
 test('a deck knows its series label and a tooltip for its format', function () {

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\BulkDeckController;
 use App\Http\Controllers\CardsController;
+use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DeckController;
 use App\Http\Controllers\DeckLikeController;
@@ -9,6 +10,7 @@ use App\Http\Controllers\DeckTransferController;
 use App\Http\Controllers\IndexController;
 use App\Http\Controllers\PacksController;
 use App\Http\Controllers\PasswordResetController;
+use App\Http\Controllers\ProfileCommentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicProfileController;
 use App\Http\Controllers\RegisterUserController;
@@ -57,13 +59,20 @@ Route::middleware('auth')->group(function () {
     // Likes on public decks (DeckPolicy::like: not your own deck; someone else's private deck is a 404)
     Route::post('/decks/{deck}/like', [DeckLikeController::class, 'store'])->can('like', 'deck')->middleware('throttle:likes')->name('decks.like');
     Route::delete('/decks/{deck}/like', [DeckLikeController::class, 'destroy'])->can('view', 'deck')->middleware('throttle:likes')->name('decks.unlike');
+
+    // Comments on profiles (StoreProfileCommentRequest: only while the profile allows comments)
+    Route::post('/u/{user:username}/comments', [ProfileCommentController::class, 'store'])->middleware('throttle:comments')->name('users.comments.store');
+    Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->can('delete', 'comment')->name('comments.destroy');
 });
 
 // Decks (visibility is checked by DeckPolicy::view)
 Route::get('/decks/{deck}', [DeckController::class, 'show'])->name('decks.show');
 Route::get('/decks/{deck}/export', [DeckTransferController::class, 'export'])->name('decks.export');
 Route::get('/public-deck', [DeckController::class, 'index'])->name('public-deck');
-Route::get('/u/{user:username}', PublicProfileController::class)->name('users.show');
+Route::get('/u/{user:username}', [PublicProfileController::class, 'show'])->name('users.show');
+Route::get('/u/{user:username}/decks', [PublicProfileController::class, 'decks'])->name('users.decks');
+Route::get('/u/{user:username}/liked', [PublicProfileController::class, 'liked'])->name('users.liked');
+Route::get('/u/{user:username}/comments', [PublicProfileController::class, 'comments'])->name('users.comments');
 
 // Per series
 Route::prefix('{series}')->group(function () {

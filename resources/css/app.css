@@ -456,6 +456,11 @@ html:not(.js) .js-only {
         }
     }
 
+    /* "Profile owner" next to the owner's own comments on their profile. */
+    .owner-badge {
+        @apply shrink-0 rounded-full border border-accent bg-surface-2 px-2.5 py-0.5 text-xs font-bold text-accent-ink;
+    }
+
     /* A game on the home page: a cream card shape in both themes (as on the board). Live ones are links. */
     .game-tile {
         @apply flex aspect-[63/88] w-full rounded-[18px] bg-[#F4EFE6] p-2.5 text-[#1A1715] shadow-[0_12px_28px_rgba(0,0,0,0.35)];

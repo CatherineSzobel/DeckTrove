@@ -15,7 +15,7 @@ test('segmented controls use the segment class and mark the selected segment wit
 
     $pages = [
         'public decks' => route('public-deck', ['game' => 'yugioh']),
-        'profile' => route('users.show', $user),
+        'profile decks' => route('users.decks', $user),
         'my decks' => route('decks'),
         'deck page' => route('decks.show', $deck),
         'cards (game switch)' => route('cards.index', 'yugioh'),

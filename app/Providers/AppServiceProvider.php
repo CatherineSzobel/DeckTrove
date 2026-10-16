@@ -43,6 +43,9 @@ class AppServiceProvider extends ServiceProvider
         // counter per user (e.g. with deck imports).
         RateLimiter::for('likes', fn (Request $request) => Limit::perMinute(30)->by($request->user()->id));
 
+        // Comments, per user: enough for a conversation, not for flooding a profile.
+        RateLimiter::for('comments', fn (Request $request) => Limit::perMinute(5)->by($request->user()->id));
+
         // The series the visitor is browsing, used by the navigation links.
         View::composer('components.layout', function ($view) {
             $routeSeries = request()->route('series');

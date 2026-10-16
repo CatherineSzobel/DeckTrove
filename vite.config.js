@@ -15,6 +15,7 @@ export default defineConfig({
                 'resources/js/deck-page.js',
                 'resources/js/edit-profile-page.js',
                 'resources/js/pack-page.js',
+                'resources/js/profile-page.js',
             ],
             refresh: true,
         }),
