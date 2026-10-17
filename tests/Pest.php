@@ -1,5 +1,8 @@
 <?php
 
+use App\Models\Deck;
+use Tests\TestCase;
+
 /*
 |--------------------------------------------------------------------------
 | Test Case
@@ -11,7 +14,7 @@
 |
 */
 
-pest()->extend(Tests\TestCase::class)
+pest()->extend(TestCase::class)
  // ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
     ->in('Feature');
 
@@ -41,7 +44,8 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+// A public Yu-Gi-Oh! deck that takes comments, for the deck comment tests.
+function commentableDeck(array $attributes = []): Deck
 {
-    // ..
+    return Deck::factory()->public()->create(['game' => 'yugioh'] + $attributes);
 }

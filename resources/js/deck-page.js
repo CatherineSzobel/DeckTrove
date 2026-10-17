@@ -7,5 +7,5 @@ import { cardPreview } from "./deckbuilder/preview.js";
 
 document.addEventListener("alpine:init", () => {
     window.Alpine.data("cardPreview", cardPreview);
-    window.Alpine.data("charCounter", (length) => charCounter(length));
+    window.Alpine.data("charCounter", charCounter);
 });

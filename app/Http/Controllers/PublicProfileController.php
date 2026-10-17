@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Comments\CommentsRedirect;
 use App\Models\User;
 use App\Profiles\ProfilePage;
 use Illuminate\Http\Request;
@@ -38,10 +39,8 @@ class PublicProfileController extends Controller
         $page = ProfilePage::for($user, $request, 'comments');
         abort_unless($page->showsComments(), 404);
 
-        $comments = $page->comments();
-
-        if ($comments->currentPage() > $comments->lastPage() && $comments->total() > 0) {
-            return redirect()->to($comments->url($comments->lastPage()));
+        if ($lastPage = CommentsRedirect::pastLastPage($page->comments())) {
+            return redirect()->to($lastPage);
         }
 
         return view('users.comments', ['user' => $user, 'page' => $page]);

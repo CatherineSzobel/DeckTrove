@@ -17,12 +17,10 @@
     </p>
     @endif
 
-    @if ($comments->canPost())
-    <x-comment-form :action="route('decks.comments.store', $deck)" :draft="$comments->draft()" />
-    @elseif ($comments->isOpen())
-    <p class="text-[15px] text-body"><a href="{{ route('login') }}" class="focus-ring font-bold text-accent-ink">Log in</a> to leave a comment.</p>
+    @if ($comments->isOpen())
+    <x-comments.box :can-post="$comments->canPost()" :action="route('decks.comments.store', $deck)" :draft="$comments->draft()" />
     @endif
 
-    <x-comments.list :comments="$comments->comments()" :owner-id="$comments->ownerId()" owner-badge="Deck owner" />
+    <x-comments.list :comments="$comments->comments()" />
     <x-pagination :paginator="$comments->comments()" />
 </section>

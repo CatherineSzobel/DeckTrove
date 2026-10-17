@@ -8,11 +8,14 @@ use Illuminate\View\Component;
 
 /**
  * One comment on a profile or deck (resources/views/components/comment.blade.php): the author, when, a badge when the
- * owner of what it's on wrote it ($ownerBadge: "Profile owner", "Deck owner"), and the text, plus Delete for who may.
+ * owner of what it's on wrote it ("Profile owner", "Deck owner"), and the text, plus Delete for who may. The target
+ * comes from the comment (chaperoned by the profile's and deck's relations, so no query).
  */
 class Comment extends Component
 {
     public bool $byOwner;
+
+    public string $ownerBadge;
 
     public string $ago;
 
@@ -22,9 +25,11 @@ class Comment extends Component
 
     public bool $canDelete;
 
-    public function __construct(public CommentModel $comment, public int $ownerId, public string $ownerBadge)
+    public function __construct(public CommentModel $comment)
     {
-        $this->byOwner = (int) $comment->user_id === $ownerId;
+        $target = $comment->commentable;
+        $this->byOwner = $target !== null && (int) $comment->user_id === $target->commentOwnerId();
+        $this->ownerBadge = $target?->commentOwnerLabel() ?? '';
         $this->ago = $comment->created_at->diffForHumans();
         $this->iso = $comment->created_at->toIso8601String();
         $this->date = $comment->created_at->format('j F Y, H:i');

@@ -5,8 +5,8 @@
 
         <div id="comments" class="flex scroll-mt-6 flex-col gap-6">
             <h1 class="heading-display text-[44px] text-ink">{{ $page->heading() }}</h1>
-            @include('users.partials.comment-box')
-            <x-comments.list :comments="$page->comments()" :owner-id="$user->id" owner-badge="Profile owner" empty-heading="h2" />
+            <x-comments.box :can-post="$page->canComment()" :action="route('users.comments.store', $user)" :draft="$page->commentDraft()" />
+            <x-comments.list :comments="$page->comments()" empty-heading="h2" />
             <x-pagination :paginator="$page->comments()" />
         </div>
     </div>

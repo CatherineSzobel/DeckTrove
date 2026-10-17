@@ -4,5 +4,5 @@
 import { charCounter } from "./char-counter.js";
 
 document.addEventListener("alpine:init", () => {
-    window.Alpine.data("charCounter", (length) => charCounter(length));
+    window.Alpine.data("charCounter", charCounter);
 });

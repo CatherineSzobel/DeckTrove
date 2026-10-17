@@ -86,7 +86,7 @@ final class ProfilePage
     /** Comments show (and can be posted) while allow_comments is on. */
     public function showsComments(): bool
     {
-        return $this->profile->allow_comments;
+        return $this->profile->acceptsComments();
     }
 
     /** The owner sees their liked decks while others can't. */
@@ -182,9 +182,7 @@ final class ProfilePage
     public function overviewComments(): Collection
     {
         return $this->overview['comments'] ??= $this->profile->profileComments()
-            ->with('author')
-            ->latest()
-            ->orderByDesc('id')
+            ->newest()
             ->limit(self::OVERVIEW_COMMENTS)
             ->get();
     }
@@ -245,9 +243,7 @@ final class ProfilePage
     public function comments(): LengthAwarePaginator
     {
         return $this->comments ??= $this->profile->profileComments()
-            ->with('author')
-            ->latest()
-            ->orderByDesc('id')
+            ->newest()
             ->paginate(self::COMMENTS_PER_PAGE)
             ->withQueryString()
             ->fragment('comments');

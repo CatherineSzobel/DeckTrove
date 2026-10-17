@@ -7,11 +7,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-function discussedDeck(array $attributes = []): Deck
-{
-    return Deck::factory()->public()->create(['game' => 'yugioh'] + $attributes);
-}
-
 function deckPageHtml(Deck $deck, ?User $viewer = null, array $query = []): string
 {
     $viewer ? test()->actingAs($viewer) : app('auth')->forgetGuards();
@@ -23,12 +18,12 @@ const PRIVATE_NOTE = 'Comments are hidden while this deck is private.';
 const OFF_NOTE = 'Comments are turned off for this deck. Other players can’t see or add them.';
 
 test('logged-in players get the form, guests the log in line', function () {
-    $deck = discussedDeck();
+    $deck = commentableDeck();
 
     expect(deckPageHtml($deck, User::factory()->create()))
         ->toContain('id="comments"')
         ->toContain('action="'.route('decks.comments.store', $deck).'"')
-        ->toContain('x-data="charCounter(0)"')
+        ->toContain('x-data="charCounter(0, 500)"')
         ->toContain('No comments yet')
         ->not->toContain('to leave a comment.');
 
@@ -39,7 +34,7 @@ test('logged-in players get the form, guests the log in line', function () {
 });
 
 test('the owner sees comments on a private deck read-only, with the private note', function () {
-    $deck = discussedDeck(['is_public' => false, 'allow_comments' => false]);
+    $deck = commentableDeck(['is_public' => false, 'allow_comments' => false]);
     Comment::factory()->on($deck)->create(['body' => 'Kept while private']);
 
     expect(deckPageHtml($deck, $deck->user))
@@ -52,7 +47,7 @@ test('the owner sees comments on a private deck read-only, with the private note
 });
 
 test('the owner sees comments on a turned-off deck read-only, with a link to edit', function () {
-    $deck = discussedDeck(['allow_comments' => false]);
+    $deck = commentableDeck(['allow_comments' => false]);
     Comment::factory()->on($deck)->create(['body' => 'Kept while off']);
 
     expect(deckPageHtml($deck, $deck->user))
@@ -63,7 +58,7 @@ test('the owner sees comments on a turned-off deck read-only, with a link to edi
 });
 
 test('other players and guests see nothing while comments are off', function () {
-    $deck = discussedDeck(['allow_comments' => false]);
+    $deck = commentableDeck(['allow_comments' => false]);
     Comment::factory()->on($deck)->create(['body' => 'Hidden from others']);
 
     foreach ([User::factory()->create(), null] as $viewer) {
@@ -75,15 +70,15 @@ test('other players and guests see nothing while comments are off', function () 
 });
 
 test('a read-only section without comments is hidden, also from the owner', function () {
-    $private = discussedDeck(['is_public' => false]);
-    $off = discussedDeck(['allow_comments' => false]);
+    $private = commentableDeck(['is_public' => false]);
+    $off = commentableDeck(['allow_comments' => false]);
 
     expect(deckPageHtml($private, $private->user))->not->toContain('id="comments"')->not->toContain('data-comments-link')
         ->and(deckPageHtml($off, $off->user))->not->toContain('id="comments"');
 });
 
 test('making a private deck public again shows its comments to others', function () {
-    $deck = discussedDeck(['is_public' => false]);
+    $deck = commentableDeck(['is_public' => false]);
     Comment::factory()->on($deck)->create(['body' => 'Back again']);
     $deck->update(['is_public' => true]);
 
@@ -91,7 +86,7 @@ test('making a private deck public again shows its comments to others', function
 });
 
 test('comments show newest first, 10 per page, with page links to the section', function () {
-    $deck = discussedDeck();
+    $deck = commentableDeck();
     foreach (range(1, 11) as $i) {
         Comment::factory()->on($deck)->create(['body' => sprintf('Body-%02d', $i), 'created_at' => now()->subMinutes(20 - $i)]);
     }
@@ -105,7 +100,7 @@ test('comments show newest first, 10 per page, with page links to the section', 
 });
 
 test('a page past the last goes to the last page', function () {
-    $deck = discussedDeck();
+    $deck = commentableDeck();
     Comment::factory()->on($deck)->count(3)->create();
 
     $this->get(route('decks.show', [$deck, 'page' => 9]))
@@ -113,7 +108,7 @@ test('a page past the last goes to the last page', function () {
 });
 
 test('the deck owner’s comments carry the badge and text is escaped', function () {
-    $deck = discussedDeck();
+    $deck = commentableDeck();
     Comment::factory()->by($deck->user)->on($deck)->create(['body' => "Line one\nLine two"]);
     Comment::factory()->on($deck)->create(['body' => '<script>alert(1)</script>']);
 
@@ -125,7 +120,7 @@ test('the deck owner’s comments carry the badge and text is escaped', function
 });
 
 test('the header links to the comments with their count', function () {
-    $deck = discussedDeck();
+    $deck = commentableDeck();
 
     expect(deckPageHtml($deck))->toContain('data-comments-link')->toContain('href="#comments"')->toContain('<span>0 comments</span>');
 

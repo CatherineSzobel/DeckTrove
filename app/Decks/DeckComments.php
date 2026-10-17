@@ -3,6 +3,7 @@
 namespace App\Decks;
 
 use App\Comments\CommentDraft;
+use App\Comments\CommentsRedirect;
 use App\Models\Deck;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -17,8 +18,6 @@ use Illuminate\Support\Str;
 final class DeckComments
 {
     public const PER_PAGE = 10;
-
-    private ?int $count = null;
 
     private ?LengthAwarePaginator $comments = null;
 
@@ -72,9 +71,10 @@ final class DeckComments
         return $this->isReadOnly() && $this->deck->is_public;
     }
 
+    /** The paginator's total, so the page counts the comments once. */
     public function count(): int
     {
-        return $this->count ??= $this->deck->comments()->count();
+        return $this->comments()->total();
     }
 
     /** "1 comment", "12 comments". */
@@ -87,9 +87,7 @@ final class DeckComments
     public function comments(): LengthAwarePaginator
     {
         return $this->comments ??= $this->deck->comments()
-            ->with('author')
-            ->latest()
-            ->orderByDesc('id')
+            ->newest()
             ->paginate(self::PER_PAGE)
             ->withQueryString()
             ->fragment('comments');
@@ -98,20 +96,11 @@ final class DeckComments
     /** The last page's URL when ?page= is past it and there are comments, else null. */
     public function lastPageUrl(): ?string
     {
-        $comments = $this->comments();
-
-        return $comments->total() > 0 && $comments->currentPage() > $comments->lastPage()
-            ? $comments->url($comments->lastPage())
-            : null;
+        return CommentsRedirect::pastLastPage($this->comments());
     }
 
     public function draft(): CommentDraft
     {
         return $this->draft;
-    }
-
-    public function ownerId(): int
-    {
-        return $this->deck->commentOwnerId();
     }
 }

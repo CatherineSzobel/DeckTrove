@@ -68,7 +68,7 @@ class User extends Authenticatable implements Commentable
         // through the user_id foreign key.
         static::deleting(function (User $user) {
             $user->profileComments()->delete();
-            Comment::deleteOnDecks($user->decks()->pluck('id'));
+            Comment::deleteOnDecks($user->decks()->select('id'));
         });
     }
 
@@ -97,6 +97,11 @@ class User extends Authenticatable implements Commentable
     public function commentOwnerId(): int
     {
         return $this->id;
+    }
+
+    public function commentOwnerLabel(): string
+    {
+        return 'Profile owner';
     }
 
     public function acceptsComments(): bool

@@ -111,7 +111,7 @@ test('logged-in players get the comment form with a counter', function () {
 
     expect($html)
         ->toContain('action="'.route('users.comments.store', $profile).'"')
-        ->toContain('x-data="charCounter(0)"')
+        ->toContain('x-data="charCounter(0, 500)"')
         ->toContain('<label for="comment-body"')
         ->toContain('name="body"')
         ->toContain('maxlength="500"')
@@ -134,7 +134,7 @@ test('a failed comment comes back with the error and what you typed', function (
         ->toContain('<p id="comment-body-error" role="alert"')
         ->toContain('aria-invalid="true"')
         ->toContain('>'.$tooLong.'</textarea>')
-        ->toContain('x-data="charCounter(501)"')
+        ->toContain('x-data="charCounter(501, 500)"')
         ->toContain('501 / 500');
 });
 

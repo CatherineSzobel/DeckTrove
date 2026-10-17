@@ -64,6 +64,11 @@ class Deck extends Model implements Commentable
         return (int) $this->user_id;
     }
 
+    public function commentOwnerLabel(): string
+    {
+        return 'Deck owner';
+    }
+
     /** Only public decks with comments on take (and show) comments; the owner still sees them read-only. */
     public function acceptsComments(): bool
     {

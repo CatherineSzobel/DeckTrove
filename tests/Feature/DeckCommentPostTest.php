@@ -13,11 +13,6 @@ function deckCommentsAnchor(Deck $deck): string
     return route('decks.show', $deck).'#comments';
 }
 
-function commentableDeck(array $attributes = []): Deck
-{
-    return Deck::factory()->public()->create(['game' => 'yugioh'] + $attributes);
-}
-
 test('guests are sent to log in', function () {
     $deck = commentableDeck();
 

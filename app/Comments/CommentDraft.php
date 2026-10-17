@@ -31,6 +31,12 @@ final class CommentDraft
         return mb_strlen($this->text);
     }
 
+    /** The limit, for the textarea's maxlength and the live counter. */
+    public function max(): int
+    {
+        return self::MAX;
+    }
+
     public function counter(): string
     {
         return $this->length().' / '.self::MAX;

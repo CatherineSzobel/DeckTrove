@@ -91,8 +91,8 @@
                 @if ($page->showsComments())
                 <section id="comments" aria-labelledby="comments-title" class="flex scroll-mt-6 flex-col gap-5">
                     @include('users.partials.section-heading', ['id' => 'comments', 'title' => 'Comments', 'more' => null])
-                    @include('users.partials.comment-box')
-                    <x-comments.list :comments="$page->overviewComments()" :owner-id="$user->id" owner-badge="Profile owner" />
+                    <x-comments.box :can-post="$page->canComment()" :action="route('users.comments.store', $user)" :draft="$page->commentDraft()" />
+                    <x-comments.list :comments="$page->overviewComments()" />
                     @if ($page->moreLink('comments'))
                     <a href="{{ $page->moreLink('comments')['href'] }}" class="focus-ring flex min-h-11 items-center self-start rounded-sm font-bold text-accent-ink">{{ $page->moreLink('comments')['label'] }}</a>
                     @endif

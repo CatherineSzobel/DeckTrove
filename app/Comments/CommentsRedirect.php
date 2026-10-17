@@ -2,6 +2,7 @@
 
 namespace App\Comments;
 
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Str;
 
 /**
@@ -23,5 +24,16 @@ final class CommentsRedirect
         }
 
         return $previous.'#comments';
+    }
+
+    /**
+     * The last page's URL when a comments page is past it (say, after deleting the only comment on the last page) and
+     * there are comments, else null.
+     */
+    public static function pastLastPage(LengthAwarePaginator $comments): ?string
+    {
+        return $comments->total() > 0 && $comments->currentPage() > $comments->lastPage()
+            ? $comments->url($comments->lastPage())
+            : null;
     }
 }

@@ -77,16 +77,18 @@ class DeckController extends Controller
     {
         Gate::authorize('view', $deck);
 
-        $deck->load('user')->loadCount('likes');
-        $sections = $this->deckService->buildSections($deck);
-        $zones = config("series.{$deck->game}.deck.zones");
-        $stats = $deckStats->fromSections($sections, config("series.{$deck->game}"));
-        $formatErrors = $this->deckService->formatErrors($deck);
+        // Before the card lookups, so a ?page= past the comments' last page doesn't fetch the cards twice.
         $comments = DeckComments::for($deck, $request);
 
         if ($comments->visible() && $lastPage = $comments->lastPageUrl()) {
             return redirect()->to($lastPage);
         }
+
+        $deck->load('user')->loadCount('likes');
+        $sections = $this->deckService->buildSections($deck);
+        $zones = config("series.{$deck->game}.deck.zones");
+        $stats = $deckStats->fromSections($sections, config("series.{$deck->game}"));
+        $formatErrors = $this->deckService->formatErrors($deck);
 
         return view('decks.deck', [
             'deck' => $deck,

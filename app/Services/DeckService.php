@@ -42,7 +42,7 @@ class DeckService
             'format' => $format,
             // Decks below the minimum size can't be shared yet.
             'is_public' => ($attributes['is_public'] ?? false) && $mainCount >= $rules['zones']['main']['min'],
-            'allow_comments' => array_key_exists('allow_comments', $attributes) ? (bool) $attributes['allow_comments'] : $deck->allow_comments,
+            'allow_comments' => (bool) ($attributes['allow_comments'] ?? $deck->allow_comments),
         ]);
 
         DB::transaction(function () use ($deck, $counts, $cards) {
