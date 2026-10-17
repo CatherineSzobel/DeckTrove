@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Cards\FilterChoices;
+use App\Decks\DeckComments;
 use App\Decks\DeckStats;
 use App\Decks\PublicDeckQuery;
 use App\Decks\StatsCharts;
 use App\Http\Requests\SaveDeckRequest;
+use App\Models\Comment;
 use App\Models\Deck;
 use App\Services\CardService;
 use App\Services\DeckService;
@@ -80,6 +82,11 @@ class DeckController extends Controller
         $zones = config("series.{$deck->game}.deck.zones");
         $stats = $deckStats->fromSections($sections, config("series.{$deck->game}"));
         $formatErrors = $this->deckService->formatErrors($deck);
+        $comments = DeckComments::for($deck, $request);
+
+        if ($comments->visible() && $lastPage = $comments->lastPageUrl()) {
+            return redirect()->to($lastPage);
+        }
 
         return view('decks.deck', [
             'deck' => $deck,
@@ -95,6 +102,7 @@ class DeckController extends Controller
             // Your own deck and guests can't like.
             'liked' => $request->user() !== null && $deck->likes()->where('user_id', $request->user()->id)->exists(),
             'canLike' => Gate::allows('like', $deck),
+            'comments' => $comments,
         ]);
     }
 
@@ -168,6 +176,7 @@ class DeckController extends Controller
             'format' => (string) old('format', $deck?->format ?? ''),
             'cover' => (string) old('image', $deck?->image ?? ''),
             'isPublic' => (bool) old('is_public', $deck?->is_public ?? false),
+            'allowComments' => (bool) old('allow_comments', $deck?->allow_comments ?? true),
             'editing' => $deck !== null,
             // Reopen the import panel after a failed import.
             'showImport' => session('errors')?->hasAny(['list', 'file']) ?? false,
@@ -188,6 +197,7 @@ class DeckController extends Controller
 
     public function destroy(Deck $deck)
     {
+        Comment::deleteOnDecks([$deck->id]);
         $deck->delete();
 
         return redirect()->route('decks')->with('success', 'Deck deleted.');

@@ -111,3 +111,31 @@ test('a decks value that is not a list is refused, not an error page', function 
         ->assertRedirect(route('profile.edit').'#your-decks')
         ->assertSessionHasErrorsIn('bulkDecks', 'decks');
 });
+
+test('allow and turn off comments change only the chosen decks', function () {
+    $user = User::factory()->create();
+    [$a, $b, $c] = Deck::factory()->for($user)->count(3)->create()->all();
+
+    bulk($user, ['decks' => [$a->id, $b->id], 'action' => 'comments_off'])
+        ->assertRedirect(route('profile.edit').'#your-decks')
+        ->assertSessionHas('success', '2 decks closed to comments.');
+    expect($a->fresh()->allow_comments)->toBeFalse()
+        ->and($b->fresh()->allow_comments)->toBeFalse()
+        ->and($c->fresh()->allow_comments)->toBeTrue();
+
+    bulk($user, ['decks' => [$a->id], 'action' => 'comments_on'])
+        ->assertSessionHas('success', '1 deck opened to comments.');
+    expect($a->fresh()->allow_comments)->toBeTrue();
+});
+
+test('turning off comments on someone else’s deck is refused', function () {
+    $user = User::factory()->create();
+    $mine = Deck::factory()->for($user)->create();
+    $theirs = Deck::factory()->create();
+
+    bulk($user, ['decks' => [$mine->id, $theirs->id], 'action' => 'comments_off'])
+        ->assertSessionHasErrorsIn('bulkDecks', ['decks' => 'Select only your own decks.']);
+
+    expect($mine->fresh()->allow_comments)->toBeTrue()
+        ->and($theirs->fresh()->allow_comments)->toBeTrue();
+});

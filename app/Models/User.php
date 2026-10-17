@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Comments\Commentable;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,7 +14,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
-class User extends Authenticatable
+class User extends Authenticatable implements Commentable
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
@@ -62,9 +63,13 @@ class User extends Authenticatable
 
     protected static function booted(): void
     {
-        // Comments on this profile have no foreign key (their target is polymorphic), so they go with the user here.
-        // The comments this user wrote go through the user_id foreign key.
-        static::deleting(fn (User $user) => $user->profileComments()->delete());
+        // Comments on this profile and on this user's decks have no foreign key (their target is polymorphic), so
+        // they go with the user here, before the database removes the decks. The comments this user wrote go
+        // through the user_id foreign key.
+        static::deleting(function (User $user) {
+            $user->profileComments()->delete();
+            Comment::deleteOnDecks($user->decks()->pluck('id'));
+        });
     }
 
     public function decks(): HasMany
@@ -77,16 +82,31 @@ class User extends Authenticatable
         return $this->hasMany(DeckLike::class);
     }
 
-    /** Comments other players (and this user) left on this user's profile. */
+    /** Comments other players (and this user) left on this user's profile; each knows its profile without a query. */
     public function profileComments(): MorphMany
     {
-        return $this->morphMany(Comment::class, 'commentable');
+        return $this->morphMany(Comment::class, 'commentable')->chaperone('commentable');
     }
 
     /** Comments this user wrote, anywhere. */
     public function comments(): HasMany
     {
         return $this->hasMany(Comment::class);
+    }
+
+    public function commentOwnerId(): int
+    {
+        return $this->id;
+    }
+
+    public function acceptsComments(): bool
+    {
+        return (bool) $this->allow_comments;
+    }
+
+    public function commentsFallbackUrl(): string
+    {
+        return route('users.show', $this);
     }
 
     /**

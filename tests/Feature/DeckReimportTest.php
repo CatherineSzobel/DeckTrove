@@ -106,3 +106,13 @@ test('the edit page offers to replace the deck with an import', function () {
         ->assertSee('Replace this deck')
         ->assertSee('This replaces all cards in this deck.');
 });
+
+test('re-importing keeps whether the deck allows comments', function () {
+    $user = User::factory()->create();
+    $deck = reimportDeck($user, ['allow_comments' => false]);
+
+    $this->actingAs($user)->post(route('decks.reimport', $deck), ['list' => "#main\n89631139\n"])
+        ->assertSessionHasNoErrors();
+
+    expect($deck->fresh()->allow_comments)->toBeFalse();
+});

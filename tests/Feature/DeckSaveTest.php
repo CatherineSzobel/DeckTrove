@@ -130,3 +130,31 @@ test('extra deck monsters must go in the extra deck', function () {
         ->post(route('decks.store', 'yugioh'), ['cards' => cardsPayload(['extra' => [NUMBER_39], 'side' => [NUMBER_39]])])
         ->assertSessionHasNoErrors();
 });
+
+test('a deck saves whether it allows comments, and keeps it when not sent', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)->post(route('decks.store', 'yugioh'), [
+        'cards' => cardsPayload(['main' => [DARK_MAGICIAN]]),
+        'allow_comments' => '0',
+    ]);
+    $deck = $user->decks()->sole();
+    expect($deck->allow_comments)->toBeFalse();
+
+    $this->actingAs($user)->patch(route('decks.update', $deck), ['cards' => cardsPayload(['main' => [DARK_MAGICIAN]])]);
+    expect($deck->fresh()->allow_comments)->toBeFalse();
+
+    $this->actingAs($user)->patch(route('decks.update', $deck), [
+        'cards' => cardsPayload(['main' => [DARK_MAGICIAN]]),
+        'allow_comments' => '1',
+    ]);
+    expect($deck->fresh()->allow_comments)->toBeTrue();
+});
+
+test('a new deck allows comments when the field is not sent', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)->post(route('decks.store', 'yugioh'), ['cards' => cardsPayload(['main' => [DARK_MAGICIAN]])]);
+
+    expect($user->decks()->sole()->allow_comments)->toBeTrue();
+});

@@ -92,7 +92,7 @@
                 <section id="comments" aria-labelledby="comments-title" class="flex scroll-mt-6 flex-col gap-5">
                     @include('users.partials.section-heading', ['id' => 'comments', 'title' => 'Comments', 'more' => null])
                     @include('users.partials.comment-box')
-                    @include('users.partials.comment-list', ['comments' => $page->overviewComments()])
+                    <x-comments.list :comments="$page->overviewComments()" :owner-id="$user->id" owner-badge="Profile owner" />
                     @if ($page->moreLink('comments'))
                     <a href="{{ $page->moreLink('comments')['href'] }}" class="focus-ring flex min-h-11 items-center self-start rounded-sm font-bold text-accent-ink">{{ $page->moreLink('comments')['label'] }}</a>
                     @endif

@@ -139,6 +139,8 @@
                     <div class="flex flex-wrap gap-3">
                         <button type="submit" name="action" value="public" :disabled="! count" class="btn-secondary">Make public</button>
                         <button type="submit" name="action" value="private" :disabled="! count" class="btn-secondary">Make private</button>
+                        <button type="submit" name="action" value="comments_on" :disabled="! count" class="btn-secondary">Allow comments</button>
+                        <button type="submit" name="action" value="comments_off" :disabled="! count" class="btn-secondary">Turn off comments</button>
                         <button type="submit" name="action" value="delete" :disabled="! count" class="btn-danger"
                             data-confirm="This deletes the selected decks and their cards. It cannot be undone."
                             data-confirm-title="Delete the selected decks?" data-confirm-button="Delete decks">Delete selected</button>

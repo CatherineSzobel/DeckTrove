@@ -1,11 +1,11 @@
-{{-- One comment on a profile: the author, when, and the text (escaped; line breaks kept, no links). --}}
+{{-- One comment on a profile or deck: the author, when, and the text (escaped; line breaks kept, no links). --}}
 <article class="flex gap-3 border-b border-line py-4 last:border-b-0">
     <x-avatar :user="$comment->author" class="h-10 w-10 shrink-0 font-display text-lg font-extrabold" />
     <div class="flex min-w-0 flex-1 flex-col gap-1">
         <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
             <a href="{{ route('users.show', $comment->author) }}" class="focus-ring break-all font-bold text-ink hover:text-accent-ink">{{ $comment->author->username }}</a>
             @if ($byOwner)
-            <span class="owner-badge">Profile owner</span>
+            <span class="owner-badge">{{ $ownerBadge }}</span>
             @endif
             <time datetime="{{ $iso }}" title="{{ $date }}" class="text-[13px] text-muted">{{ $ago }}</time>
         </div>

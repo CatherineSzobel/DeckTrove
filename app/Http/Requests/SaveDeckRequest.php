@@ -31,6 +31,11 @@ class SaveDeckRequest extends FormRequest
             'cards' => is_string($cards) ? (json_decode($cards, true) ?? $cards) : ($cards ?? []),
             'is_public' => $this->boolean('is_public'),
         ]);
+
+        // Only the builder sends allow_comments; without it (re-import) the deck keeps its setting.
+        if ($this->has('allow_comments')) {
+            $this->merge(['allow_comments' => $this->boolean('allow_comments')]);
+        }
     }
 
     public function rules(): array
@@ -43,6 +48,7 @@ class SaveDeckRequest extends FormRequest
             'deck_description' => ['nullable', 'string', 'max:2000'],
             'image' => ['nullable', 'url:https', 'max:2048'],
             'is_public' => ['boolean'],
+            'allow_comments' => ['sometimes', 'boolean'],
             // Absent or empty means Casual (Laravel turns '' into null).
             'format' => ['nullable', 'string', Rule::in(array_keys($deck['formats']))],
             'cards' => ['present', 'array:'.implode(',', $zones)],

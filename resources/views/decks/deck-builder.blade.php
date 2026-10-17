@@ -71,6 +71,10 @@
                     </label>
                     <span class="text-xs" :class="publicReady ? 'text-ok' : 'text-muted'" x-text="publicHint"></span>
                 </div>
+                <label class="flex min-h-11 cursor-pointer items-center gap-2.5 self-start text-[15px] font-bold text-ink">
+                    <input type="checkbox" x-model="allowComments" class="h-5 w-5 accent-accent">
+                    Allow comments
+                </label>
                 <button type="button" data-import-toggle @click="showImport = !showImport" :aria-expanded="showImport" aria-controls="importPanel"
                     class="btn-secondary px-4" :class="showImport && 'bg-surface-2'">
                     <x-heroicon-o-arrow-up-tray class="h-5 w-5" aria-hidden="true" />
@@ -173,6 +177,7 @@
             <input type="hidden" name="deck_title" :value="title.trim()">
             <input type="hidden" name="deck_description" :value="description.trim()">
             <input type="hidden" name="is_public" :value="isPublic ? 1 : 0">
+            <input type="hidden" name="allow_comments" :value="allowComments ? 1 : 0">
             <input type="hidden" name="image" :value="cover">
             <input type="hidden" name="format" :value="format">
         </form>

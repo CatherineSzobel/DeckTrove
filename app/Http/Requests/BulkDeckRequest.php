@@ -29,7 +29,7 @@ class BulkDeckRequest extends FormRequest
                     $fail('Select only your own decks.');
                 }
             }],
-            'action' => ['required', 'in:public,private,delete'],
+            'action' => ['required', 'in:public,private,comments_on,comments_off,delete'],
         ];
     }
 

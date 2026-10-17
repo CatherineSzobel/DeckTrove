@@ -1,4 +1,4 @@
-{{-- A saved deck: header with format and price, format problems, the zones and the deck stats sidebar. --}}
+{{-- A saved deck: header with format and price, format problems, the zones, the comments and the deck stats sidebar. --}}
 
 <x-layout :title="$deck->name" :js="['resources/js/deck-page.js']">
     <div x-data="cardPreview" @scroll.window.passive="hidePreview()" class="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6">
@@ -61,6 +61,12 @@
                 @if ($isOwner && $deck->is_public)
                 <x-deck.like-button :deck="$deck" :liked="false" :count="$deck->likes_count" size="lg" />
                 @endif
+                @if ($comments->visible())
+                <a href="#comments" data-comments-link class="focus-ring flex min-h-11 items-center justify-center gap-2 rounded-[10px] px-3 text-sm font-bold text-accent-ink hover:text-ink">
+                    <x-heroicon-o-chat-bubble-left-right class="h-5 w-5" aria-hidden="true" />
+                    <span>{{ $comments->headerLabel() }}</span>
+                </a>
+                @endif
                 @unless ($deck->is_public)
                 <span class="text-center text-xs text-muted">Private: only you can see this deck</span>
                 @endunless
@@ -105,6 +111,10 @@
 
                 @if (collect($sections)->every(fn ($cards) => $cards->isEmpty()))
                 <x-empty-state title="No cards in this deck yet" />
+                @endif
+
+                @if ($comments->visible())
+                @include('decks.partials.comments')
                 @endif
             </div>
 

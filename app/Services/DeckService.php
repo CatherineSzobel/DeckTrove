@@ -19,7 +19,7 @@ class DeckService
     /**
      * Create or update a deck and replace its cards.
      *
-     * @param  array  $attributes  deck_title, deck_description, image, is_public, format (optional: absent keeps the deck's format)
+     * @param  array  $attributes  deck_title, deck_description, image, is_public, format and allow_comments (both optional: absent keeps the deck's value)
      * @param  array  $counts  card counts per zone: ['main' => ['<external id>' => 2, ...], ...]
      *
      * @throws ValidationException when a card is unknown or the deck breaks the game's rules
@@ -42,6 +42,7 @@ class DeckService
             'format' => $format,
             // Decks below the minimum size can't be shared yet.
             'is_public' => ($attributes['is_public'] ?? false) && $mainCount >= $rules['zones']['main']['min'],
+            'allow_comments' => array_key_exists('allow_comments', $attributes) ? (bool) $attributes['allow_comments'] : $deck->allow_comments,
         ]);
 
         DB::transaction(function () use ($deck, $counts, $cards) {

@@ -2,20 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Comments\CommentsRedirect;
 use App\Models\Comment;
-use App\Profiles\CommentsRedirect;
 
 class CommentController extends Controller
 {
     /**
-     * Deletes a comment (CommentPolicy::delete) and goes back to the page it was on. Every comment is on a
-     * profile for now; deck comments will need their own way back.
+     * Deletes a comment (CommentPolicy::delete) and goes back to the page it was on: the profile or the deck.
      */
     public function destroy(Comment $comment)
     {
-        $profile = $comment->commentable;
+        $target = $comment->commentable;
         $comment->delete();
 
-        return redirect()->to(CommentsRedirect::url($profile))->with('success', 'Comment deleted.');
+        return redirect()->to(CommentsRedirect::url($target))->with('success', 'Comment deleted.');
     }
 }

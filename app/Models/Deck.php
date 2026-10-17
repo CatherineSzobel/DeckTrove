@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Comments\Commentable;
 use Database\Factories\DeckFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -9,18 +10,23 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
-class Deck extends Model
+class Deck extends Model implements Commentable
 {
     /** @use HasFactory<DeckFactory> */
     use HasFactory;
 
-    protected $fillable = ['game', 'name', 'description', 'is_public', 'image', 'format'];
+    protected $fillable = ['game', 'name', 'description', 'is_public', 'allow_comments', 'image', 'format'];
+
+    /** New decks allow comments, as the column's default (so an unsaved or just-created deck says so too). */
+    protected $attributes = ['allow_comments' => true];
 
     protected function casts(): array
     {
         return [
             'is_public' => 'boolean',
+            'allow_comments' => 'boolean',
         ];
     }
 
@@ -45,6 +51,28 @@ class Deck extends Model
     public function likes(): HasMany
     {
         return $this->hasMany(DeckLike::class);
+    }
+
+    /** Comments players left on this deck; each knows its deck without a query (for CommentPolicy). */
+    public function comments(): MorphMany
+    {
+        return $this->morphMany(Comment::class, 'commentable')->chaperone('commentable');
+    }
+
+    public function commentOwnerId(): int
+    {
+        return (int) $this->user_id;
+    }
+
+    /** Only public decks with comments on take (and show) comments; the owner still sees them read-only. */
+    public function acceptsComments(): bool
+    {
+        return $this->is_public && $this->allow_comments;
+    }
+
+    public function commentsFallbackUrl(): string
+    {
+        return route('decks.show', $this);
     }
 
     public function scopePublic($query)

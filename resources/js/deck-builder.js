@@ -17,6 +17,7 @@ document.addEventListener("alpine:init", () => {
         title: "",
         description: "",
         isPublic: false,
+        allowComments: true,
         currency: { symbol: "€" },
         notice: null,
         showImport: false,
@@ -51,10 +52,11 @@ document.addEventListener("alpine:init", () => {
             this.title = state.title ?? "";
             this.description = state.description ?? "";
             this.isPublic = Boolean(state.isPublic);
+            this.allowComments = state.allowComments ?? true;
             this.currency = state.currency ?? this.currency;
             this.showImport = Boolean(state.showImport);
 
-            ["title", "description", "format", "cover", "isPublic"].forEach((key) => this.$watch(key, () => (this.dirty = true)));
+            ["title", "description", "format", "cover", "isPublic", "allowComments"].forEach((key) => this.$watch(key, () => (this.dirty = true)));
             window.addEventListener("beforeunload", (event) => {
                 if (this.dirty) event.preventDefault();
             });

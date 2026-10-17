@@ -4,6 +4,7 @@ use App\Http\Controllers\BulkDeckController;
 use App\Http\Controllers\CardsController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DeckCommentController;
 use App\Http\Controllers\DeckController;
 use App\Http\Controllers\DeckLikeController;
 use App\Http\Controllers\DeckTransferController;
@@ -60,8 +61,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/decks/{deck}/like', [DeckLikeController::class, 'store'])->can('like', 'deck')->middleware('throttle:likes')->name('decks.like');
     Route::delete('/decks/{deck}/like', [DeckLikeController::class, 'destroy'])->can('view', 'deck')->middleware('throttle:likes')->name('decks.unlike');
 
-    // Comments on profiles (StoreProfileCommentRequest: only while the profile allows comments)
+    // Comments on profiles and decks (StoreCommentRequest: only while the target accepts comments; someone else's
+    // private deck is a 404 through DeckPolicy::view)
     Route::post('/u/{user:username}/comments', [ProfileCommentController::class, 'store'])->middleware('throttle:comments')->name('users.comments.store');
+    Route::post('/decks/{deck}/comments', [DeckCommentController::class, 'store'])->can('view', 'deck')->middleware('throttle:comments')->name('decks.comments.store');
     Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->can('delete', 'comment')->name('comments.destroy');
 });
 

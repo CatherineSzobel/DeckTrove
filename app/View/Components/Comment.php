@@ -1,15 +1,14 @@
 <?php
 
-namespace App\View\Components\Profile;
+namespace App\View\Components;
 
 use App\Models\Comment as CommentModel;
-use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\View\Component;
 
 /**
- * One comment on a profile (resources/views/components/profile/comment.blade.php): the author, when, a badge when the
- * profile owner wrote it, and the text, plus Delete for the author and the profile owner.
+ * One comment on a profile or deck (resources/views/components/comment.blade.php): the author, when, a badge when the
+ * owner of what it's on wrote it ($ownerBadge: "Profile owner", "Deck owner"), and the text, plus Delete for who may.
  */
 class Comment extends Component
 {
@@ -23,9 +22,9 @@ class Comment extends Component
 
     public bool $canDelete;
 
-    public function __construct(public CommentModel $comment, public User $profile)
+    public function __construct(public CommentModel $comment, public int $ownerId, public string $ownerBadge)
     {
-        $this->byOwner = (int) $comment->user_id === $profile->id;
+        $this->byOwner = (int) $comment->user_id === $ownerId;
         $this->ago = $comment->created_at->diffForHumans();
         $this->iso = $comment->created_at->toIso8601String();
         $this->date = $comment->created_at->format('j F Y, H:i');
@@ -34,6 +33,6 @@ class Comment extends Component
 
     public function render(): View
     {
-        return view('components.profile.comment');
+        return view('components.comment');
     }
 }

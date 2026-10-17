@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Comments\Commentable;
 use App\Models\Comment;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -26,9 +27,9 @@ class CommentFactory extends Factory
         return $this->state(['user_id' => $author->id]);
     }
 
-    /** A comment on this user's profile. */
-    public function on(User $profile): static
+    /** A comment on this profile or deck. */
+    public function on(Commentable $target): static
     {
-        return $this->state(['commentable_type' => 'user', 'commentable_id' => $profile->id]);
+        return $this->state(['commentable_type' => $target->getMorphClass(), 'commentable_id' => $target->getKey()]);
     }
 }

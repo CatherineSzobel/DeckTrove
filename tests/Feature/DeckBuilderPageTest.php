@@ -168,3 +168,18 @@ test('the server accepts what the builder sends', function (string $format) {
     expect($deck->format)->toBe($format ?: null)
         ->and($deck->deckCards()->sum('count'))->toBe(3);
 })->with(['casual' => [''], 'tcg' => ['tcg']]);
+
+test('the builder starts with comments allowed for new decks and the saved value when editing', function () {
+    $user = User::factory()->create();
+    $deck = builderDeck($user);
+    $deck->update(['allow_comments' => false]);
+
+    $new = $this->actingAs($user)->get(route('decks.builder', 'yugioh'))->getContent();
+    expect(builderStateFrom($new)['allowComments'])->toBeTrue()
+        ->and($new)->toContain('x-model="allowComments"')->toContain('name="allow_comments"');
+
+    expect(builderStateFrom($this->actingAs($user)->get(route('decks.edit', $deck))->getContent())['allowComments'])->toBeFalse();
+
+    $failed = $this->actingAs($user)->withSession(['_old_input' => ['allow_comments' => '1']])->get(route('decks.edit', $deck))->getContent();
+    expect(builderStateFrom($failed)['allowComments'])->toBeTrue();
+});

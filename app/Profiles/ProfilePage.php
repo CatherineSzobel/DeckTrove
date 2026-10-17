@@ -2,6 +2,7 @@
 
 namespace App\Profiles;
 
+use App\Comments\CommentDraft;
 use App\Decks\PublicDeckQuery;
 use App\Models\Deck;
 use App\Models\DeckLike;
@@ -21,8 +22,6 @@ final class ProfilePage
     public const DECKS_PER_PAGE = 12;
 
     public const COMMENTS_PER_PAGE = 20;
-
-    public const COMMENT_MAX = 500;
 
     public const OVERVIEW_DECKS = 6;
 
@@ -51,7 +50,7 @@ final class ProfilePage
         private ?User $viewer,
         private PublicDeckQuery $baseQuery,
         private string $list,
-        private string $commentDraft,
+        private CommentDraft $commentDraft,
     ) {}
 
     /**
@@ -60,9 +59,7 @@ final class ProfilePage
      */
     public static function for(User $profile, Request $request, string $list = 'overview'): self
     {
-        $draft = $request->old('body');
-
-        return new self($profile, $request->user(), PublicDeckQuery::fromRequest($request), $list, is_string($draft) ? $draft : '');
+        return new self($profile, $request->user(), PublicDeckQuery::fromRequest($request), $list, CommentDraft::fromOld($request));
     }
 
     public function user(): User
@@ -257,19 +254,9 @@ final class ProfilePage
     }
 
     /** What was typed in the comment form before a failed post. */
-    public function commentDraft(): string
+    public function commentDraft(): CommentDraft
     {
         return $this->commentDraft;
-    }
-
-    public function commentDraftLength(): int
-    {
-        return mb_strlen($this->commentDraft);
-    }
-
-    public function commentCounter(): string
-    {
-        return $this->commentDraftLength().' / '.self::COMMENT_MAX;
     }
 
     private function count(string $list): int
