@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ResetPasswordRequest;
+use App\Http\Requests\SendPasswordResetLinkRequest;
 use App\Models\User;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rules\Password as PasswordRule;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -20,10 +21,8 @@ class PasswordResetController extends Controller
         return view('auth.forgot-password');
     }
 
-    public function store(Request $request)
+    public function store(SendPasswordResetLinkRequest $request)
     {
-        $request->validate(['email' => ['required', 'email']]);
-
         Password::sendResetLink($request->only('email'));
 
         // Same answer whether or not the email has an account, so the form can't be used to find accounts.
@@ -38,14 +37,8 @@ class PasswordResetController extends Controller
         ]);
     }
 
-    public function update(Request $request)
+    public function update(ResetPasswordRequest $request)
     {
-        $request->validate([
-            'token' => ['required', 'string'],
-            'email' => ['required', 'email'],
-            'password' => ['required', 'confirmed', PasswordRule::min(8)],
-        ]);
-
         $status = Password::reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
             function (User $user, string $password) {

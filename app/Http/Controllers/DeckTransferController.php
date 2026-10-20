@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Decks\DeckFormat;
 use App\Decks\ImportedDeck;
+use App\Http\Requests\ImportDeckRequest;
 use App\Models\Deck;
 use App\Services\CardService;
 use App\Services\DeckService;
@@ -50,14 +51,14 @@ class DeckTransferController extends Controller
         );
     }
 
-    public function import(Request $request, string $series)
+    public function import(ImportDeckRequest $request, string $series)
     {
-        [$imported, $name] = $this->readImport($request, $series);
+        $imported = $this->readImport($request, $series);
 
         $deck = $request->user()->decks()->make(['game' => $series]);
 
         // Saving applies the same rules as the deck builder (zones, sizes, copy limits).
-        $this->deckService->save($deck, ['deck_title' => $name ?? 'Imported deck', 'is_public' => false], $imported->counts);
+        $this->deckService->save($deck, ['deck_title' => $request->deckName() ?? 'Imported deck', 'is_public' => false], $imported->counts);
 
         return $this->withSkippedCards(
             redirect()->route('decks.edit', $deck)->with('success', 'Deck imported. It is private until you make it public.'),
@@ -69,12 +70,12 @@ class DeckTransferController extends Controller
      * Replaces an existing deck's cards with an imported list, e.g. to fix a wrong import. Like any import the deck
      * becomes Casual; an uploaded file also renames the deck after the file, and the old cover is dropped.
      */
-    public function reimport(Request $request, Deck $deck)
+    public function reimport(ImportDeckRequest $request, Deck $deck)
     {
-        [$imported, $name] = $this->readImport($request, $deck->game);
+        $imported = $this->readImport($request, $deck->game);
 
         $this->deckService->save($deck, [
-            'deck_title' => $name ?? $deck->name,
+            'deck_title' => $request->deckName() ?? $deck->name,
             'deck_description' => $deck->description,
             'image' => null,
             'is_public' => $deck->is_public,
@@ -88,29 +89,17 @@ class DeckTransferController extends Controller
     }
 
     /**
-     * The imported deck from an uploaded file or a pasted list, plus the deck name the file suggests (null for a list).
-     *
-     * @return array{0: ImportedDeck, 1: ?string}
+     * The submitted deck read in the series' format. A list without any cards we know fails like a validation error.
      */
-    private function readImport(Request $request, string $series): array
+    private function readImport(ImportDeckRequest $request, string $series): ImportedDeck
     {
-        $request->validate([
-            'file' => ['nullable', 'file', 'max:100', 'extensions:ydk,txt,dek'],
-            'list' => ['required_without:file', 'nullable', 'string', 'max:100000'],
-        ], [
-            'list.required_without' => 'Upload a deck file or paste a deck list.',
-        ]);
-
-        $file = $request->file('file');
-        $imported = $this->format($series)->import($file ? $file->get() : $request->input('list'));
+        $imported = $this->format($series)->import($request->deckText());
 
         if ($imported->isEmpty()) {
             throw ValidationException::withMessages(['list' => 'We could not find any cards in that deck list.']);
         }
 
-        $name = $file ? Str::limit(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME), 255, '') : null;
-
-        return [$imported, $name ?: null];
+        return $imported;
     }
 
     private function withSkippedCards(RedirectResponse $redirect, ImportedDeck $imported): RedirectResponse

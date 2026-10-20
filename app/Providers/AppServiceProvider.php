@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -31,6 +32,9 @@ class AppServiceProvider extends ServiceProvider
     {
         // Polymorphic types are stored as these keys, not class names. Enforced: an unmapped model fails loudly.
         Relation::enforceMorphMap(['user' => User::class, 'deck' => Deck::class]);
+
+        // The password rule for registering, changing and resetting a password (Password::defaults()).
+        Password::defaults(fn () => Password::min(8));
 
         // Every {series} route segment must be a series from config/series.php.
         Route::pattern('series', implode('|', array_keys(config('series'))));
