@@ -5,13 +5,15 @@ namespace App\Http\Controllers;
 use App\Http\Requests\DeleteAccountRequest;
 use App\Http\Requests\UpdatePasswordRequest;
 use App\Http\Requests\UpdateProfileRequest;
+use App\Services\AvatarService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class ProfileController extends Controller
 {
+    public function __construct(protected AvatarService $avatars) {}
+
     /**
      * "Profile" is your public profile.
      */
@@ -63,27 +65,19 @@ class ProfileController extends Controller
     public function update(UpdateProfileRequest $request)
     {
         $user = $request->user();
-        $validated = $request->validated();
-
-        $disk = Storage::disk(config('filesystems.media'));
         $oldAvatar = $user->avatar;
-
-        if ($request->hasFile('avatar')) {
-            $validated['avatar'] = $request->file('avatar')->store('avatars', config('filesystems.media'));
-        } else {
-            unset($validated['avatar']);
-        }
 
         // Checkboxes: an unticked box isn't sent, so a missing one means off.
         $user->update([
-            ...$validated,
+            ...$request->safe()->except('avatar'),
+            'avatar' => $request->hasFile('avatar') ? $this->avatars->store($request->file('avatar')) : $oldAvatar,
             'show_liked_decks' => $request->boolean('show_liked_decks'),
             'allow_comments' => $request->boolean('allow_comments'),
         ]);
 
         // Only remove the old avatar once the new one is stored and saved.
-        if ($oldAvatar && $user->avatar !== $oldAvatar) {
-            $disk->delete($oldAvatar);
+        if ($user->avatar !== $oldAvatar) {
+            $this->avatars->delete($oldAvatar);
         }
 
         return redirect()->to(route('profile.edit').'#edit-profile')->with('success', 'Profile updated successfully!');
@@ -112,9 +106,7 @@ class ProfileController extends Controller
         Auth::logout();
         $user->delete();
 
-        if ($avatar) {
-            Storage::disk(config('filesystems.media'))->delete($avatar);
-        }
+        $this->avatars->delete($avatar);
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();

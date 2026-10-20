@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Comments\Commentable;
+use App\Services\AvatarService;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,7 +12,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class User extends Authenticatable implements Commentable
@@ -124,6 +124,6 @@ class User extends Authenticatable implements Commentable
 
     public function avatarUrl(): ?string
     {
-        return $this->avatar ? Storage::disk(config('filesystems.media'))->url($this->avatar) : null;
+        return app(AvatarService::class)->url($this->avatar);
     }
 }
