@@ -6,6 +6,7 @@ use App\Models\Deck;
 use App\Models\User;
 use App\Services\MagicService;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -32,6 +33,10 @@ class AppServiceProvider extends ServiceProvider
     {
         // Polymorphic types are stored as these keys, not class names. Enforced: an unmapped model fails loudly.
         Relation::enforceMorphMap(['user' => User::class, 'deck' => Deck::class]);
+
+        // Outside production a relation that wasn't eager loaded throws, so an N+1 query fails the tests instead of
+        // slowing a page down.
+        Model::preventLazyLoading(! $this->app->isProduction());
 
         // The password rule for registering, changing and resetting a password (Password::defaults()).
         Password::defaults(fn () => Password::min(8));
