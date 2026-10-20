@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\BulkDeckAction;
 use Closure;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 /**
  * Validates the Edit profile page's "Your decks" form: some of your own decks (`decks[]`) and what to do with them
@@ -29,7 +31,7 @@ class BulkDeckRequest extends FormRequest
                     $fail('Select only your own decks.');
                 }
             }],
-            'action' => ['required', 'in:public,private,comments_on,comments_off,delete'],
+            'action' => ['required', Rule::enum(BulkDeckAction::class)],
         ];
     }
 
@@ -39,6 +41,11 @@ class BulkDeckRequest extends FormRequest
             'decks.required' => 'Select at least one deck.',
             'decks.min' => 'Select at least one deck.',
         ];
+    }
+
+    public function action(): BulkDeckAction
+    {
+        return $this->enum('action', BulkDeckAction::class);
     }
 
     /**

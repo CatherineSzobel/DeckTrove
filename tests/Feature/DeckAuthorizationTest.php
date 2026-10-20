@@ -29,7 +29,7 @@ test('owners can delete their deck', function () {
 
     $this->actingAs($deck->user)
         ->delete(route('decks.destroy', $deck))
-        ->assertRedirect(route('decks'));
+        ->assertRedirect(route('decks.mine'));
 
     expect(Deck::find($deck->id))->toBeNull();
 });
@@ -87,13 +87,13 @@ test('a non-numeric deck id returns 404 instead of a server error', function () 
 });
 
 test('my decks page requires login and only lists my own decks', function () {
-    $this->get(route('decks'))->assertRedirect(route('login'));
+    $this->get(route('decks.mine'))->assertRedirect(route('login'));
 
     $mine = Deck::factory()->create(['name' => 'Mine']);
     Deck::factory()->create(['name' => 'Someone elses']);
 
     $this->actingAs($mine->user)
-        ->get(route('decks'))
+        ->get(route('decks.mine'))
         ->assertOk()
         ->assertSee('Mine')
         ->assertDontSee('Someone elses');
@@ -104,13 +104,13 @@ test('the public deck list only shows public decks and can be filtered by game',
     Deck::factory()->public()->create(['name' => 'Public Yugioh', 'game' => 'yugioh']);
     Deck::factory()->create(['name' => 'Secret Deck']);
 
-    $this->get(route('public-deck'))
+    $this->get(route('decks.index'))
         ->assertOk()
         ->assertSee('Public Magic')
         ->assertSee('Public Yugioh')
         ->assertDontSee('Secret Deck');
 
-    $this->getJson(route('public-deck', ['game' => 'magic']), ['X-Requested-With' => 'XMLHttpRequest'])
+    $this->getJson(route('decks.index', ['game' => 'magic']), ['X-Requested-With' => 'XMLHttpRequest'])
         ->assertOk()
         ->assertJsonPath('html', fn (string $html) => str_contains($html, 'Public Magic') && ! str_contains($html, 'Public Yugioh'));
 });

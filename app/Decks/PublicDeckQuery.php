@@ -124,7 +124,7 @@ class PublicDeckQuery
 
     /**
      * The applied filters as query parameters, with some changed: links for the page's controls, e.g.
-     * route('public-deck', $query->queryWith(['sort' => 'liked'])). Null removes a filter; `page` is never kept, so
+     * route('decks.index', $query->queryWith(['sort' => 'liked'])). Null removes a filter; `page` is never kept, so
      * any change starts again at page one.
      *
      * @return array<string, string|int>
@@ -151,7 +151,7 @@ class PublicDeckQuery
         return match (true) {
             $this->liker !== null => route('users.liked', [$this->liker, ...$this->queryWith($changes)]),
             $this->owner !== null => route('users.decks', [$this->owner, ...$this->queryWith($changes)]),
-            default => route('public-deck', $this->queryWith($changes)),
+            default => route('decks.index', $this->queryWith($changes)),
         };
     }
 

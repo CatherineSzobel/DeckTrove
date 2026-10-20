@@ -29,7 +29,7 @@
             </div>
         </div>
 
-        <form method="GET" action="{{ route('public-deck') }}" role="search"
+        <form method="GET" action="{{ route('decks.index') }}" role="search"
             class="flex flex-wrap items-center gap-3 rounded-[18px] border border-line bg-surface p-4">
             <input type="hidden" name="sort" value="{{ $filters['sort'] }}">
             @if ($filters['game'])
@@ -88,7 +88,7 @@
                 <span class="font-mono font-bold text-ink">{{ $decks->total() }} {{ Str::plural('deck', $decks->total()) }}</span> · {{ $query->sortNote() }}
             </p>
             @if ($query->isFiltering())
-            <a href="{{ route('public-deck', ['sort' => $filters['sort']]) }}" class="focus-ring rounded-sm text-sm font-bold text-accent-ink">Clear filters</a>
+            <a href="{{ route('decks.index', ['sort' => $filters['sort']]) }}" class="focus-ring rounded-sm text-sm font-bold text-accent-ink">Clear filters</a>
             @endif
         </div>
 
@@ -100,17 +100,17 @@
         <x-empty-state title="You haven’t liked any decks yet">
             <x-slot:icon><x-heroicon-o-heart class="h-8 w-8 text-accent-ink" aria-hidden="true" /></x-slot:icon>
             Tap the heart on a deck to keep it here. Only you can see which decks you liked.
-            <x-slot:actions><a href="{{ route('public-deck', ['sort' => 'trending']) }}" class="btn-primary">See trending decks</a></x-slot:actions>
+            <x-slot:actions><a href="{{ route('decks.index', ['sort' => 'trending']) }}" class="btn-primary">See trending decks</a></x-slot:actions>
         </x-empty-state>
         @elseif ($query->isFiltering())
         <x-empty-state title="No decks match">
             Try another search or format, or clear the filters to see every public deck.
-            <x-slot:actions><a href="{{ route('public-deck', ['sort' => $filters['sort']]) }}" class="btn-secondary">Clear filters</a></x-slot:actions>
+            <x-slot:actions><a href="{{ route('decks.index', ['sort' => $filters['sort']]) }}" class="btn-secondary">Clear filters</a></x-slot:actions>
         </x-empty-state>
         @else
         <x-empty-state title="No public decks yet">
             Decks show up here once their owners make them public.
-            <x-slot:actions>@auth<a href="{{ route('decks') }}" class="btn-secondary">Go to my decks</a>@endauth</x-slot:actions>
+            <x-slot:actions>@auth<a href="{{ route('decks.mine') }}" class="btn-secondary">Go to my decks</a>@endauth</x-slot:actions>
         </x-empty-state>
         @endif
     </div>

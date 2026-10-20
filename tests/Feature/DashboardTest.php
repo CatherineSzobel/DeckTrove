@@ -74,7 +74,7 @@ test('your decks shows the three newest as tiles, filtered by series, with View 
 
     $this->actingAs($user)->get(route('dashboard'))
         ->assertSeeInOrder(['Newest', 'Newer', 'Older'])->assertDontSee('Oldest')
-        ->assertSee('href="'.route('decks').'"', false)
+        ->assertSee('href="'.route('decks.mine').'"', false)
         ->assertSee('data-size="sm"', false);
 
     $this->get(route('dashboard', ['tcg' => 'magic']))->assertSee('Newest')->assertDontSee('Newer');

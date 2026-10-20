@@ -97,7 +97,7 @@ class DashboardService
                 ->map(fn (array $config, string $series) => ['href' => route('cards.index', $series), 'title' => $config['label'].' cards'])
                 ->values()
                 ->all(),
-            ['href' => route('public-deck'), 'title' => 'Public decks'],
+            ['href' => route('decks.index'), 'title' => 'Public decks'],
             ['href' => route('users.show', $user), 'title' => 'Your public profile'],
         ];
     }

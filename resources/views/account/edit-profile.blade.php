@@ -27,7 +27,7 @@
             </dl>
 
             <a href="{{ route('users.show', $user) }}" class="btn-secondary w-full">View your public profile</a>
-            <a href="{{ route('decks') }}" class="btn-secondary w-full">View my decks</a>
+            <a href="{{ route('decks.mine') }}" class="btn-secondary w-full">View my decks</a>
         </x-profile.card>
 
         <div class="flex min-w-0 flex-[999_1_480px] flex-col gap-6">
@@ -98,7 +98,7 @@
 
                 @if ($decks->isEmpty())
                 <x-empty-state title="No decks yet" heading="h3">
-                    <x-slot:actions><a href="{{ route('decks') }}" class="btn-primary">Go to my decks</a></x-slot:actions>
+                    <x-slot:actions><a href="{{ route('decks.mine') }}" class="btn-primary">Go to my decks</a></x-slot:actions>
                 </x-empty-state>
                 @else
                 <form method="POST" action="{{ route('decks.bulk') }}" x-data="deckSelection({{ $deckTotal }})" x-init="sync($el)" @change="sync($el)" class="flex flex-col gap-5">

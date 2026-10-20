@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\BulkDeckAction;
 use App\Http\Requests\BulkDeckRequest;
 use App\Models\Comment;
 use Illuminate\Http\RedirectResponse;
@@ -16,29 +17,21 @@ class BulkDeckController extends Controller
     public function __invoke(BulkDeckRequest $request): RedirectResponse
     {
         $decks = $request->user()->decks()->whereKey($request->deckIds());
-        $action = $request->validated('action');
+        $action = $request->action();
 
-        // Deck cards and likes go with a deck by the database's cascading deletes; comments have no foreign key, so
-        // they go first.
-        if ($action === 'delete') {
+        // Deck cards and likes go with a deck by the database's cascading deletes; comments have no foreign key, and a
+        // delete by query runs no model events, so they go first.
+        if ($action === BulkDeckAction::Delete) {
             Comment::deleteOnDecks($request->deckIds());
         }
 
         $count = match ($action) {
-            'delete' => $decks->delete(),
-            'public', 'private' => $decks->update(['is_public' => $action === 'public']),
-            'comments_on', 'comments_off' => $decks->update(['allow_comments' => $action === 'comments_on']),
-        };
-
-        $done = match ($action) {
-            'public' => 'made public',
-            'private' => 'made private',
-            'comments_on' => 'opened to comments',
-            'comments_off' => 'closed to comments',
-            'delete' => 'deleted',
+            BulkDeckAction::Delete => $decks->delete(),
+            BulkDeckAction::Public, BulkDeckAction::Private => $decks->update(['is_public' => $action === BulkDeckAction::Public]),
+            BulkDeckAction::CommentsOn, BulkDeckAction::CommentsOff => $decks->update(['allow_comments' => $action === BulkDeckAction::CommentsOn]),
         };
 
         return redirect()->to(route('profile.edit').'#your-decks')
-            ->with('success', "{$count} ".Str::plural('deck', $count)." {$done}.");
+            ->with('success', "{$count} ".Str::plural('deck', $count)." {$action->doneLabel()}.");
     }
 }

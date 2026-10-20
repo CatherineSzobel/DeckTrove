@@ -35,8 +35,9 @@ class Comment extends Model
 
     /**
      * Deletes the comments on these decks. Comments have no foreign key to their target, and decks are also deleted
-     * by query (bulk) and by the database (with their owner), so every deck delete calls this first. $deckIds can be
-     * a query selecting the ids, so the delete is one statement.
+     * by query (bulk) and by the database (with their owner), where no model event runs, so those deletes call this
+     * first; deleting one Deck model calls it through Deck's deleting event. $deckIds can be a query selecting the
+     * ids, so the delete is one statement.
      */
     public static function deleteOnDecks(iterable|Builder $deckIds): int
     {

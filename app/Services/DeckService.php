@@ -125,22 +125,34 @@ class DeckService
     public function buildSections(Deck $deck): array
     {
         $config = config("series.{$deck->game}");
-        $deck->loadMissing('cards');
-
-        $data = $this->cards->for($deck->game)->findMany($deck->cards->pluck('external_id')->all());
+        $data = $this->cardData($deck);
 
         $sections = collect($config['deck']['zones'])->map(fn () => collect())->all();
 
         foreach ($deck->cards as $card) {
-            // Fall back to what we stored locally if the source no longer has the card.
-            $raw = $data->get($card->external_id) ?? ['id' => $card->external_id, 'name' => $card->name];
-            $viewModel = new CardViewModel($raw, $config);
+            $viewModel = new CardViewModel($data->get($card->external_id), $config);
 
             $sections[$card->pivot->zone] ??= collect();
             $sections[$card->pivot->zone]->push(...array_fill(0, $card->pivot->count, $viewModel));
         }
 
         return $sections;
+    }
+
+    /**
+     * The raw card data of the deck's cards, by external id. A card the source no longer has falls back to the name
+     * we stored locally.
+     *
+     * @return Collection<string, array>
+     */
+    public function cardData(Deck $deck): Collection
+    {
+        $deck->loadMissing('cards');
+        $data = $this->cards->for($deck->game)->findMany($deck->cards->pluck('external_id')->all());
+
+        return $deck->cards->mapWithKeys(fn (Card $card) => [
+            $card->external_id => $data->get($card->external_id) ?? ['id' => $card->external_id, 'name' => $card->name],
+        ]);
     }
 
     private function resolveCards(string $game, array $counts): Collection

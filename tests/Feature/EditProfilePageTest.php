@@ -31,7 +31,7 @@ test('the card shows who you are, your deck counts and links to your public prof
         ->toMatch('/>private<\/dt>\s*<dd[^>]*>2<\/dd>/')
         ->toContain('href="'.route('users.show', $user).'" class="btn-secondary w-full">View your public profile</a>')
         ->not->toContain('class="btn-secondary w-full">Settings</a>')
-        ->toContain('href="'.route('decks').'" class="btn-secondary w-full">View my decks</a>')
+        ->toContain('href="'.route('decks.mine').'" class="btn-secondary w-full">View my decks</a>')
         ->not->toContain('id="change-password"')
         ->not->toContain('id="delete-account"');
 });
@@ -129,7 +129,7 @@ test('without decks the panel points to my decks and has no form', function () {
     expect(editProfilePage(User::factory()->create()))
         ->toContain('<section id="your-decks"')
         ->toContain('No decks yet')
-        ->toContain('href="'.route('decks').'" class="btn-primary">Go to my decks</a>')
+        ->toContain('href="'.route('decks.mine').'" class="btn-primary">Go to my decks</a>')
         ->not->toContain('action="'.route('decks.bulk').'"');
 });
 

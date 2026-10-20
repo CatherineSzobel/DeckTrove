@@ -7,7 +7,7 @@
 <x-layout :title="$user->username" :js="['resources/js/profile-page.js']">
     <div class="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6">
         <nav aria-label="Breadcrumb" class="flex flex-wrap items-center gap-2 text-sm text-muted">
-            <a href="{{ route('public-deck') }}" class="focus-ring text-body hover:text-ink">Public decks</a>
+            <a href="{{ route('decks.index') }}" class="focus-ring text-body hover:text-ink">Public decks</a>
             <span aria-hidden="true">/</span>
             <span aria-current="page" class="text-ink">{{ $user->username }}</span>
         </nav>
@@ -60,7 +60,7 @@
                     @elseif ($page->isOwner())
                     <x-empty-state title="You haven’t shared a deck yet" heading="h3">
                         Make a deck public from the deck builder and it shows up here for other players.
-                        <x-slot:actions><a href="{{ route('decks') }}" class="btn-primary">Go to my decks</a></x-slot:actions>
+                        <x-slot:actions><a href="{{ route('decks.mine') }}" class="btn-primary">Go to my decks</a></x-slot:actions>
                     </x-empty-state>
                     @else
                     <x-empty-state title="No public decks yet" heading="h3">{{ $user->username }} hasn’t shared any decks yet.</x-empty-state>
@@ -80,7 +80,7 @@
                     @elseif ($page->isOwner())
                     <x-empty-state title="You haven’t liked any decks yet" heading="h3">
                         Like a deck on Public decks and it shows up here.
-                        <x-slot:actions><a href="{{ route('public-deck') }}" class="btn-primary">Browse public decks</a></x-slot:actions>
+                        <x-slot:actions><a href="{{ route('decks.index') }}" class="btn-primary">Browse public decks</a></x-slot:actions>
                     </x-empty-state>
                     @else
                     <x-empty-state title="No liked decks yet" heading="h3">{{ $user->username }} hasn’t liked any decks yet.</x-empty-state>

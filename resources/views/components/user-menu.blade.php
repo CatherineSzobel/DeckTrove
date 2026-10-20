@@ -12,7 +12,7 @@
     <div id="userMenu" x-cloak x-show="open" x-transition.opacity
         class="absolute right-0 z-50 mt-2 w-48 rounded-xl border border-line bg-surface p-1 shadow-xl">
         <a href="{{ route('dashboard') }}" class="focus-ring block rounded-lg px-3 py-2.5 text-body hover:bg-surface-2 hover:text-ink">Dashboard</a>
-        <a href="{{ route('decks') }}" class="focus-ring block rounded-lg px-3 py-2.5 text-body hover:bg-surface-2 hover:text-ink">My decks</a>
+        <a href="{{ route('decks.mine') }}" class="focus-ring block rounded-lg px-3 py-2.5 text-body hover:bg-surface-2 hover:text-ink">My decks</a>
         <a href="{{ route('profile') }}" class="focus-ring block rounded-lg px-3 py-2.5 text-body hover:bg-surface-2 hover:text-ink">Profile</a>
         <a href="{{ route('settings') }}" class="focus-ring block rounded-lg px-3 py-2.5 text-body hover:bg-surface-2 hover:text-ink">Settings</a>
         <form method="POST" action="{{ route('logout') }}">

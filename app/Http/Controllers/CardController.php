@@ -8,7 +8,7 @@ use App\Services\CardService;
 use App\ViewModels\CardViewModel;
 use Illuminate\Http\Request;
 
-class CardsController extends Controller
+class CardController extends Controller
 {
     public function __construct(protected CardService $cardService) {}
 

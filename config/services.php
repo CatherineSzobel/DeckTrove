@@ -36,7 +36,13 @@ return [
     ],
 
     'scryfall' => [
+        'url' => 'https://api.scryfall.com',
         'user_agent' => env('SCRYFALL_USER_AGENT', 'DeckTrove/1.0'),
+    ],
+
+    // Only read by `php artisan yugioh:import --fetch`; the site itself serves Yu-Gi-Oh! cards from the database.
+    'ygoprodeck' => [
+        'url' => 'https://db.ygoprodeck.com/api/v7',
     ],
 
 ];

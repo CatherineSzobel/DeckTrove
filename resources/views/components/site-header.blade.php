@@ -56,7 +56,7 @@
             <div class="mt-2 flex flex-col gap-1 border-t border-line pt-2">
                 @auth
                 <a href="{{ route('dashboard') }}" class="focus-ring rounded-lg px-3 py-3 text-body hover:text-ink">Dashboard</a>
-                <a href="{{ route('decks') }}" class="focus-ring rounded-lg px-3 py-3 text-body hover:text-ink">My decks</a>
+                <a href="{{ route('decks.mine') }}" class="focus-ring rounded-lg px-3 py-3 text-body hover:text-ink">My decks</a>
                 <a href="{{ route('profile') }}" class="focus-ring rounded-lg px-3 py-3 text-body hover:text-ink">Profile</a>
                 <a href="{{ route('settings') }}" class="focus-ring rounded-lg px-3 py-3 text-body hover:text-ink">Settings</a>
                 <form method="POST" action="{{ route('logout') }}">

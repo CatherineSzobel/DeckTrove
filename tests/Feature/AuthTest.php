@@ -20,10 +20,10 @@ test('users can register and are logged in', function () {
 test('users can log in and are sent to the page they originally wanted', function () {
     $user = User::factory()->create();
 
-    $this->get(route('decks'))->assertRedirect(route('login'));
+    $this->get(route('decks.mine'))->assertRedirect(route('login'));
 
     $this->post('/login', ['username' => $user->username, 'password' => 'password'])
-        ->assertRedirect(route('decks'));
+        ->assertRedirect(route('decks.mine'));
 
     $this->assertAuthenticatedAs($user);
 });

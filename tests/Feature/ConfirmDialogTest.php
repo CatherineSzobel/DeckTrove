@@ -8,14 +8,14 @@ use Symfony\Component\Finder\Finder;
 uses(RefreshDatabase::class);
 
 test('every page has the styled confirm dialog', function () {
-    $this->get(route('public-deck'))->assertOk()->assertSee('data-confirm-dialog', false);
+    $this->get(route('decks.index'))->assertOk()->assertSee('data-confirm-dialog', false);
 });
 
 test('deleting a deck or the account asks in the styled dialog', function () {
     $user = User::factory()->create();
     Deck::factory()->for($user)->create(['name' => 'Old Deck']);
 
-    $this->actingAs($user)->get(route('decks'))
+    $this->actingAs($user)->get(route('decks.mine'))
         ->assertSee('data-confirm-title="Delete this deck?"', false)
         ->assertSee('data-confirm-button="Delete deck"', false);
 

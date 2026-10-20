@@ -13,9 +13,19 @@ test('deleting a deck deletes its comments, not others', function () {
     Comment::factory()->on($deck)->count(2)->create();
     $kept = [Comment::factory()->on($other)->create()->id, Comment::factory()->on($deck->user)->create()->id];
 
-    $this->actingAs($deck->user)->delete(route('decks.destroy', $deck))->assertRedirect(route('decks'));
+    $this->actingAs($deck->user)->delete(route('decks.destroy', $deck))->assertRedirect(route('decks.mine'));
 
     expect(Comment::pluck('id')->sort()->values()->all())->toBe($kept);
+});
+
+test('deleting a deck model anywhere deletes its comments', function () {
+    $deck = Deck::factory()->public()->create();
+    Comment::factory()->on($deck)->count(2)->create();
+    $kept = Comment::factory()->on($deck->user)->create();
+
+    $deck->delete();
+
+    expect(Comment::pluck('id')->all())->toBe([$kept->id]);
 });
 
 test('bulk deleting decks deletes their comments, other bulk actions keep them', function () {

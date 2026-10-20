@@ -25,7 +25,7 @@
         @elseif ($page->isOwner())
         <x-empty-state title="You haven’t shared a deck yet">
             Make a deck public from the deck builder and it shows up here for other players.
-            <x-slot:actions><a href="{{ route('decks') }}" class="btn-primary">Go to my decks</a></x-slot:actions>
+            <x-slot:actions><a href="{{ route('decks.mine') }}" class="btn-primary">Go to my decks</a></x-slot:actions>
         </x-empty-state>
         @else
         <x-empty-state title="No public decks yet">{{ $user->username }} hasn’t shared any decks yet.</x-empty-state>

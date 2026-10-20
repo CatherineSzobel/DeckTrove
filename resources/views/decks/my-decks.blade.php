@@ -38,7 +38,7 @@
             Start one in the deck builder, or copy a public deck to make it your own.
             <x-slot:actions>
                 <a href="{{ route('decks.builder', $builderSeries) }}" class="btn-primary">Create your first deck</a>
-                <a href="{{ route('public-deck') }}" class="btn-secondary">Browse public decks</a>
+                <a href="{{ route('decks.index') }}" class="btn-secondary">Browse public decks</a>
             </x-slot:actions>
         </x-empty-state>
         @else

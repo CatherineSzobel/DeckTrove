@@ -41,7 +41,7 @@ test('My decks has like counts', function () {
     DeckLike::factory()->count(3)->for($deck)->create();
 
     $this->actingAs($deck->user)
-        ->get(route('decks'))
+        ->get(route('decks.mine'))
         ->assertViewHas('decks', fn ($decks) => (int) $decks->first()->likes_count === 3);
 });
 
@@ -50,7 +50,7 @@ test('usernames on the deck page and the public list link to the profile', funct
     $profile = route('users.show', $deck->user);
 
     $this->get(route('decks.show', $deck))->assertSee('href="'.$profile.'"', false);
-    $this->get(route('public-deck'))->assertSee('href="'.$profile.'"', false);
+    $this->get(route('decks.index'))->assertSee('href="'.$profile.'"', false);
 });
 
 test('the deck page shows a like button above Copy for other players', function () {

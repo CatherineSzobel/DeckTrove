@@ -6,7 +6,6 @@ use App\Decks\DeckFormat;
 use App\Decks\ImportedDeck;
 use App\Http\Requests\ImportDeckRequest;
 use App\Models\Deck;
-use App\Services\CardService;
 use App\Services\DeckService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,10 +18,7 @@ use Illuminate\Validation\ValidationException;
  */
 class DeckTransferController extends Controller
 {
-    public function __construct(
-        protected DeckService $deckService,
-        protected CardService $cardService,
-    ) {}
+    public function __construct(protected DeckService $deckService) {}
 
     public function export(Deck $deck)
     {
@@ -30,16 +26,7 @@ class DeckTransferController extends Controller
 
         $format = $this->format($deck->game);
         $zones = $this->deckService->zoneCounts($deck);
-        $ids = collect($zones)->flatMap(fn ($zone) => array_keys($zone))->unique()->all();
-
-        // Fall back to the locally stored name for cards the source no longer has.
-        $cards = $this->cardService->for($deck->game)->findMany($ids);
-        foreach ($deck->cards as $card) {
-            if (! $cards->has($card->external_id)) {
-                $cards->put($card->external_id, ['id' => $card->external_id, 'name' => $card->name]);
-            }
-        }
-
+        $cards = $this->deckService->cardData($deck);
         $filename = (Str::slug($deck->name) ?: 'deck').'.'.$format->extension();
 
         return response()->streamDownload(

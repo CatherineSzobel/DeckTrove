@@ -52,7 +52,7 @@ test('quick links are each series’ cards, public decks and the user’s public
     expect(app(DashboardService::class)->quickLinks($user))->toBe([
         ['href' => route('cards.index', 'yugioh'), 'title' => 'Yu-Gi-Oh! cards'],
         ['href' => route('cards.index', 'magic'), 'title' => 'Magic: The Gathering cards'],
-        ['href' => route('public-deck'), 'title' => 'Public decks'],
+        ['href' => route('decks.index'), 'title' => 'Public decks'],
         ['href' => route('users.show', $user), 'title' => 'Your public profile'],
     ]);
 });

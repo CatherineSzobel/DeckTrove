@@ -34,7 +34,7 @@
                     <h2 id="your-decks" class="heading-display text-[32px] text-ink">Your decks</h2>
                     <div class="flex flex-wrap items-center gap-3">
                         <x-segment-links :links="$seriesLinks" label="Filter by series" />
-                        <a href="{{ route('decks') }}" class="focus-ring inline-flex min-h-11 items-center gap-1.5 rounded-sm font-bold text-accent-ink hover:underline">
+                        <a href="{{ route('decks.mine') }}" class="focus-ring inline-flex min-h-11 items-center gap-1.5 rounded-sm font-bold text-accent-ink hover:underline">
                             View all
                             <x-heroicon-o-arrow-right class="h-4 w-4" aria-hidden="true" />
                         </a>
@@ -46,7 +46,7 @@
                     Start one in the deck builder, or copy a public deck to make it your own.
                     <x-slot:actions>
                         <a href="{{ route('decks.builder', $builderSeries) }}" class="btn-primary">Create a deck</a>
-                        <a href="{{ route('public-deck') }}" class="btn-secondary">Browse public decks</a>
+                        <a href="{{ route('decks.index') }}" class="btn-secondary">Browse public decks</a>
                     </x-slot:actions>
                 </x-empty-state>
                 @else

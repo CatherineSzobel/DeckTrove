@@ -1,5 +1,5 @@
 /**
- * My decks (resources/views/decks/mydecks.blade.php): search and the series switch filter the cards in place.
+ * My decks (resources/views/decks/my-decks.blade.php): search and the series switch filter the cards in place.
  * Alpine component: x-data="deckSearch(decks)", where decks lists each card's { game, text } in the grid's order.
  */
 export function deckSearch(decks) {

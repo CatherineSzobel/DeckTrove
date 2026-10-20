@@ -49,7 +49,7 @@ class MagicService implements CardProvider
 
     public function scryfall(): PendingRequest
     {
-        return Http::baseUrl('https://api.scryfall.com')
+        return Http::baseUrl(config('services.scryfall.url'))
             ->timeout(15)
             ->acceptJson()
             ->withUserAgent(config('services.scryfall.user_agent'));
@@ -202,7 +202,7 @@ class MagicService implements CardProvider
     {
         $responses = Http::pool(fn ($pool) => array_map(
             fn ($i) => $pool->as("card$i")
-                ->baseUrl('https://api.scryfall.com')
+                ->baseUrl(config('services.scryfall.url'))
                 ->timeout(5)
                 ->acceptJson()
                 ->withUserAgent(config('services.scryfall.user_agent'))

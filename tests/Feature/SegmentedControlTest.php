@@ -14,9 +14,9 @@ test('segmented controls use the segment class and mark the selected segment wit
     $deck = Deck::factory()->public()->for($user)->create(['game' => 'yugioh']);
 
     $pages = [
-        'public decks' => route('public-deck', ['game' => 'yugioh']),
+        'public decks' => route('decks.index', ['game' => 'yugioh']),
         'profile decks' => route('users.decks', $user),
-        'my decks' => route('decks'),
+        'my decks' => route('decks.mine'),
         'deck page' => route('decks.show', $deck),
         'cards (game switch)' => route('cards.index', 'yugioh'),
     ];
@@ -32,7 +32,7 @@ test('segmented controls use the segment class and mark the selected segment wit
 });
 
 test('the selected segment carries aria-current or aria-pressed', function () {
-    $html = $this->get(route('public-deck', ['sort' => 'liked']))->getContent();
+    $html = $this->get(route('decks.index', ['sort' => 'liked']))->getContent();
 
     expect($html)->toMatch('/<a[^>]*data-sort="liked"[^>]*aria-current="true"[^>]*class="segment/')
         ->not->toMatch('/<a[^>]*data-sort="newest"[^>]*aria-current/');

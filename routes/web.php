@@ -1,7 +1,7 @@
 <?php
 
 use App\Http\Controllers\BulkDeckController;
-use App\Http\Controllers\CardsController;
+use App\Http\Controllers\CardController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DeckCommentController;
@@ -9,7 +9,7 @@ use App\Http\Controllers\DeckController;
 use App\Http\Controllers\DeckLikeController;
 use App\Http\Controllers\DeckTransferController;
 use App\Http\Controllers\IndexController;
-use App\Http\Controllers\PacksController;
+use App\Http\Controllers\PackController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\ProfileCommentController;
 use App\Http\Controllers\ProfileController;
@@ -45,7 +45,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Deck management
-    Route::get('/decks', [DeckController::class, 'mine'])->name('decks');
+    Route::get('/decks', [DeckController::class, 'mine'])->name('decks.mine');
     Route::post('/decks/bulk', BulkDeckController::class)->name('decks.bulk');
     Route::post('/{series}/deck-builder', [DeckController::class, 'store'])->name('decks.store');
     Route::get('/decks/{deck}/edit', [DeckController::class, 'edit'])->can('update', 'deck')->name('decks.edit');
@@ -71,7 +71,7 @@ Route::middleware('auth')->group(function () {
 // Decks (visibility is checked by DeckPolicy::view)
 Route::get('/decks/{deck}', [DeckController::class, 'show'])->name('decks.show');
 Route::get('/decks/{deck}/export', [DeckTransferController::class, 'export'])->name('decks.export');
-Route::get('/public-deck', [DeckController::class, 'index'])->name('public-deck');
+Route::get('/public-deck', [DeckController::class, 'index'])->name('decks.index');
 Route::get('/u/{user:username}', [PublicProfileController::class, 'show'])->name('users.show');
 Route::get('/u/{user:username}/decks', [PublicProfileController::class, 'decks'])->name('users.decks');
 Route::get('/u/{user:username}/liked', [PublicProfileController::class, 'liked'])->name('users.liked');
@@ -79,12 +79,12 @@ Route::get('/u/{user:username}/comments', [PublicProfileController::class, 'comm
 
 // Per series
 Route::prefix('{series}')->group(function () {
-    Route::get('/cards', [CardsController::class, 'index'])->middleware('throttle:card-search')->name('cards.index');
-    Route::get('/card/{id}', [CardsController::class, 'show'])->where('id', '[A-Za-z0-9._-]+')->middleware('throttle:card-search')->name('cards.show');
+    Route::get('/cards', [CardController::class, 'index'])->middleware('throttle:card-search')->name('cards.index');
+    Route::get('/card/{id}', [CardController::class, 'show'])->where('id', '[A-Za-z0-9._-]+')->middleware('throttle:card-search')->name('cards.show');
 
-    Route::get('/packs', [PacksController::class, 'index'])->name('packs.index');
+    Route::get('/packs', [PackController::class, 'index'])->name('packs.index');
     // The optional slug picks between Yu-Gi-Oh! products that share a set code.
-    Route::get('/pack/{setCode}/{slug?}', [PacksController::class, 'show'])
+    Route::get('/pack/{setCode}/{slug?}', [PackController::class, 'show'])
         ->where(['setCode' => '[A-Za-z0-9-]+', 'slug' => '[a-z0-9-]+'])
         ->middleware('throttle:card-search')
         ->name('packs.show');

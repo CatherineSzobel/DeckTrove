@@ -17,7 +17,7 @@ beforeEach(function () {
 // --- Tokens and fonts --------------------------------------------------------------------------
 
 test('pages use the new colours and self-hosted fonts', function () {
-    $this->get(route('public-deck'))->assertOk()
+    $this->get(route('decks.index'))->assertOk()
         ->assertSee('bg-canvas', false)
         ->assertDontSee('fonts.googleapis.com', false);
 
@@ -27,7 +27,7 @@ test('pages use the new colours and self-hosted fonts', function () {
 // --- Header ------------------------------------------------------------------------------------
 
 test('guests see the public links and the account buttons', function () {
-    $html = $this->get(route('public-deck'))->assertOk()->getContent();
+    $html = $this->get(route('decks.index'))->assertOk()->getContent();
 
     expect($html)
         ->toContain('data-nav="cards"')
@@ -42,7 +42,7 @@ test('guests see the public links and the account buttons', function () {
 test('logged in users see the deck builder and the account menu', function () {
     $user = User::factory()->create(['username' => 'catherine']);
 
-    $html = $this->actingAs($user)->get(route('decks'))->assertOk()->getContent();
+    $html = $this->actingAs($user)->get(route('decks.mine'))->assertOk()->getContent();
 
     expect($html)
         ->toContain('data-nav="deck-builder"')
@@ -58,14 +58,14 @@ test('logged in users see the deck builder and the account menu', function () {
 test('the account button shows the avatar when there is one', function () {
     $user = User::factory()->create(['username' => 'catherine', 'avatar' => 'avatars/catherine.png']);
 
-    $html = $this->actingAs($user)->get(route('decks'))->assertOk()->getContent();
+    $html = $this->actingAs($user)->get(route('decks.mine'))->assertOk()->getContent();
 
     expect($html)->toContain('avatars/catherine.png')->not->toContain('>C</span>');
 });
 
 test('the initial is uppercase, accents included', function () {
     $this->actingAs(User::factory()->create(['username' => 'émilie']))
-        ->get(route('decks'))->assertOk()->assertSee('>É</span>', false);
+        ->get(route('decks.mine'))->assertOk()->assertSee('>É</span>', false);
 });
 
 test('header links follow the current game', function () {
@@ -74,12 +74,12 @@ test('header links follow the current game', function () {
 });
 
 test('header links use the remembered game on other pages', function () {
-    $this->withSession(['series' => 'magic'])->get(route('public-deck'))
+    $this->withSession(['series' => 'magic'])->get(route('decks.index'))
         ->assertSee('href="'.route('packs.index', 'magic').'" data-nav="packs"', false);
 });
 
 test('header links fall back to the first game', function (?string $remembered) {
-    $this->withSession(array_filter(['series' => $remembered]))->get(route('public-deck'))
+    $this->withSession(array_filter(['series' => $remembered]))->get(route('decks.index'))
         ->assertSee('href="'.route('packs.index', array_key_first(config('series'))).'" data-nav="packs"', false);
 })->with(['nothing remembered' => [null], 'a game that no longer exists' => ['pokemon']]);
 
@@ -87,7 +87,7 @@ test('the current section is marked in the header', function () {
     expect($this->get(route('cards.index', 'yugioh'))->getContent())
         ->toMatch('/data-nav="cards"\s+aria-current="page"/');
 
-    expect($this->get(route('public-deck'))->getContent())
+    expect($this->get(route('decks.index'))->getContent())
         ->toMatch('/data-nav="public-decks"\s+aria-current="page"/')
         ->not->toMatch('/data-nav="cards"\s+aria-current="page"/');
 
@@ -97,7 +97,7 @@ test('the current section is marked in the header', function () {
 });
 
 test('a skip link jumps to the main content', function () {
-    $this->get(route('public-deck'))
+    $this->get(route('decks.index'))
         ->assertSee('href="#content"', false)
         ->assertSee('<main id="content"', false);
 });
@@ -118,10 +118,10 @@ test('game pages offer the same section in the other game', function (string $ro
 ]);
 
 test('pages without a game have no game switch', function () {
-    $this->get(route('public-deck'))->assertOk()->assertDontSee('data-game-switch', false);
+    $this->get(route('decks.index'))->assertOk()->assertDontSee('data-game-switch', false);
 
     $deck = Deck::factory()->create(['game' => 'yugioh']);
-    $this->actingAs($deck->user)->get(route('decks'))->assertOk()->assertDontSee('data-game-switch', false);
+    $this->actingAs($deck->user)->get(route('decks.mine'))->assertOk()->assertDontSee('data-game-switch', false);
     $this->actingAs($deck->user)->get(route('decks.edit', $deck))->assertOk()->assertDontSee('data-game-switch', false);
 });
 
@@ -136,7 +136,7 @@ test('a page can place the game switch itself', function () {
 // --- Footer and flash messages -----------------------------------------------------------------
 
 test('the footer credits the data and links to the source', function () {
-    $this->get(route('public-deck'))->assertOk()
+    $this->get(route('decks.index'))->assertOk()
         ->assertSee('DeckTrove is a showcase project built with Laravel, Tailwind CSS, Alpine.js and MySQL.')
         ->assertSee('href="https://github.com/CatherineSzobel/DeckTrove"', false)
         ->assertSee('Source on GitHub')
@@ -147,13 +147,13 @@ test('the footer credits the data and links to the source', function () {
 });
 
 test('flash messages are shown as notices', function (string $key) {
-    $this->withSession([$key => 'Deck saved successfully!'])->get(route('public-deck'))->assertOk()
+    $this->withSession([$key => 'Deck saved successfully!'])->get(route('decks.index'))->assertOk()
         ->assertSee('data-flash="'.$key.'"', false)
         ->assertSee('Deck saved successfully!');
 })->with(['success', 'warning', 'error']);
 
 test('notices get their look from the notice class and their type, and errors are alerts', function () {
-    $html = $this->withSession(['success' => 'Saved.', 'error' => 'Oops.'])->get(route('public-deck'))->getContent();
+    $html = $this->withSession(['success' => 'Saved.', 'error' => 'Oops.'])->get(route('decks.index'))->getContent();
 
     expect($html)
         ->toMatch('/role="status" data-flash="success"[^>]*class="notice/')
@@ -163,7 +163,7 @@ test('notices get their look from the notice class and their type, and errors ar
 });
 
 test('flash messages are escaped', function () {
-    $this->withSession(['success' => '<b>bold</b>'])->get(route('public-deck'))->assertOk()
+    $this->withSession(['success' => '<b>bold</b>'])->get(route('decks.index'))->assertOk()
         ->assertSee('&lt;b&gt;bold&lt;/b&gt;', false)
         ->assertDontSee('<b>bold</b>', false);
 });
@@ -179,17 +179,17 @@ function mainNav(string $html): string
 }
 
 test('the mobile menu is part of the main navigation and has the account links', function () {
-    expect(mainNav($this->get(route('public-deck'))->getContent()))
+    expect(mainNav($this->get(route('decks.index'))->getContent()))
         ->toContain('id="mobileMenu"')
         ->toContain('href="'.route('register').'"');
 
-    expect(mainNav($this->actingAs(User::factory()->create())->get(route('decks'))->getContent()))
+    expect(mainNav($this->actingAs(User::factory()->create())->get(route('decks.mine'))->getContent()))
         ->toContain('id="mobileMenu"')
-        ->toContain('href="'.route('decks').'"');
+        ->toContain('href="'.route('decks.mine').'"');
 });
 
 test('menus close with Escape and give focus back', function () {
-    $html = $this->actingAs(User::factory()->create())->get(route('decks'))->getContent();
+    $html = $this->actingAs(User::factory()->create())->get(route('decks.mine'))->getContent();
 
     expect($html)
         ->toContain('x-ref="button"')
@@ -198,11 +198,11 @@ test('menus close with Escape and give focus back', function () {
 });
 
 test('the theme toggle is labelled by the state it switches', function () {
-    $this->get(route('public-deck'))->assertSee('aria-label="Dark mode"', false);
+    $this->get(route('decks.index'))->assertSee('aria-label="Dark mode"', false);
 });
 
 test('header links have a full-size touch target', function () {
-    expect($this->get(route('public-deck'))->getContent())->toMatch('/data-nav="cards"[^>]*min-h-11/');
+    expect($this->get(route('decks.index'))->getContent())->toMatch('/data-nav="cards"[^>]*min-h-11/');
 });
 
 test('the footer stays at the bottom of short pages', function () {
@@ -210,8 +210,8 @@ test('the footer stays at the bottom of short pages', function () {
 });
 
 test('logged in users get a link to their decks', function () {
-    $this->actingAs(User::factory()->create())->get(route('decks'))
-        ->assertSee('href="'.route('decks').'"', false);
+    $this->actingAs(User::factory()->create())->get(route('decks.mine'))
+        ->assertSee('href="'.route('decks.mine').'"', false);
 });
 
 test('the dashboard has no game switch', function () {
@@ -223,15 +223,15 @@ test('the dashboard has no game switch', function () {
 test('the logo goes to the welcome page for guests and to the dashboard when logged in', function () {
     $logo = '/<a href="([^"]*)" class="focus-ring flex items-center gap-2\.5 rounded-lg">/';
 
-    preg_match($logo, $this->get(route('public-deck'))->getContent(), $guest);
-    preg_match($logo, $this->actingAs(User::factory()->create())->get(route('public-deck'))->getContent(), $member);
+    preg_match($logo, $this->get(route('decks.index'))->getContent(), $guest);
+    preg_match($logo, $this->actingAs(User::factory()->create())->get(route('decks.index'))->getContent(), $member);
 
     expect($guest[1])->toBe(route('index'))
         ->and($member[1])->toBe(route('dashboard'));
 });
 
 test('the page knows when JS runs, so collapsed content stays visible without it', function () {
-    $this->get(route('public-deck'))->assertOk()
+    $this->get(route('decks.index'))->assertOk()
         ->assertSee('document.documentElement.classList.add("js");', false);
 
     expect(file_get_contents(resource_path('css/app.css')))

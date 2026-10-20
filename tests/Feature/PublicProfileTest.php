@@ -68,11 +68,11 @@ test('an empty profile says so, and points the owner to their decks', function (
     $this->get(route('users.show', $user))
         ->assertSee('No public decks yet')
         ->assertSee('newcomer hasn’t shared any decks yet.')
-        ->assertDontSee(route('decks'));
+        ->assertDontSee(route('decks.mine'));
 
     $this->actingAs($user)->get(route('users.show', $user))
         ->assertSee('You haven’t shared a deck yet')
-        ->assertSee(route('decks'));
+        ->assertSee(route('decks.mine'));
 });
 
 test('your edit profile page links to your public profile', function () {

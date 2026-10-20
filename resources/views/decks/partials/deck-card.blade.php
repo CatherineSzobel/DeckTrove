@@ -10,5 +10,5 @@
 </div>
 
 @if ($decks->hasPages())
-<div class="mt-8">{{ $decks->withPath($decksPath ?? route('public-deck'))->links() }}</div>
+<div class="mt-8">{{ $decks->withPath($decksPath ?? route('decks.index'))->links() }}</div>
 @endif

@@ -8,7 +8,6 @@ use App\Decks\DeckStats;
 use App\Decks\PublicDeckQuery;
 use App\Decks\StatsCharts;
 use App\Http\Requests\SaveDeckRequest;
-use App\Models\Comment;
 use App\Models\Deck;
 use App\Services\CardService;
 use App\Services\DeckService;
@@ -56,7 +55,7 @@ class DeckController extends Controller
         $decks = $request->user()->decks()->withCardCount()->withCount('likes')->latest()->get();
         $public = $decks->where('is_public', true);
 
-        return view('decks.mydecks', [
+        return view('decks.my-decks', [
             'decks' => $decks,
             'stats' => [
                 'decks' => $decks->count(),
@@ -131,7 +130,7 @@ class DeckController extends Controller
 
         $this->deckService->save($deck, $request->validated(), $request->cardCounts());
 
-        return redirect()->route('decks')->with('success', $this->savedMessage($deck, $request));
+        return redirect()->route('decks.mine')->with('success', $this->savedMessage($deck, $request));
     }
 
     public function edit(Request $request, Deck $deck)
@@ -199,10 +198,9 @@ class DeckController extends Controller
 
     public function destroy(Deck $deck)
     {
-        Comment::deleteOnDecks([$deck->id]);
         $deck->delete();
 
-        return redirect()->route('decks')->with('success', 'Deck deleted.');
+        return redirect()->route('decks.mine')->with('success', 'Deck deleted.');
     }
 
     private function searchCards(Request $request, string $series)

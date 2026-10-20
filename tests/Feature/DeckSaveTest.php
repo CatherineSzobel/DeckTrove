@@ -38,7 +38,7 @@ test('a deck is saved with card counts per zone', function () {
     $this->actingAs($user)->post(route('decks.store', 'yugioh'), [
         'deck_title' => 'Spellcasters',
         'cards' => cardsPayload(['main' => [DARK_MAGICIAN, DARK_MAGICIAN, BLUE_EYES], 'side' => [BLUE_EYES]]),
-    ])->assertRedirect(route('decks'));
+    ])->assertRedirect(route('decks.mine'));
 
     $deck = $user->decks()->sole();
     expect($deck)->name->toBe('Spellcasters')->game->toBe('yugioh');

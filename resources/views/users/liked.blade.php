@@ -30,7 +30,7 @@
         @elseif ($page->isOwner())
         <x-empty-state title="You haven’t liked any decks yet">
             Like a deck on Public decks and it shows up here.
-            <x-slot:actions><a href="{{ route('public-deck') }}" class="btn-primary">Browse public decks</a></x-slot:actions>
+            <x-slot:actions><a href="{{ route('decks.index') }}" class="btn-primary">Browse public decks</a></x-slot:actions>
         </x-empty-state>
         @else
         <x-empty-state title="No liked decks yet">{{ $user->username }} hasn’t liked any decks yet.</x-empty-state>

@@ -10,7 +10,7 @@ use App\ViewModels\PackViewModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
-class PacksController extends Controller
+class PackController extends Controller
 {
     private const VIEWS = ['full' => 'Full', 'list' => 'List'];
 

@@ -134,7 +134,7 @@ test('the liked page says when nothing is liked yet', function () {
 
     expect(deckListPage('users.liked', $user, [], $user)->getContent())
         ->toContain('You haven’t liked any decks yet')
-        ->toContain(route('public-deck'));
+        ->toContain(route('decks.index'));
     expect(deckListPage('users.liked', $user)->getContent())
         ->toContain('No liked decks yet')
         ->toContain('newcomer hasn’t liked any decks yet.');

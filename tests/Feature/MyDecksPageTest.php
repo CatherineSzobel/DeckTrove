@@ -15,7 +15,7 @@ test('the stat chips count decks per series, public decks and likes received', f
     DeckLike::factory()->count(2)->for($shared)->create();
     DeckLike::factory()->count(5)->for($private)->create();
 
-    $html = $this->actingAs($user)->get(route('decks'))->assertOk()->getContent();
+    $html = $this->actingAs($user)->get(route('decks.mine'))->assertOk()->getContent();
 
     expect($html)
         ->toMatch('/>3<\/b>\s*decks\s*</')
@@ -29,7 +29,7 @@ test('each deck is an owner card with visibility, edit and delete', function () 
     $user = User::factory()->create(['username' => 'deckmaster']);
     $deck = Deck::factory()->for($user)->create(['name' => 'Secret Plan']);
 
-    $this->actingAs($user)->get(route('decks'))
+    $this->actingAs($user)->get(route('decks.mine'))
         ->assertSee('Secret Plan')
         ->assertSee('Private')
         ->assertSee(route('decks.edit', $deck))
@@ -41,7 +41,7 @@ test('search and series filter the cards in place', function () {
     $user = User::factory()->create();
     Deck::factory()->for($user)->create(['name' => 'Dragon Rush', 'game' => 'yugioh']);
 
-    $this->actingAs($user)->get(route('decks'))
+    $this->actingAs($user)->get(route('decks.mine'))
         ->assertSee('x-model="q"', false)
         ->assertSee('x-show="matches(0)"', false)
         ->assertSee('dragon rush', false)
@@ -50,7 +50,7 @@ test('search and series filter the cards in place', function () {
 });
 
 test('without decks, the page offers to build the first one', function () {
-    $this->actingAs(User::factory()->create())->get(route('decks'))
+    $this->actingAs(User::factory()->create())->get(route('decks.mine'))
         ->assertSee('You don’t have any decks yet')
         ->assertSee('Create your first deck')
         ->assertDontSee('x-model="q"', false);
@@ -62,7 +62,7 @@ test('the controller hands My decks its stats and search data', function () {
     Deck::factory()->for($user)->create(['game' => 'magic', 'name' => 'Burn', 'description' => null]);
     DeckLike::factory()->count(2)->for($shared)->create();
 
-    $this->actingAs($user)->get(route('decks'))
+    $this->actingAs($user)->get(route('decks.mine'))
         ->assertViewHas('stats', ['decks' => 2, 'series' => ['yugioh' => 1, 'magic' => 1], 'public' => 1, 'likes_received' => 2])
         ->assertViewHas('searchData', [
             ['game' => 'magic', 'text' => 'burn'],

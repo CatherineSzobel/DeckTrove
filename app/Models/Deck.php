@@ -30,6 +30,13 @@ class Deck extends Model implements Commentable
         ];
     }
 
+    protected static function booted(): void
+    {
+        // Comments have no foreign key to their deck (their target is polymorphic), so they go with it here. Cards and
+        // likes go by the database's cascading deletes.
+        static::deleting(fn (Deck $deck) => Comment::deleteOnDecks([$deck->id]));
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

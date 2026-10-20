@@ -4,9 +4,9 @@
     <div x-data="cardPreview" @scroll.window.passive="hidePreview()" class="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6">
         <nav aria-label="Breadcrumb" class="flex flex-wrap items-center gap-2 text-sm text-muted">
             @if ($isOwner)
-            <a href="{{ route('decks') }}" class="focus-ring text-body hover:text-ink">My decks</a>
+            <a href="{{ route('decks.mine') }}" class="focus-ring text-body hover:text-ink">My decks</a>
             @else
-            <a href="{{ route('public-deck') }}" class="focus-ring text-body hover:text-ink">Public decks</a>
+            <a href="{{ route('decks.index') }}" class="focus-ring text-body hover:text-ink">Public decks</a>
             @endif
             <span aria-hidden="true">/</span>
             <span aria-current="page" class="text-ink">{{ $deck->name }}</span>

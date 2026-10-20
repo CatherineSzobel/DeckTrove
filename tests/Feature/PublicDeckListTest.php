@@ -23,7 +23,7 @@ test('newest is the default order and private decks are never listed', function 
     Deck::factory()->public()->create(['name' => 'New', 'created_at' => now()->subDay()]);
     Deck::factory()->create(['name' => 'Private']);
 
-    expect(publicDeckNames($this->get(route('public-deck'))))->toBe(['New', 'Old']);
+    expect(publicDeckNames($this->get(route('decks.index'))))->toBe(['New', 'Old']);
 });
 
 test('most liked sorts by all-time likes, then newest', function () {
@@ -33,7 +33,7 @@ test('most liked sorts by all-time likes, then newest', function () {
     DeckLike::factory()->for($few)->create();
     DeckLike::factory()->count(3)->for($many)->create();
 
-    expect(publicDeckNames($this->get(route('public-deck', ['sort' => 'liked']))))->toBe(['Many', 'Few', 'None']);
+    expect(publicDeckNames($this->get(route('decks.index', ['sort' => 'liked']))))->toBe(['Many', 'Few', 'None']);
 });
 
 test('trending sorts by likes in the last 7 days, then all-time likes, then newest', function () {
@@ -45,7 +45,7 @@ test('trending sorts by likes in the last 7 days, then all-time likes, then newe
     DeckLike::factory()->count(2)->for($hot)->create(['created_at' => now()->subDays(2)]);
     DeckLike::factory()->for($edge)->create(['created_at' => now()->subDays(8)]);
 
-    $response = $this->get(route('public-deck', ['sort' => 'trending']));
+    $response = $this->get(route('decks.index', ['sort' => 'trending']));
 
     expect(publicDeckNames($response))->toBe(['Hot', 'Favourite', 'Edge', 'New'])
         ->and($response->viewData('decks')->first()->recent_likes_count)->toBe(2);
@@ -53,7 +53,7 @@ test('trending sorts by likes in the last 7 days, then all-time likes, then newe
     // Six days later, Hot's likes are 8 days old and no longer count as recent.
     $this->travel(6)->days();
 
-    expect(publicDeckNames($this->get(route('public-deck', ['sort' => 'trending']))))->toBe(['Favourite', 'Hot', 'Edge', 'New']);
+    expect(publicDeckNames($this->get(route('decks.index', ['sort' => 'trending']))))->toBe(['Favourite', 'Hot', 'Edge', 'New']);
 });
 
 test('search matches deck name, description and username, case-insensitively', function () {
@@ -63,7 +63,7 @@ test('search matches deck name, description and username, case-insensitively', f
     Deck::factory()->public()->create(['name' => 'Elves', 'description' => 'Go wide.']);
     Deck::factory()->create(['name' => 'Secret Dragon']);
 
-    $response = $this->get(route('public-deck', ['q' => '  dRaGoN ']));
+    $response = $this->get(route('decks.index', ['q' => '  dRaGoN ']));
 
     expect(publicDeckNames($response))->toEqualCanonicalizing(['Dragon Control', 'Burn', 'Mill'])
         ->and($response->viewData('filters')['q'])->toBe('dRaGoN');
@@ -75,7 +75,7 @@ test('the format filter works within a game, and casual means no format', functi
     Deck::factory()->public()->create(['name' => 'Casual', 'game' => 'yugioh', 'format' => null]);
     Deck::factory()->public()->create(['name' => 'Modern', 'game' => 'magic', 'format' => 'modern']);
 
-    $names = fn (array $params) => publicDeckNames($this->get(route('public-deck', $params)));
+    $names = fn (array $params) => publicDeckNames($this->get(route('decks.index', $params)));
 
     expect($names(['game' => 'yugioh', 'format' => 'tcg']))->toBe(['TCG'])
         ->and($names(['game' => 'yugioh', 'format' => 'casual']))->toBe(['Casual'])
@@ -91,7 +91,7 @@ test('liked shows only the decks the viewer liked', function () {
     DeckLike::factory()->for($liked)->for($viewer)->create();
     DeckLike::factory()->for($other)->create();
 
-    $response = $this->actingAs($viewer)->get(route('public-deck', ['liked' => 1]));
+    $response = $this->actingAs($viewer)->get(route('decks.index', ['liked' => 1]));
 
     expect(publicDeckNames($response))->toBe(['Liked'])
         ->and($response->viewData('filters')['liked'])->toBeTrue();
@@ -100,7 +100,7 @@ test('liked shows only the decks the viewer liked', function () {
 test('liked is ignored for guests', function () {
     Deck::factory()->public()->count(2)->create();
 
-    $response = $this->get(route('public-deck', ['liked' => 1]));
+    $response = $this->get(route('decks.index', ['liked' => 1]));
 
     expect(publicDeckNames($response))->toHaveCount(2)
         ->and($response->viewData('filters')['liked'])->toBeFalse();
@@ -109,7 +109,7 @@ test('liked is ignored for guests', function () {
 test('invalid parameters fall back to the defaults', function () {
     Deck::factory()->public()->count(2)->create();
 
-    $this->get(route('public-deck', ['sort' => 'bogus', 'game' => 'pokemon', 'format' => 'tcg', 'q' => '   ']))
+    $this->get(route('decks.index', ['sort' => 'bogus', 'game' => 'pokemon', 'format' => 'tcg', 'q' => '   ']))
         ->assertOk()
         ->assertViewHas('filters', DEFAULT_FILTERS)
         ->assertViewHas('decks', fn ($decks) => $decks->total() === 2);
@@ -126,17 +126,17 @@ test('array-valued parameters are ignored instead of failing', function () {
 test('long searches are cut to 100 characters and wildcard characters do no harm', function () {
     Deck::factory()->public()->create(['name' => '100% Burn']);
 
-    $this->get(route('public-deck', ['q' => str_repeat('a', 300)]))
+    $this->get(route('decks.index', ['q' => str_repeat('a', 300)]))
         ->assertOk()
         ->assertViewHas('filters', fn (array $filters) => $filters['q'] === str_repeat('a', 100));
 
-    $this->get(route('public-deck', ['q' => '%_']))->assertOk();
+    $this->get(route('decks.index', ['q' => '%_']))->assertOk();
 });
 
 test('page links keep the filters and the sort', function () {
     Deck::factory()->public()->count(19)->create(['game' => 'magic']);
 
-    $response = $this->get(route('public-deck', ['game' => 'magic', 'sort' => 'liked']));
+    $response = $this->get(route('decks.index', ['game' => 'magic', 'sort' => 'liked']));
     $next = $response->viewData('decks')->nextPageUrl();
 
     expect($next)->toContain('game=magic')->toContain('sort=liked')->toContain('page=2');
@@ -149,7 +149,7 @@ test("the list exposes like counts, the viewer's likes, sorts and formats", func
     DeckLike::factory()->for($deck)->create();
 
     $this->actingAs($viewer)
-        ->get(route('public-deck', ['game' => 'yugioh']))
+        ->get(route('decks.index', ['game' => 'yugioh']))
         ->assertViewHas('decks', function ($decks) {
             $deck = $decks->first();
 
@@ -164,7 +164,7 @@ test("the list exposes like counts, the viewer's likes, sorts and formats", func
 test('guests see like counts but no liked state, and no formats without a game', function () {
     DeckLike::factory()->create();
 
-    $this->get(route('public-deck'))
+    $this->get(route('decks.index'))
         ->assertViewHas('decks', fn ($decks) => (int) $decks->first()->likes_count === 1 && ! $decks->first()->liked_by_viewer)
         ->assertViewHas('formats', []);
 });
@@ -211,7 +211,7 @@ test('url links to the page the query is for, with the changed filters', functio
     $user = User::factory()->create(['username' => 'deckmaster']);
     $query = publicDeckQuery(['q' => 'burn', 'sort' => 'liked', 'game' => 'magic']);
 
-    expect($query->url(['sort' => 'trending']))->toBe(route('public-deck', ['q' => 'burn', 'sort' => 'trending', 'game' => 'magic']))
+    expect($query->url(['sort' => 'trending']))->toBe(route('decks.index', ['q' => 'burn', 'sort' => 'trending', 'game' => 'magic']))
         ->and($query->forUser($user)->url(['game' => null]))->toBe(route('users.decks', [$user, 'sort' => 'liked']));
 });
 

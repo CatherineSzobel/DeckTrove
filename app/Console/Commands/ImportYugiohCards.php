@@ -27,8 +27,6 @@ class ImportYugiohCards extends Command
 
     protected $description = 'Import Yu-Gi-Oh! sets and cards into the database';
 
-    private const API = 'https://db.ygoprodeck.com/api/v7';
-
     public function handle(): int
     {
         // Decoding the full card dump needs far more memory than a web request is allowed.
@@ -132,7 +130,7 @@ class ImportYugiohCards extends Command
     {
         if ($this->option('fetch')) {
             $this->info("Downloading $what from YGOPRODeck...");
-            $response = Http::timeout(120)->get(self::API.$endpoint);
+            $response = Http::timeout(120)->get(config('services.ygoprodeck.url').$endpoint);
 
             if ($response->failed()) {
                 $this->error("Downloading $what failed with status ".$response->status());

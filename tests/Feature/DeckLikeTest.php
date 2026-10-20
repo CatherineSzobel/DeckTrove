@@ -37,16 +37,16 @@ test('a user can like and unlike a public deck', function () {
     $user = User::factory()->create();
 
     $this->actingAs($user)
-        ->from(route('public-deck'))
+        ->from(route('decks.index'))
         ->post(route('decks.like', $deck))
-        ->assertRedirect(route('public-deck'));
+        ->assertRedirect(route('decks.index'));
 
     expect($deck->likes()->where('user_id', $user->id)->exists())->toBeTrue();
 
     $this->actingAs($user)
-        ->from(route('public-deck'))
+        ->from(route('decks.index'))
         ->delete(route('decks.unlike', $deck))
-        ->assertRedirect(route('public-deck'));
+        ->assertRedirect(route('decks.index'));
 
     expect($deck->likes()->exists())->toBeFalse();
 });

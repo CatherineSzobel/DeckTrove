@@ -26,7 +26,7 @@ class SiteHeader extends Component
         $this->links = array_values(array_filter([
             ['key' => 'cards', 'label' => 'Cards', 'href' => route('cards.index', $series), 'active' => request()->routeIs('cards.*')],
             ['key' => 'packs', 'label' => 'Packs', 'href' => route('packs.index', $series), 'active' => request()->routeIs('packs.*')],
-            ['key' => 'public-decks', 'label' => 'Public decks', 'href' => route('public-deck'), 'active' => request()->routeIs('public-deck')],
+            ['key' => 'public-decks', 'label' => 'Public decks', 'href' => route('decks.index'), 'active' => request()->routeIs('decks.index')],
             auth()->check()
                 ? ['key' => 'deck-builder', 'label' => 'Deck builder', 'href' => route('decks.builder', $series), 'active' => request()->routeIs('decks.builder', 'decks.edit')]
                 : null,
