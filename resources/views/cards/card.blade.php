@@ -1,4 +1,4 @@
-{{-- A card's page: the image (both faces for double-faced cards), type, stats, text, printings and related cards. --}}
+{{-- A card's page: the image (both faces for double-faced cards; it tilts toward the pointer), type, stats, text, printings and related cards. --}}
 
 <x-layout :title="$card->name()" :game-switch="false" :js="['resources/js/card-page.js']">
     <div class="mx-auto flex max-w-7xl flex-col gap-10 px-4 py-8 sm:px-6">
@@ -10,8 +10,11 @@
 
         <div class="flex flex-wrap items-start gap-14">
             <div class="card-glow w-full max-w-[400px] flex-[1_1_320px]" @if ($card->hasFaces()) x-data="cardFaces(@js($card->faceImages()))" @endif>
-                <img src="{{ $card->image() }}" @if ($card->hasFaces()) :src="current" @endif alt="{{ $card->name() }}"
-                    class="relative aspect-[59/86] w-full rounded-[14px] object-cover shadow-[0_30px_60px_rgba(0,0,0,0.45)]">
+                {{-- Leans toward the pointer with a glare; holo rarities add a foil sheen (cardTilt, .card-holo). --}}
+                <div x-data="cardTilt" @pointermove="move($event)" @pointerleave="reset()" class="card-holo" @if ($card->isHolo()) data-holo @endif>
+                    <img src="{{ $card->image() }}" @if ($card->hasFaces()) :src="current" @endif alt="{{ $card->name() }}"
+                        class="relative aspect-[59/86] w-full rounded-[14px] object-cover shadow-[0_30px_60px_rgba(0,0,0,0.45)]">
+                </div>
                 @if ($card->hasFaces())
                 <button type="button" @click="next()" x-text="label" class="js-only btn-secondary relative mt-4 w-full">Show other face</button>
                 @endif

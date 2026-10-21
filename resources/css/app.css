@@ -217,6 +217,55 @@ html:not(.js) .js-only {
         }
     }
 
+    /* The card page's big card (x-data="cardTilt", resources/js/cards/tilt.js): it leans toward the pointer with a
+       soft glare, and holo rarities (data-holo, the series' holo_rarities) add a rainbow foil band. Only with a
+       hovering pointer and without reduced motion; otherwise the card looks as it always did. */
+    .card-holo {
+        --tilt-x: 0deg;
+        --tilt-y: 0deg;
+        --shine-x: 50%;
+        --shine-y: 50%;
+
+        @apply relative rounded-[14px];
+
+        &::after {
+            @apply pointer-events-none absolute inset-0 rounded-[14px] opacity-0 content-[''];
+            background: radial-gradient(circle at var(--shine-x) var(--shine-y), rgba(255, 255, 255, 0.5), transparent 55%);
+            mix-blend-mode: soft-light;
+        }
+
+        &[data-holo]::after {
+            background:
+                radial-gradient(circle at var(--shine-x) var(--shine-y), rgba(255, 255, 255, 0.45), transparent 50%),
+                linear-gradient(115deg, transparent 25%, #FF4FA3 38%, #FFD84F 46%, #4FFFC1 54%, #4FA8FF 62%, transparent 75%);
+            background-position: center, var(--shine-x) var(--shine-y);
+            background-size: 100% 100%, 300% 300%;
+            mix-blend-mode: color-dodge;
+        }
+
+        @media (prefers-reduced-motion: no-preference) and (hover: hover) {
+            transform: perspective(900px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y));
+            transition: transform 400ms ease-out;
+
+            &::after {
+                transition: opacity 300ms ease-out;
+            }
+
+            &:hover {
+                transition-duration: 120ms;
+                will-change: transform;
+
+                &::after {
+                    opacity: 1;
+                }
+            }
+
+            &[data-holo]:hover::after {
+                opacity: 0.35;
+            }
+        }
+    }
+
     /* Results that are being replaced (aria-busy while the new ones load). */
     .results-region[aria-busy="true"] {
         @apply opacity-60 transition-opacity;
