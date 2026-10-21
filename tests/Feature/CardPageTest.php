@@ -99,6 +99,15 @@ test('related cards are shown under the series label, and hidden when there are 
     $this->get(route('cards.show', ['yugioh', '33333333']))->assertDontSee('More from this archetype');
 });
 
+test('hovering or focusing a related card shows its details', function () {
+    $content = $this->get(route('cards.show', ['yugioh', '46986414']))->assertOk()->getContent();
+
+    expect($content)
+        ->toMatch('/<section aria-labelledby="related" x-data="cardPreview" @scroll\.window\.passive="hideOnScroll\(\)"/')
+        ->toMatch('/aria-label="Dark Magician Girl" class="card-tile"\s+x-data="\{ card: [^"]*Dark Magician Girl[^"]*\}"\s+@mouseenter="showPreview\(card, \$el\)" @mouseleave="hidePreview\(\)"\s+@focus="showPreview\(card, \$el\)" @blur="hidePreview\(\)"/')
+        ->toContain('data-card-preview');
+});
+
 test('a magic card shows its type line, mana cost, power and toughness', function () {
     fakeScryfallCard(['mana_cost' => '{G}', 'type_line' => 'Creature — Elf Druid', 'power' => '1', 'toughness' => '1',
         'image_uris' => ['normal' => 'https://cards.scryfall.io/normal/front/elves.jpg', 'small' => 'https://cards.scryfall.io/small/front/elves.jpg']]);

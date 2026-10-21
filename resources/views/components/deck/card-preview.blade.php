@@ -1,5 +1,6 @@
 {{--
-    The card preview panel shared by the deck builder and the deck page: one fixed panel placed next to the hovered or
+    The card preview panel shared by the deck builder, the deck page, the card database, the pack page and the card
+    page's related cards: one fixed panel placed next to the hovered or
     focused card (state and placement: cardPreview() in resources/js/deckbuilder/preview.js). Must sit inside the
     Alpine component that has that state; `preview` is a CardViewModel::builderCard() array.
 --}}

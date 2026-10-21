@@ -54,15 +54,21 @@
         </div>
 
         @if ($setCards->isNotEmpty())
-        <section aria-labelledby="related" class="flex flex-col gap-4 border-t border-line pt-8">
+        {{-- Hovering or focusing a related card shows its details in the shared card preview. --}}
+        <section aria-labelledby="related" x-data="cardPreview" @scroll.window.passive="hideOnScroll()" class="flex flex-col gap-4 border-t border-line pt-8">
             <h2 id="related" class="heading-display text-[28px] text-ink">{{ $relatedLabel }}</h2>
             <div class="grid grid-cols-[repeat(auto-fill,minmax(120px,1fr))] gap-3.5">
                 @foreach ($setCards as $setCard)
-                <a href="{{ $setCard->link() }}" aria-label="{{ $setCard->name() }}" class="card-tile">
+                <a href="{{ $setCard->link() }}" aria-label="{{ $setCard->name() }}" class="card-tile"
+                    x-data="{ card: @js($setCard->builderCard()) }"
+                    @mouseenter="showPreview(card, $el)" @mouseleave="hidePreview()"
+                    @focus="showPreview(card, $el)" @blur="hidePreview()">
                     <img src="{{ $setCard->imageSmall() }}" alt="" loading="lazy" class="aspect-[59/86] w-full rounded-lg object-cover">
                 </a>
                 @endforeach
             </div>
+
+            <x-deck.card-preview />
         </section>
         @endif
     </div>

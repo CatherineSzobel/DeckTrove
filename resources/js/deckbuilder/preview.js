@@ -8,8 +8,8 @@
  */
 /**
  * Alpine state for the shared card preview (resources/views/components/deck/card-preview.blade.php): one panel,
- * shown next to the hovered or focused card. Used by the deck builder, the deck page, the card database and
- * the pack page.
+ * shown next to the hovered or focused card. Used by the deck builder, the deck page, the card database, the pack
+ * page and the card page's related cards.
  */
 export function cardPreview() {
     return {
