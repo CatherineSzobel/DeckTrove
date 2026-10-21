@@ -37,7 +37,8 @@ test('the showcase loop only runs without reduced motion and can be paused', fun
     $css = file_get_contents(resource_path('css/app.css'));
 
     preg_match('/@keyframes showcase-cycle\s*\{(.*?)\n\}/s', $css, $keyframes);
-    preg_match('/@media \(prefers-reduced-motion: no-preference\)\s*\{(.*?)\n        \}/s', $css, $motion);
+    // The showcase's own reduced-motion block (app.css has others, e.g. the pack deal-in).
+    preg_match('/@media \(prefers-reduced-motion: no-preference\)\s*\{(\s*animation: showcase-cycle.*?)\n        \}/s', $css, $motion);
 
     expect($keyframes[1] ?? '')->toContain('var(--back)')->toContain('var(--front)')->toContain('var(--gone)')
         ->and($motion[1] ?? '')->toContain('animation: showcase-cycle 20s ease-in-out infinite')

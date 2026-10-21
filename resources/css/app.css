@@ -425,6 +425,28 @@ html:not(.js) .js-only {
         @apply focus-ring rounded-2xl border-[1.5px] border-line bg-surface transition hover:border-accent focus-visible:border-accent motion-safe:hover:-translate-y-0.5 motion-safe:focus-visible:-translate-y-0.5;
     }
 
+    /* The pack page's cards deal in like a booster being opened: the first 12 tiles, 40 ms apart. `backwards` only
+       holds the first frame during the delay, so the hover lift still works afterwards; pack-page.js drops
+       data-deal after the deal, so filtering doesn't replay it. */
+    @media (prefers-reduced-motion: no-preference) {
+        [data-deal] > .pack-tile:nth-child(-n+12) {
+            animation: pack-deal 0.4s ease-out backwards;
+            animation-delay: calc(var(--deal, 0) * 40ms);
+        }
+
+        [data-deal] > .pack-tile:nth-child(2) { --deal: 1; }
+        [data-deal] > .pack-tile:nth-child(3) { --deal: 2; }
+        [data-deal] > .pack-tile:nth-child(4) { --deal: 3; }
+        [data-deal] > .pack-tile:nth-child(5) { --deal: 4; }
+        [data-deal] > .pack-tile:nth-child(6) { --deal: 5; }
+        [data-deal] > .pack-tile:nth-child(7) { --deal: 6; }
+        [data-deal] > .pack-tile:nth-child(8) { --deal: 7; }
+        [data-deal] > .pack-tile:nth-child(9) { --deal: 8; }
+        [data-deal] > .pack-tile:nth-child(10) { --deal: 9; }
+        [data-deal] > .pack-tile:nth-child(11) { --deal: 10; }
+        [data-deal] > .pack-tile:nth-child(12) { --deal: 11; }
+    }
+
     /* One square in the numbered pagination (x-pagination). */
     .page-link {
         @apply focus-ring flex h-11 min-w-11 items-center justify-center rounded-[10px] border border-line px-2 text-ink hover:bg-surface-2;
@@ -574,6 +596,11 @@ html:not(.js) .js-only {
     29% { opacity: 1; transform: var(--front); z-index: 2; }
     50% { opacity: 1; transform: var(--front); z-index: 3; }
     54%, 100% { opacity: 0; transform: var(--gone); z-index: 3; }
+}
+
+/* One pack tile dealt onto the table (the pack page's deal-in): from slightly low, turned and small, to its place. */
+@keyframes pack-deal {
+    from { opacity: 0; transform: translateY(16px) rotate(-2deg) scale(0.96); }
 }
 
 /*

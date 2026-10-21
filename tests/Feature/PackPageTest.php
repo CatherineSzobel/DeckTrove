@@ -51,6 +51,17 @@ test('the cards are tiles with their name and rarity for filtering', function ()
         ->toMatch('/data-no-matches x-ref="noMatches"\s+hidden/');
 });
 
+test('the first tiles deal in once, and keep their hover lift afterwards', function () {
+    expect(lobPage())->toContain('x-ref="grid" data-deal');
+
+    $css = file_get_contents(resource_path('css/app.css'));
+
+    expect($css)->toMatch('/@media \(prefers-reduced-motion: no-preference\)\s*\{[^@]*\[data-deal\] > \.pack-tile:nth-child\(-n\+12\)\s*\{\s*animation: pack-deal 0\.4s ease-out backwards/')
+        ->toContain('animation-delay: calc(var(--deal, 0) * 40ms)')
+        ->toContain('@keyframes pack-deal')
+        ->and(substr_count($css, 'animation: pack-deal'))->toBe(1);
+});
+
 test('the name filter hides the other cards on the server', function () {
     expect(lobPage(['name' => 'DARK']))
         ->toContain('value="DARK"')

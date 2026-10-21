@@ -1,10 +1,11 @@
 /**
  * Pack page (resources/views/packs/pack.blade.php): filters the card tiles as you type or pick a rarity, and keeps
  * the URL in sync, so the server's ?name=&rarity= filter and this one always agree. Hovering or focusing a tile shows
- * the card preview.
+ * the card preview. The first tiles deal in once.
  */
 import { buildUrl } from "./cards/query.js";
 import { cardPreview } from "./deckbuilder/preview.js";
+import { endDeal } from "./packs/deal.js";
 import { countLabel, matchesCard } from "./packs/filter.js";
 
 document.addEventListener("alpine:init", () => {
@@ -16,7 +17,10 @@ document.addEventListener("alpine:init", () => {
 
         init() {
             // $refs aren't registered yet inside init().
-            this.$nextTick(() => this.filter());
+            this.$nextTick(() => {
+                this.filter();
+                endDeal(this.$refs.grid);
+            });
         },
 
         get countLabel() {

@@ -51,7 +51,7 @@
                 <p aria-live="polite" x-text="countLabel" class="ml-auto font-mono text-[13px] text-muted">{{ $countLabel }}</p>
             </form>
 
-            <div x-ref="grid" class="grid grid-cols-[repeat(auto-fill,minmax(min(180px,100%),1fr))] gap-5">
+            <div x-ref="grid" data-deal class="grid grid-cols-[repeat(auto-fill,minmax(min(180px,100%),1fr))] gap-5">
                 @foreach ($cards as $card)
                 <a href="{{ $card->link() }}" data-name="{{ $card->searchName() }}" data-rarity="{{ $card->rarity() }}" @unless ($filter->matches($card)) hidden @endunless
                     x-data="{ card: @js($card->builderCard()) }" @mouseenter="showPreview(card, $el)" @mouseleave="hidePreview()"
