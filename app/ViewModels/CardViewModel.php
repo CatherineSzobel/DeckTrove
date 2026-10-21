@@ -146,6 +146,14 @@ class CardViewModel
         return ucfirst($this->rarity());
     }
 
+    /**
+     * Whether the card page gives this card the rainbow foil sheen (the series' `holo_rarities`).
+     */
+    public function isHolo(): bool
+    {
+        return $this->mapper->isHolo($this->card, $this->config['holo_rarities'] ?? []);
+    }
+
     public function priceValue(): ?float
     {
         return $this->mapper->priceValue($this->card);

@@ -31,6 +31,12 @@ return [
         'mapper' => YugiohCardMapper::class,
         'deck_format' => YdkFormat::class,
         'link_prefix' => '/yugioh',
+        // Rarity words that get the card page's rainbow foil sheen (matched in the rarity, ignoring case). Not
+        // "Super": "Super Short Print" isn't foil.
+        'holo_rarities' => [
+            'Super Rare', 'Ultra', 'Secret', 'Ultimate', 'Ghost', 'Starlight', 'Gold', 'Platinum', 'Parallel',
+            'Starfoil', 'Shatterfoil', 'Mosaic', 'Collector', 'Grand Master',
+        ],
 
         // Order matters: it is the order the filter dropdowns are rendered in.
         'filters' => [
@@ -93,6 +99,8 @@ return [
         'mapper' => MagicCardMapper::class,
         'deck_format' => MagicTextFormat::class,
         'link_prefix' => '/magic',
+        // Scryfall's rarities are lower case; "rare" doesn't match "uncommon".
+        'holo_rarities' => ['rare', 'mythic', 'special', 'bonus'],
 
         'filters' => [
             'type' => ['label' => 'Type'],

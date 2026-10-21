@@ -30,6 +30,11 @@ test('every configured series is fully set up', function () {
             $check(is_string($config[$key] ?? null) && $config[$key] !== '', "'$key' must be a non-empty string");
         }
         $check(($config['link_prefix'] ?? null) === "/$series", "'link_prefix' must be '/$series'");
+        $check(
+            ! array_key_exists('holo_rarities', $config) || (is_array($config['holo_rarities']) && array_is_list($config['holo_rarities'])
+                && collect($config['holo_rarities'])->every(fn ($word) => is_string($word) && $word !== '')),
+            "'holo_rarities' must be a list of words"
+        );
         $check(is_file(resource_path('img/'.($config['logo'] ?? ''))), "logo resources/img/{$config['logo']} does not exist");
 
         $check($implements($config['provider'] ?? null, CardProvider::class), "'provider' must implement CardProvider");

@@ -62,6 +62,19 @@ abstract class CardMapper
 
     abstract public function rarity(array $card): ?string;
 
+    /**
+     * Whether the card gets the rainbow foil sheen on the card page: its rarity contains one of the series'
+     * `holo_rarities` words, ignoring case. Series whose foil isn't a rarity override this.
+     *
+     * @param  list<string>  $holoRarities
+     */
+    public function isHolo(array $card, array $holoRarities): bool
+    {
+        $rarity = (string) $this->rarity($card);
+
+        return $rarity !== '' && collect($holoRarities)->contains(fn (string $word) => stripos($rarity, $word) !== false);
+    }
+
     abstract public function price(array $card): ?string;
 
     /**
