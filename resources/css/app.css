@@ -389,21 +389,59 @@ html:not(.js) .js-only {
         }
     }
 
-    /* The log in / create account showcase: a soft accent glow and two tilted screenshots in a light frame. */
+    /* The screenshot showcase (x-showcase-shots): a soft accent glow and four tilted screenshots in a light frame. */
     .showcase-glow {
         @apply absolute inset-[10%_6%_6%_10%] rounded-[28px] bg-accent opacity-15 blur-[48px];
     }
 
+    /* One screenshot in the showcase stack. Both spots share one width, so moving between them is a transform:
+       back = top left, tilted -5deg; front = bottom right, tilted 4deg. Without animation, shot 1 is in front. */
     .showcase-shot {
-        @apply absolute rounded-xl border-[5px] border-[#F4EFE6] shadow-[0_24px_48px_rgba(0,0,0,0.45)];
+        --back: translate(0, 3%) rotate(-5deg);
+        --front: translate(41%, 62%) rotate(4deg);
+        --gone: translate(130%, 62%) rotate(12deg);
+
+        @apply absolute left-0 top-0 w-[71%] rounded-xl border-[5px] border-[#F4EFE6] opacity-0 shadow-[0_24px_48px_rgba(0,0,0,0.45)];
+        transform: var(--back);
 
         &[data-shot="1"] {
-            @apply left-0 top-[2%] w-[70%] -rotate-5;
+            @apply z-2 opacity-100;
+            transform: var(--front);
         }
 
         &[data-shot="2"] {
-            @apply bottom-0 right-0 w-[72%] rotate-4;
+            @apply z-1 opacity-100;
         }
+
+        /* Every shot runs the same 20 s turn, offset by 5 s: at load shot 1 is in front, shot 2 behind it, and the
+           first swap starts after 4 s. Delay = where in its turn each shot starts. */
+        @media (prefers-reduced-motion: no-preference) {
+            animation: showcase-cycle 20s ease-in-out infinite;
+
+            &[data-shot="1"] { animation-delay: -6s; }
+            &[data-shot="2"] { animation-delay: -1s; }
+            &[data-shot="3"] { animation-delay: -16s; }
+            &[data-shot="4"] { animation-delay: -11s; }
+        }
+    }
+
+    /* Pauses the showcase loop (WCAG 2.2.2). The checkbox is visually hidden, so the label shows its focus and
+       state. Nothing moves with reduced motion, so the toggle goes. */
+    .showcase-pause {
+        @apply flex min-h-11 cursor-pointer items-center gap-2 self-start rounded-full border border-line px-4 text-sm font-bold text-body motion-reduce:hidden;
+
+        &:has(:focus-visible) {
+            outline: 2px solid var(--color-accent-ink);
+            outline-offset: 2px;
+        }
+
+        &:has(:checked) {
+            @apply bg-surface-2 text-ink;
+        }
+    }
+
+    .showcase:has(.showcase-pause :checked) .showcase-shot {
+        animation-play-state: paused;
     }
 
     /* The profile card's banner (x-profile.card): a dark strip with three tilted card shapes, in both themes. */
@@ -477,6 +515,16 @@ html:not(.js) .js-only {
     .game-tile-inner {
         @apply flex w-full flex-col justify-between rounded-xl border-[1.5px] border-[#1A1715]/15 p-4;
     }
+}
+
+/* One shot's 20 s turn in the screenshot showcase (four shots, 5 s apart): fade in at the back, move to the front,
+   stay, swipe off to the right above the next one, wait out of sight. 4 % = the 0.8 s move. */
+@keyframes showcase-cycle {
+    0% { opacity: 0; transform: var(--back); z-index: 1; }
+    4%, 25% { opacity: 1; transform: var(--back); z-index: 1; }
+    29% { opacity: 1; transform: var(--front); z-index: 2; }
+    50% { opacity: 1; transform: var(--front); z-index: 3; }
+    54%, 100% { opacity: 0; transform: var(--gone); z-index: 3; }
 }
 
 /*

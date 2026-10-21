@@ -1,7 +1,7 @@
 {{-- Log in: a plain POST form (SessionController@store) next to the "About DeckTrove" showcase. --}}
 
 <x-layout title="Log in">
-    <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-16 px-4 py-12 sm:px-6 lg:py-[72px]">
+    <div class="mx-auto flex max-w-7xl overflow-x-clip flex-wrap items-center justify-center gap-16 px-4 py-12 sm:px-6 lg:py-[72px]">
         <x-auth.card eyebrow="Welcome back" title="Log in">
             <x-slot:intro><p class="text-base text-body">Log in to your DeckTrove account.</p></x-slot:intro>
 
