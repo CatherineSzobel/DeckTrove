@@ -1,6 +1,9 @@
 <?php
 
+use App\Models\Card;
 use App\Models\Deck;
+use App\Models\DeckCard;
+use App\Models\User;
 use Tests\TestCase;
 
 /*
@@ -48,4 +51,30 @@ expect()->extend('toBeOne', function () {
 function commentableDeck(array $attributes = []): Deck
 {
     return Deck::factory()->public()->create(['game' => 'yugioh'] + $attributes);
+}
+
+// Copies of a card on a user's collection or wishlist, for the collection tests.
+function ownedCount(User $user, string $key = '46986414'): int
+{
+    return (int) $user->collectionItems()->owned()->where('card_key', $key)->sum('quantity');
+}
+
+// A private deck with [zone => [external id => copies]], storing the cards rows as deck saving does.
+function collectionDeck(string $game, array $zones): Deck
+{
+    $deck = Deck::factory()->create(['game' => $game]);
+
+    foreach ($zones as $zone => $cards) {
+        foreach ($cards as $externalId => $count) {
+            $card = Card::firstOrCreate(['game' => $game, 'external_id' => (string) $externalId], ['name' => "Card $externalId"]);
+            DeckCard::create(['deck_id' => $deck->id, 'card_id' => $card->id, 'zone' => $zone, 'count' => $count]);
+        }
+    }
+
+    return $deck;
+}
+
+function wantedCount(User $user, string $key = '46986414'): int
+{
+    return (int) $user->collectionItems()->wanted()->where('card_key', $key)->sum('quantity');
 }

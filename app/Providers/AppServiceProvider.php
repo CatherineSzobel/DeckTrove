@@ -4,10 +4,12 @@ namespace App\Providers;
 
 use App\Models\Deck;
 use App\Models\User;
+use App\Policies\CollectionPolicy;
 use App\Services\MagicService;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
@@ -32,6 +34,10 @@ class AppServiceProvider extends ServiceProvider
         // Polymorphic types are stored as these keys, not class names. Enforced: an unmapped model fails loudly.
         Relation::enforceMorphMap(['user' => User::class, 'deck' => Deck::class]);
 
+        // Closures with a nullable user, so guests reach the policy (an array callback would deny them outright).
+        Gate::define('viewCollection', fn (?User $viewer, User $owner) => app(CollectionPolicy::class)->viewCollection($viewer, $owner));
+        Gate::define('viewWishlist', fn (?User $viewer, User $owner) => app(CollectionPolicy::class)->viewWishlist($viewer, $owner));
+
         // Every {series} route segment must be a series from config/series.php.
         Route::pattern('series', implode('|', array_keys(config('series'))));
         Route::pattern('deck', '[0-9]+');
@@ -45,6 +51,11 @@ class AppServiceProvider extends ServiceProvider
 
         // Comments, per user: enough for a conversation, not for flooding a profile.
         RateLimiter::for('comments', fn (Request $request) => Limit::perMinute(5)->by($request->user()->id));
+
+        // Collections, per user: + and − on single cards, and the bulk adds (a whole deck or set) that call the card
+        // source for every card.
+        RateLimiter::for('collection-items', fn (Request $request) => Limit::perMinute(120)->by($request->user()->id));
+        RateLimiter::for('collection', fn (Request $request) => Limit::perMinute(30)->by($request->user()->id));
 
         // Card search and lookups (the card database, card and pack pages, the builder's search), so bots can't burn
         // the Scryfall allowance or load the database. Per account when logged in, else per IP; prefixed so the two

@@ -58,3 +58,9 @@ test('a pack always gets the same tile colour', function () {
     expect($tone)->toBeGreaterThanOrEqual(0)->toBeLessThan(6)
         ->and(packFor('yugioh', ['set_code' => 'LOB'])->tone())->toBe($tone);
 });
+
+test('the code and slug are what the collection route needs', function () {
+    $pack = packFor('yugioh', ['set_code' => 'LOB', 'slug' => 'legend']);
+
+    expect($pack->code())->toBe('LOB')->and($pack->slug())->toBe('legend');
+});
