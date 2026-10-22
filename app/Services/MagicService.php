@@ -162,6 +162,23 @@ class MagicService implements CardProvider
         return collect($names)->contains(fn ($name) => strcasecmp($name, $identifier['name'] ?? '') === 0);
     }
 
+    public function printings(array $card): array
+    {
+        $oracleId = $card['oracle_id'] ?? data_get($card, 'card_faces.0.oracle_id');
+        $prints = $oracleId ? $this->searchAll("oracleid:$oracleId unique:prints", 2) : [$card];
+
+        return collect($prints)
+            ->map(fn ($print) => [
+                'key' => (string) $print['id'],
+                'label' => ($print['set_name'] ?? 'Unknown').' ('.Str::upper($print['set'] ?? '').' #'.($print['collector_number'] ?? '?').')',
+                'set_name' => $print['set_name'] ?? 'Unknown',
+                'code' => Str::upper($print['set'] ?? '').' #'.($print['collector_number'] ?? '?'),
+                'pack_code' => (string) ($print['set'] ?? ''),
+            ])
+            ->values()
+            ->all();
+    }
+
     public function related(array $card, int $limit = 6): Collection
     {
         $setCode = $card['set'] ?? null;

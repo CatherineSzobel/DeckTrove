@@ -39,6 +39,10 @@ test('every configured series is fully set up', function () {
 
         $check($implements($config['provider'] ?? null, CardProvider::class), "'provider' must implement CardProvider");
         $check($implements($config['mapper'] ?? null, CardMapper::class), "'mapper' must extend CardMapper");
+        if ($implements($config['mapper'] ?? null, CardMapper::class)) {
+            $key = app($config['mapper'])->collectionKey(['id' => 'contract-1', 'name' => 'Contract']);
+            $check($key !== '', "the mapper's collectionKey() must fall back to the card id");
+        }
         $check($implements($config['deck_format'] ?? null, DeckFormat::class), "'deck_format' must implement DeckFormat");
         $check($implements($config['pack']['provider'] ?? null, PackProvider::class), "'pack.provider' must implement PackProvider");
         $check(($config['pack']['link_prefix'] ?? null) === "/$series", "'pack.link_prefix' must be '/$series'");

@@ -112,6 +112,18 @@ class MagicCardMapper extends CardMapper
         ]];
     }
 
+    /** Scryfall's oracle id is shared by every printing (double-faced cards keep it on their faces). */
+    public function collectionKey(array $card): string
+    {
+        return (string) ($card['oracle_id'] ?? data_get($card, 'card_faces.0.oracle_id') ?? $card['id'] ?? '');
+    }
+
+    /** A Scryfall card already is one printing. */
+    public function printingIn(array $card, string $setCode, ?string $setName = null): string
+    {
+        return (string) ($card['id'] ?? '');
+    }
+
     /**
      * Scryfall gives one legality per format, which already accounts for set rotation (e.g. Standard).
      */

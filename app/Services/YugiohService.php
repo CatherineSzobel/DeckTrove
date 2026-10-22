@@ -70,6 +70,22 @@ class YugiohService implements CardProvider
         return YugiohCard::whereIn('id', $ids)->get()->mapWithKeys(fn (YugiohCard $card) => [$card->id => $card->toCardArray()]);
     }
 
+    public function printings(array $card): array
+    {
+        return collect($card['card_sets'] ?? [])
+            ->filter(fn ($set) => ($set['set_code'] ?? '') !== '')
+            ->unique('set_code')
+            ->map(fn ($set) => [
+                'key' => $set['set_code'],
+                'label' => ($set['set_name'] ?? 'Unknown').' ('.$set['set_code'].')',
+                'set_name' => $set['set_name'] ?? 'Unknown',
+                'code' => $set['set_code'],
+                'pack_code' => explode('-', $set['set_code'])[0],
+            ])
+            ->values()
+            ->all();
+    }
+
     public function related(array $card, int $limit = 6): Collection
     {
         if (empty($card['archetype'])) {

@@ -102,6 +102,22 @@ class YugiohCardMapper extends CardMapper
             ->all();
     }
 
+    public function collectionKey(array $card): string
+    {
+        return (string) ($card['id'] ?? '');
+    }
+
+    /** The set's print code ("LOB-EN005"); the set name picks between products that share a code. */
+    public function printingIn(array $card, string $setCode, ?string $setName = null): string
+    {
+        $inSet = collect($card['card_sets'] ?? [])
+            ->filter(fn ($set) => strcasecmp(explode('-', $set['set_code'] ?? '')[0], $setCode) === 0);
+
+        $match = $setName === null ? null : $inSet->first(fn ($set) => ($set['set_name'] ?? null) === $setName);
+
+        return (string) (($match ?? $inSet->first())['set_code'] ?? '');
+    }
+
     /**
      * YGOPRODeck lists a card's status per banlist (`ban_tcg`, `ban_ocg`, ...); cards that aren't on it have no entry.
      */

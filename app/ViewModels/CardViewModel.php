@@ -18,6 +18,12 @@ class CardViewModel
         $this->mapper = app($config['mapper']);
     }
 
+    /** The raw card this presents, e.g. to store its name and image locally. */
+    public function raw(): array
+    {
+        return $this->card;
+    }
+
     public function id(): ?string
     {
         return isset($this->card['id']) ? (string) $this->card['id'] : null;
@@ -182,6 +188,16 @@ class CardViewModel
     public function printSets(): array
     {
         return $this->mapper->printSets($this->card);
+    }
+
+    public function collectionKey(): string
+    {
+        return $this->mapper->collectionKey($this->card);
+    }
+
+    public function printingIn(string $setCode, ?string $setName = null): string
+    {
+        return $this->mapper->printingIn($this->card, $setCode, $setName);
     }
 
     /**
