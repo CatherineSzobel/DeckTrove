@@ -4,11 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Collection\CollectionPage;
 use App\Collection\CollectionService;
+use App\Collection\CollectionSuggestions;
 use App\Exceptions\ScryfallUnavailableException;
 use App\Models\CollectionItem;
 use Illuminate\Http\Request;
 
-/** Your own collection (/collection) and wishlist (/collection/wishlist), with − / + on each card. */
+/**
+ * Your own collection (/collection) and wishlist (/collection/wishlist), with − / + on each card and, while searching,
+ * the card database's matches you can add.
+ */
 class CollectionController extends Controller
 {
     public function owned(Request $request)
@@ -33,6 +37,7 @@ class CollectionController extends Controller
 
         return view('collection.index', [
             'page' => $page,
+            'suggestions' => CollectionSuggestions::for($request->user(), $page),
             'totals' => $page->totals($cost),
             'seriesLinks' => $page->seriesLinks($list === CollectionItem::WANTED ? 'collection.wishlist' : 'collection'),
         ]);

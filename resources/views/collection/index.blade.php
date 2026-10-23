@@ -30,5 +30,7 @@
         <x-form-error name="card" bag="collection" />
 
         @include('collection.partials.grid')
+
+        @include('collection.partials.suggestions')
     </div>
 </x-layout>

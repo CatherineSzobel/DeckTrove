@@ -72,8 +72,9 @@ Route::middleware('auth')->group(function () {
     Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->can('delete', 'comment')->name('comments.destroy');
 
     // Collections and wishlists (App\Collection\CollectionService)
-    Route::get('/collection', [CollectionController::class, 'owned'])->name('collection');
-    Route::get('/collection/wishlist', [CollectionController::class, 'wishlist'])->name('collection.wishlist');
+    // A search there also searches the card database (quick add), so it shares the card search's limit.
+    Route::get('/collection', [CollectionController::class, 'owned'])->middleware('throttle:card-search')->name('collection');
+    Route::get('/collection/wishlist', [CollectionController::class, 'wishlist'])->middleware('throttle:card-search')->name('collection.wishlist');
     Route::post('/collection/add', [CollectionItemController::class, 'add'])->middleware('throttle:collection-items')->name('collection.add');
     Route::post('/collection/remove', [CollectionItemController::class, 'remove'])->middleware('throttle:collection-items')->name('collection.remove');
     Route::post('/collection/want', [CollectionItemController::class, 'want'])->middleware('throttle:collection-items')->name('collection.want');
