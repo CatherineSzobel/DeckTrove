@@ -13,6 +13,7 @@ use App\Models\Comment;
 use App\Models\Deck;
 use App\Services\CardService;
 use App\Services\DeckService;
+use App\Support\Series;
 use App\ViewModels\CardViewModel;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -70,7 +71,7 @@ class DeckController extends Controller
                 'game' => $deck->game,
                 'text' => Str::lower(trim($deck->name.' '.$deck->description)),
             ])->values()->all(),
-            'builderSeries' => session('series', array_key_first(config('series'))),
+            'builderSeries' => Series::orDefault(session('series')),
         ]);
     }
 

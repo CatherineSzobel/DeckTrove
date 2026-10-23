@@ -3,6 +3,7 @@
 namespace App\Home;
 
 use App\Models\User;
+use App\Support\Series;
 
 /**
  * What the home page (resources/views/index.blade.php) shows: the games from config/series.php and
@@ -20,9 +21,7 @@ final class HomePage
 
     public static function for(?User $user, ?string $sessionSeries): self
     {
-        $series = array_key_exists((string) $sessionSeries, config('series')) ? $sessionSeries : array_key_first(config('series'));
-
-        return new self($user, $series);
+        return new self($user, Series::orDefault($sessionSeries));
     }
 
     public function eyebrow(): string

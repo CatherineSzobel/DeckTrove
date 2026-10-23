@@ -2,6 +2,7 @@
 
 namespace App\Packs;
 
+use App\Support\QueryInput;
 use App\ViewModels\CardViewModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -19,8 +20,8 @@ final class PackCardFilter
 
     public static function fromRequest(Request $request): self
     {
-        $name = mb_substr(trim((string) self::string($request, 'name')), 0, self::NAME_LENGTH);
-        $rarity = trim((string) self::string($request, 'rarity'));
+        $name = mb_substr(trim(QueryInput::string($request, 'name')), 0, self::NAME_LENGTH);
+        $rarity = trim(QueryInput::string($request, 'rarity'));
 
         return new self($name === '' ? null : $name, $rarity === '' ? null : $rarity);
     }
@@ -64,12 +65,5 @@ final class PackCardFilter
         $cards = number_format($total).' '.Str::plural('card', $total);
 
         return $this->isFiltering() ? number_format($shown).' of '.$cards : $cards;
-    }
-
-    private static function string(Request $request, string $key): ?string
-    {
-        $value = $request->query($key);
-
-        return is_string($value) ? $value : null;
     }
 }

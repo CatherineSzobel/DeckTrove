@@ -233,12 +233,14 @@ class CollectionService
             foreach ($provider->cards($setCode, $slug) as $raw) {
                 $card = new CardViewModel((array) $raw, $config);
                 $printing = $card->printingIn($setCode, $setName);
+                $cardId = $card->id();
 
-                if (($this->counts($user, $series, $card->collectionKey())['printings'][$printing] ?? 0) >= self::MAX) {
+                // A set entry without an id can't be stored.
+                if ($cardId === null || ($this->counts($user, $series, $card->collectionKey())['printings'][$printing] ?? 0) >= self::MAX) {
                     continue;
                 }
 
-                $this->addCard($user, $series, $card, (string) $card->id(), CollectionItem::OWNED, $printing, 1);
+                $this->addCard($user, $series, $card, $cardId, CollectionItem::OWNED, $printing, 1);
                 $added++;
             }
 

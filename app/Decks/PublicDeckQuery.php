@@ -4,6 +4,8 @@ namespace App\Decks;
 
 use App\Models\Deck;
 use App\Models\User;
+use App\Support\QueryInput;
+use App\Support\Series;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -41,18 +43,17 @@ class PublicDeckQuery
         $series = config('series');
         $viewer = $request->user();
 
-        $game = self::string($request, 'game');
-        $game = array_key_exists((string) $game, $series) ? $game : null;
+        $game = Series::orNull($request->query('game'));
 
         // A format only means something within one game. `casual` is a deck without a format.
-        $format = self::string($request, 'format');
+        $format = QueryInput::string($request, 'format');
         $formats = $game ? array_keys($series[$game]['deck']['formats'] ?? []) : [];
         $format = $game && ($format === 'casual' || in_array($format, $formats, true)) ? $format : null;
 
-        $sort = self::string($request, 'sort');
-        $sort = array_key_exists((string) $sort, self::SORTS) ? $sort : 'newest';
+        $sort = QueryInput::string($request, 'sort');
+        $sort = array_key_exists($sort, self::SORTS) ? $sort : 'newest';
 
-        $search = mb_substr(trim((string) self::string($request, 'q')), 0, self::SEARCH_LENGTH);
+        $search = mb_substr(trim(QueryInput::string($request, 'q')), 0, self::SEARCH_LENGTH);
 
         return new self(
             $viewer,
@@ -225,15 +226,5 @@ class PublicDeckQuery
 
         // Newest breaks ties, then the id, so pages stay stable when values are equal.
         return $query->latest()->orderByDesc('id');
-    }
-
-    /**
-     * A query parameter as a string, or null when it's missing or not a string (e.g. `game[]=...`).
-     */
-    private static function string(Request $request, string $key): ?string
-    {
-        $value = $request->query($key);
-
-        return is_string($value) ? $value : null;
     }
 }

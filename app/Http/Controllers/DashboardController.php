@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\DashboardService;
+use App\Support\Series;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
@@ -10,12 +11,12 @@ class DashboardController extends Controller
     public function __invoke(Request $request, DashboardService $service)
     {
         $user = $request->user();
-        $selectedTcg = array_key_exists((string) $request->query('tcg'), config('series')) ? $request->query('tcg') : null;
+        $selectedTcg = Series::orNull($request->query('tcg'));
         // Picking a series for the random cards also makes it the remembered series (New deck, header links).
-        if (array_key_exists((string) $request->query('cards'), config('series'))) {
+        if (Series::isKnown($request->query('cards'))) {
             session(['series' => $request->query('cards')]);
         }
-        $builderSeries = session('series', array_key_first(config('series')));
+        $builderSeries = Series::orDefault(session('series'));
         $stats = $service->stats($user);
 
         return view('dashboard', [

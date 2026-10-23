@@ -4,6 +4,8 @@ namespace App\Collection;
 
 use App\Models\CollectionItem;
 use App\Models\User;
+use App\Support\QueryInput;
+use App\Support\Series;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -28,11 +30,9 @@ final class CollectionPage
 
     public static function for(User $owner, Request $request, string $list, bool $editable): self
     {
-        $series = $request->query('series');
-        $series = is_string($series) && array_key_exists($series, config('series')) ? $series : array_key_first(config('series'));
-        $search = is_string($request->query('search')) ? mb_substr(trim($request->query('search')), 0, 100) : '';
+        $search = mb_substr(trim(QueryInput::string($request, 'search')), 0, 100);
 
-        return new self($owner, $list, $series, $search, $editable);
+        return new self($owner, $list, Series::orDefault($request->query('series')), $search, $editable);
     }
 
     public function list(): string
@@ -156,8 +156,8 @@ final class CollectionPage
     {
         $rows = $this->owner->collectionItems()->where('list', $this->list)->where('game', $this->series);
         $totals = [
-            ['label' => 'Unique cards', 'value' => (string) (clone $rows)->distinct()->count('card_key')],
-            ['label' => 'Copies', 'value' => (string) (int) (clone $rows)->sum('quantity')],
+            ['label' => 'Unique cards', 'value' => number_format((clone $rows)->distinct()->count('card_key'))],
+            ['label' => 'Copies', 'value' => number_format((int) (clone $rows)->sum('quantity'))],
         ];
 
         if ($cost !== null) {

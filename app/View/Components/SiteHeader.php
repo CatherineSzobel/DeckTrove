@@ -2,6 +2,7 @@
 
 namespace App\View\Components;
 
+use App\Support\Series;
 use Illuminate\Contracts\View\View;
 use Illuminate\View\Component;
 
@@ -20,7 +21,7 @@ class SiteHeader extends Component
 
     public function __construct(?string $series = null)
     {
-        $series ??= array_key_first(config('series'));
+        $series ??= Series::default();
         $this->homeUrl = auth()->check() ? route('dashboard') : route('index');
 
         $this->links = array_values(array_filter([
