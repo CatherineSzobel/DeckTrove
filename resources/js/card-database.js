@@ -5,9 +5,12 @@
  * The server answers AJAX requests with cards/partials/results.blade.php.
  */
 import { buildUrl, countFilters, syncValues, viewUrl } from "./cards/query.js";
+import { collectionCounter } from "./collection/counter.js";
 import { cardPreview } from "./deckbuilder/preview.js";
 
 document.addEventListener("alpine:init", () => {
+    window.Alpine.data("collectionCounter", () => collectionCounter());
+
     window.Alpine.data("cardDatabase", () => ({
         ...cardPreview(),
         showFilters: false,

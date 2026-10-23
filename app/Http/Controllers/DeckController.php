@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Cards\FilterChoices;
+use App\Collection\DeckCollection;
 use App\Decks\DeckComments;
 use App\Decks\DeckStats;
 use App\Decks\PublicDeckQuery;
@@ -105,6 +106,7 @@ class DeckController extends Controller
             'liked' => $request->user() !== null && $deck->likes()->where('user_id', $request->user()->id)->exists(),
             'canLike' => Gate::allows('like', $deck),
             'comments' => $comments,
+            'collection' => DeckCollection::for($request->user(), $deck),
         ]);
     }
 

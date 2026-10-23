@@ -8,11 +8,14 @@
                 <th scope="col" class="px-3 py-3 font-normal max-sm:hidden sm:px-4">Rarity</th>
                 <th scope="col" class="px-3 py-3 font-normal max-sm:hidden sm:px-4">Set</th>
                 <th scope="col" class="px-3 py-3 text-right font-normal sm:px-4">Price</th>
+                @if ($tileCounts->shows())
+                <th scope="col" class="px-2 py-3"><span class="sr-only">In your collection</span></th>
+                @endif
             </tr>
         </thead>
         <tbody data-results>
             @foreach ($cards as $card)
-            <tr class="border-t border-line">
+            <tr id="card-{{ $card->id() }}" class="scroll-mt-24 border-t border-line">
                 <td class="px-3 py-1.5 sm:px-4">
                     <a href="{{ $card->link() }}" class="focus-ring flex min-h-11 items-center gap-3 rounded-sm font-bold text-ink hover:text-accent-ink">
                         <img src="{{ $card->imageSmall() }}" alt="" loading="lazy" class="h-11 w-8 shrink-0 rounded-sm object-cover">
@@ -26,6 +29,9 @@
                 <td class="px-3 py-1.5 max-sm:hidden sm:px-4"><span class="rarity-pill">{{ $card->rarityLabel() }}</span></td>
                 <td class="px-3 py-1.5 text-body max-sm:hidden sm:px-4">{{ $card->setName() }}</td>
                 <td class="px-3 py-1.5 text-right font-mono font-bold text-ink sm:px-4">{{ $card->formattedPrice() }}</td>
+                @if ($tileCounts->shows())
+                <td class="px-2 py-1.5"><x-collection.counter :game="$series" :card="$card->id()" :name="$card->name()" :count="$tileCounts->count($card)" :removable="$tileCounts->removable($card)" /></td>
+                @endif
             </tr>
             @endforeach
         </tbody>

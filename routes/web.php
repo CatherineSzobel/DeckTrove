@@ -2,13 +2,17 @@
 
 use App\Http\Controllers\BulkDeckController;
 use App\Http\Controllers\CardsController;
+use App\Http\Controllers\CollectionController;
+use App\Http\Controllers\CollectionItemController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DeckCollectionController;
 use App\Http\Controllers\DeckCommentController;
 use App\Http\Controllers\DeckController;
 use App\Http\Controllers\DeckLikeController;
 use App\Http\Controllers\DeckTransferController;
 use App\Http\Controllers\IndexController;
+use App\Http\Controllers\PackCollectionController;
 use App\Http\Controllers\PacksController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\ProfileCommentController;
@@ -66,6 +70,15 @@ Route::middleware('auth')->group(function () {
     Route::post('/u/{user:username}/comments', [ProfileCommentController::class, 'store'])->middleware('throttle:comments')->name('users.comments.store');
     Route::post('/decks/{deck}/comments', [DeckCommentController::class, 'store'])->can('view', 'deck')->middleware('throttle:comments')->name('decks.comments.store');
     Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->can('delete', 'comment')->name('comments.destroy');
+
+    // Collections and wishlists (App\Collection\CollectionService)
+    Route::get('/collection', [CollectionController::class, 'owned'])->name('collection');
+    Route::get('/collection/wishlist', [CollectionController::class, 'wishlist'])->name('collection.wishlist');
+    Route::post('/collection/add', [CollectionItemController::class, 'add'])->middleware('throttle:collection-items')->name('collection.add');
+    Route::post('/collection/remove', [CollectionItemController::class, 'remove'])->middleware('throttle:collection-items')->name('collection.remove');
+    Route::post('/collection/want', [CollectionItemController::class, 'want'])->middleware('throttle:collection-items')->name('collection.want');
+    Route::post('/decks/{deck}/collection', [DeckCollectionController::class, 'collection'])->can('view', 'deck')->middleware('throttle:collection')->name('decks.collection');
+    Route::post('/decks/{deck}/wishlist', [DeckCollectionController::class, 'wishlist'])->can('view', 'deck')->middleware('throttle:collection')->name('decks.wishlist');
 });
 
 // Decks (visibility is checked by DeckPolicy::view)
@@ -76,6 +89,8 @@ Route::get('/u/{user:username}', [PublicProfileController::class, 'show'])->name
 Route::get('/u/{user:username}/decks', [PublicProfileController::class, 'decks'])->name('users.decks');
 Route::get('/u/{user:username}/liked', [PublicProfileController::class, 'liked'])->name('users.liked');
 Route::get('/u/{user:username}/comments', [PublicProfileController::class, 'comments'])->name('users.comments');
+Route::get('/u/{user:username}/collection', [PublicProfileController::class, 'collection'])->name('users.collection');
+Route::get('/u/{user:username}/wishlist', [PublicProfileController::class, 'wishlist'])->name('users.wishlist');
 
 // Per series
 Route::prefix('{series}')->group(function () {
@@ -88,6 +103,11 @@ Route::prefix('{series}')->group(function () {
         ->where(['setCode' => '[A-Za-z0-9-]+', 'slug' => '[a-z0-9-]+'])
         ->middleware('throttle:card-search')
         ->name('packs.show');
+    // The slug comes after `collection`: an optional segment in the middle can’t be generated or matched.
+    Route::post('/pack/{setCode}/collection/{slug?}', PackCollectionController::class)
+        ->where(['setCode' => '[A-Za-z0-9-]+', 'slug' => '[a-z0-9-]+'])
+        ->middleware(['auth', 'throttle:collection'])
+        ->name('packs.collection');
 
     // Guests can browse the builder; saving requires login.
     Route::get('/deck-builder', [DeckController::class, 'builder'])->middleware('throttle:card-search')->name('decks.builder');

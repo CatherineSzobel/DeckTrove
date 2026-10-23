@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\User;
 use App\Models\YugiohCard;
 use App\Models\YugiohPrinting;
 use App\Models\YugiohSet;
@@ -56,8 +57,9 @@ test('the first tiles deal in once, and keep their hover lift afterwards', funct
 
     $css = file_get_contents(resource_path('css/app.css'));
 
-    expect($css)->toMatch('/@media \(prefers-reduced-motion: no-preference\)\s*\{[^@]*\[data-deal\] > \.pack-tile:nth-child\(-n\+12\)\s*\{\s*animation: pack-deal 0\.4s ease-out backwards/')
+    expect($css)->toMatch('/@media \(prefers-reduced-motion: no-preference\)\s*\{[^@]*\[data-deal\] > :nth-child\(-n\+12\)\s*\{\s*animation: pack-deal 0\.4s ease-out backwards/')
         ->toContain('animation-delay: calc(var(--deal, 0) * 40ms)')
+        ->toContain('[data-deal] > :nth-child(12) { --deal: 11; }')
         ->toContain('@keyframes pack-deal')
         ->and(substr_count($css, 'animation: pack-deal'))->toBe(1);
 });
@@ -135,4 +137,18 @@ test('card tiles show the card preview on hover and focus, with the description'
         ->toContain('The ultimate wizard.')
         ->toContain('@scroll.window.passive="hideOnScroll()"')
         ->and(substr_count($html, 'data-card-preview'))->toBe(1);
+});
+
+test('logged-in players get “Add set to collection” and a counter under each tile; guests get neither', function () {
+    $html = lobPage();
+
+    expect($html)->not->toContain('Add set to collection')->not->toContain('collectionCounter');
+
+    $html = test()->actingAs(User::factory()->create())->get(route('packs.show', ['yugioh', 'LOB', 'legend-of-blue-eyes-white-dragon']))->getContent();
+
+    expect($html)->toContain('action="'.route('packs.collection', ['yugioh', 'LOB', 'legend-of-blue-eyes-white-dragon']).'"')
+        ->toContain('Add set to collection')
+        ->toContain('aria-label="Add a copy of Dark Magician"')
+        ->toContain('aria-label="Add a copy of Blue-Eyes White Dragon"')
+        ->toMatch('/<div id="card-46986414" class="relative flex scroll-mt-24 flex-col" data-name="dark magician" data-rarity="Ultra Rare"/');
 });

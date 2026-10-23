@@ -1,7 +1,7 @@
 {{-- Full view: one card per box with its text, set, rarity and price. The name's link covers the whole box. --}}
 <div data-results class="grid grid-cols-[repeat(auto-fill,minmax(min(340px,100%),1fr))] gap-4">
     @foreach ($cards as $card)
-    <article class="relative flex gap-4 rounded-2xl border border-line bg-surface p-4 transition hover:border-accent focus-within:border-accent">
+    <article id="card-{{ $card->id() }}" class="relative flex scroll-mt-24 gap-4 rounded-2xl border border-line bg-surface p-4 transition hover:border-accent focus-within:border-accent">
         <img src="{{ $card->imageSmall() }}" alt="" loading="lazy" class="aspect-[59/86] w-[120px] shrink-0 self-start rounded-md object-cover shadow-md">
         <div class="flex min-w-0 flex-1 flex-col gap-2">
             <h2 class="heading-display text-[22px] text-ink">
@@ -20,6 +20,10 @@
                 <span class="ml-auto font-mono text-sm font-bold text-ink">{{ $card->formattedPrice() }}</span>
             </div>
         </div>
+        @if ($tileCounts->shows())
+        {{-- Above the name link's overlay (after:inset-0), so its buttons can be pressed. --}}
+        <x-collection.counter :game="$series" :card="$card->id()" :name="$card->name()" :count="$tileCounts->count($card)" :removable="$tileCounts->removable($card)" class="relative z-10 self-end" />
+        @endif
     </article>
     @endforeach
 </div>

@@ -68,11 +68,19 @@
                         <x-form-error name="about" id="about-error" />
                     </div>
 
-                    <fieldset class="flex flex-col gap-1">
+                    <fieldset id="privacy" class="flex scroll-mt-6 flex-col gap-1">
                         <legend class="mb-1 text-sm font-bold text-ink">Privacy</legend>
                         <label class="flex min-h-11 cursor-pointer items-center gap-3 text-[15px] text-body">
                             <input type="checkbox" name="show_liked_decks" value="1" @checked($showLikedDecks) class="focus-ring h-5 w-5 shrink-0 accent-accent">
                             Show my liked decks on my profile
+                        </label>
+                        <label class="flex min-h-11 cursor-pointer items-center gap-3 text-[15px] text-body">
+                            <input type="checkbox" name="collection_public" value="1" @checked($collectionPublic) class="focus-ring h-5 w-5 shrink-0 accent-accent">
+                            Show my collection on my public profile
+                        </label>
+                        <label class="flex min-h-11 cursor-pointer items-center gap-3 text-[15px] text-body">
+                            <input type="checkbox" name="wishlist_public" value="1" @checked($wishlistPublic) class="focus-ring h-5 w-5 shrink-0 accent-accent">
+                            Show my wishlist on my public profile
                         </label>
                         <label class="flex min-h-11 cursor-pointer items-start gap-3 py-2 text-[15px] text-body">
                             <input type="checkbox" name="allow_comments" value="1" @checked($allowComments) aria-describedby="allow-comments-hint" class="focus-ring mt-0.5 h-5 w-5 shrink-0 accent-accent">

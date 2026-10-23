@@ -147,6 +147,37 @@ html:not(.js) .js-only {
         }
     }
 
+    /* The quiet − n + (x-collection.counter): borderless icon buttons around the count; the count is muted at 0. */
+    .counter-button {
+        @apply focus-ring flex h-11 w-9 items-center justify-center rounded-md text-ink hover:text-accent-ink disabled:cursor-default disabled:text-line-strong disabled:hover:text-line-strong;
+    }
+
+    .counter-count {
+        @apply text-center font-mono text-accent-ink;
+
+        &[data-zero] {
+            @apply text-muted;
+        }
+    }
+
+    /* The card page's "In your collection" row: the border turns accent once you own the card. */
+    .collection-row {
+        @apply border-line;
+
+        &[data-owned]:not([data-owned="0"]) {
+            @apply border-accent/45;
+        }
+    }
+
+    /* The "Want it" heart: an outlined pill, accent when the card is on the wishlist. */
+    .collection-heart {
+        @apply focus-ring inline-flex min-h-11 items-center gap-2 rounded-full border-[1.5px] border-line-strong px-4 text-sm font-bold text-ink;
+
+        &[aria-pressed="true"] {
+            @apply border-accent-ink bg-warn-bg text-accent-ink;
+        }
+    }
+
     /* Session notices (x-flash): the box and the icon take the colour of their data-flash type. */
     .notice {
         @apply mb-4 flex items-center gap-3 rounded-xl border px-4 py-3 text-[15px] text-ink;
@@ -429,22 +460,22 @@ html:not(.js) .js-only {
        holds the first frame during the delay, so the hover lift still works afterwards; pack-page.js drops
        data-deal after the deal, so filtering doesn't replay it. */
     @media (prefers-reduced-motion: no-preference) {
-        [data-deal] > .pack-tile:nth-child(-n+12) {
+        [data-deal] > :nth-child(-n+12) {
             animation: pack-deal 0.4s ease-out backwards;
             animation-delay: calc(var(--deal, 0) * 40ms);
         }
 
-        [data-deal] > .pack-tile:nth-child(2) { --deal: 1; }
-        [data-deal] > .pack-tile:nth-child(3) { --deal: 2; }
-        [data-deal] > .pack-tile:nth-child(4) { --deal: 3; }
-        [data-deal] > .pack-tile:nth-child(5) { --deal: 4; }
-        [data-deal] > .pack-tile:nth-child(6) { --deal: 5; }
-        [data-deal] > .pack-tile:nth-child(7) { --deal: 6; }
-        [data-deal] > .pack-tile:nth-child(8) { --deal: 7; }
-        [data-deal] > .pack-tile:nth-child(9) { --deal: 8; }
-        [data-deal] > .pack-tile:nth-child(10) { --deal: 9; }
-        [data-deal] > .pack-tile:nth-child(11) { --deal: 10; }
-        [data-deal] > .pack-tile:nth-child(12) { --deal: 11; }
+        [data-deal] > :nth-child(2) { --deal: 1; }
+        [data-deal] > :nth-child(3) { --deal: 2; }
+        [data-deal] > :nth-child(4) { --deal: 3; }
+        [data-deal] > :nth-child(5) { --deal: 4; }
+        [data-deal] > :nth-child(6) { --deal: 5; }
+        [data-deal] > :nth-child(7) { --deal: 6; }
+        [data-deal] > :nth-child(8) { --deal: 7; }
+        [data-deal] > :nth-child(9) { --deal: 8; }
+        [data-deal] > :nth-child(10) { --deal: 9; }
+        [data-deal] > :nth-child(11) { --deal: 10; }
+        [data-deal] > :nth-child(12) { --deal: 11; }
     }
 
     /* One square in the numbered pagination (x-pagination). */

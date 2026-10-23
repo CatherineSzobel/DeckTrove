@@ -1,9 +1,11 @@
 <?php
 
+use App\Collection\CollectionService;
 use App\Models\Comment;
 use App\Models\Deck;
 use App\Models\DeckLike;
 use App\Models\User;
+use App\Models\YugiohCard;
 use App\Profiles\ProfilePage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -51,7 +53,7 @@ test('visitors only see liked decks while the owner shows them', function () {
 });
 
 test('the owner sees their private liked decks with a badge', function () {
-    $user = User::factory()->create(['show_liked_decks' => false]);
+    $user = User::factory()->create(['show_liked_decks' => false, 'collection_public' => true, 'wishlist_public' => true]);
 
     expect(overview($user, [], $user)->getContent())->toContain('Only you can see this');
 
@@ -216,4 +218,26 @@ test('the overview page names itself by the username', function () {
     $page = ProfilePage::for($user, request());
 
     expect($page->heading())->toBe('kaiba')->and($page->title())->toBe('kaiba');
+});
+
+test('collection and wishlist join the jump links and link to their pages past 8 cards', function () {
+    $user = User::factory()->create(['collection_public' => true, 'wishlist_public' => true]);
+    $service = app(CollectionService::class);
+    foreach (range(1, 9) as $id) {
+        YugiohCard::factory()->fromCard(['id' => 1000 + $id, 'name' => "Card $id"])->create();
+        $service->add($user, 'yugioh', (string) (1000 + $id));
+    }
+    $service->add($user, 'yugioh', '1001', 'wanted');
+
+    $page = overview($user)->viewData('page');
+
+    expect($page->sections())->toBe([
+        ['id' => 'decks', 'label' => 'Public decks', 'count' => 0],
+        ['id' => 'collection', 'label' => 'Collection', 'count' => 9],
+        ['id' => 'wishlist', 'label' => 'Wishlist', 'count' => 1],
+        ['id' => 'comments', 'label' => 'Comments', 'count' => 0],
+    ])
+        ->and($page->overviewCollection())->toHaveCount(8)
+        ->and($page->moreLink('collection'))->toBe(['label' => 'All 9 cards', 'href' => route('users.collection', $user)])
+        ->and($page->moreLink('wishlist'))->toBeNull();
 });

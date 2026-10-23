@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Collection\TileCounts;
 use App\Packs\PackCardFilter;
 use App\Services\PackService;
 use App\ViewModels\CardCollectionViewModel;
@@ -63,7 +64,18 @@ class PacksController extends Controller
             'filter' => $filter,
             'countLabel' => $filter->countLabel($shown, $cards->count()),
             'noMatches' => $cards->isNotEmpty() && $shown === 0,
+            'dealIn' => ! $this->cameBackFromCollection($request),
+            // The owned count under every tile, in one query (none for guests).
+            'tileCounts' => TileCounts::for($request->user(), $series, $cards),
         ]);
+    }
+
+    /** Whether this page load follows a collection action (its notice or error is flashed), so the cards don’t deal in again. */
+    private function cameBackFromCollection(Request $request): bool
+    {
+        $errors = $request->session()->get('errors');
+
+        return $request->session()->has('success') || ($errors !== null && $errors->hasBag('collection'));
     }
 
     /**

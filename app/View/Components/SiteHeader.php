@@ -30,6 +30,9 @@ class SiteHeader extends Component
             auth()->check()
                 ? ['key' => 'deck-builder', 'label' => 'Deck builder', 'href' => route('decks.builder', $series), 'active' => request()->routeIs('decks.builder', 'decks.edit')]
                 : null,
+            auth()->check()
+                ? ['key' => 'collection', 'label' => 'Collection', 'href' => route('collection'), 'active' => request()->routeIs('collection', 'collection.*')]
+                : null,
         ]));
     }
 

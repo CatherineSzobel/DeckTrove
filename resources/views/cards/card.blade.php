@@ -38,9 +38,13 @@
                 <div class="whitespace-pre-line rounded-2xl border border-line bg-surface px-6 py-5 text-[17px] leading-[1.7] text-body">{{ $card->description() }}</div>
                 @endif
 
+                @if ($collection)
+                @include('cards.partials.collection-row')
+                @endif
+
                 <section aria-labelledby="printings" class="flex flex-col gap-3">
                     <h2 id="printings" class="heading-display text-[28px] text-ink">Printings</h2>
-                    <x-print-list :packs="$card->printPacks($series)" />
+                    <x-print-list :packs="$printList" :counters="$printCounters" />
                 </section>
 
                 <div class="flex flex-wrap gap-3">
