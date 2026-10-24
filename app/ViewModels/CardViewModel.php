@@ -2,6 +2,7 @@
 
 namespace App\ViewModels;
 
+use App\Cards\CardFace;
 use App\Cards\CardMapper;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -12,6 +13,9 @@ use Illuminate\Support\Str;
 class CardViewModel
 {
     protected CardMapper $mapper;
+
+    /** @var list<CardFace>|null */
+    private ?array $faces = null;
 
     public function __construct(protected array $card, protected array $config)
     {
@@ -57,7 +61,17 @@ class CardViewModel
      */
     public function faceImages(): array
     {
-        return $this->mapper->faceImages($this->card);
+        return array_map(fn (CardFace $face) => $face->image(), $this->faces());
+    }
+
+    /**
+     * Every face of a double-faced card, each with its own image, name, type, text and stats; empty for regular cards.
+     *
+     * @return list<CardFace>
+     */
+    public function faces(): array
+    {
+        return $this->faces ??= $this->mapper->faces($this->card);
     }
 
     /**

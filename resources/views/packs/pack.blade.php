@@ -71,6 +71,7 @@
                         <span class="flex min-w-0 flex-col gap-1.5 px-0.5 pb-0.5">
                             <span class="truncate text-[15px] font-bold text-ink">{{ $card->name() }}</span>
                             <span class="truncate text-xs text-muted">{{ $card->typeLine() }}</span>
+                            <x-card-faces-badge :card="$card" />
                             <span class="rarity-pill max-w-full self-start" title="{{ $card->rarityLabel() }}"><span class="min-w-0 truncate">{{ $card->rarityLabel() }}</span></span>
                         </span>
                     </a>

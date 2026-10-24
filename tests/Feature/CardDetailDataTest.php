@@ -67,3 +67,35 @@ test('a magic land has no mana cost box', function () {
     expect(detailCard('magic', ['mana_cost' => '', 'type_line' => 'Basic Land — Forest'])->detailStats())
         ->toBe([['label' => 'Price', 'value' => 'N/A']]);
 });
+
+test('a double-faced card has each face’s name, image, type, text and stats', function () {
+    $card = detailCard('magic', ['name' => 'Delver of Secrets // Insectile Aberration', 'card_faces' => [
+        ['name' => 'Delver of Secrets', 'mana_cost' => '{U}', 'type_line' => 'Creature — Human Wizard', 'oracle_text' => 'Look at the top card.', 'power' => '1', 'toughness' => '1', 'image_uris' => ['normal' => 'https://cards.scryfall.io/normal/front/delver.jpg']],
+        ['name' => 'Insectile Aberration', 'mana_cost' => '', 'type_line' => 'Creature — Human Insect', 'oracle_text' => 'Flying', 'power' => '3', 'toughness' => '2', 'image_uris' => ['normal' => 'https://cards.scryfall.io/normal/back/delver.jpg']],
+    ]]);
+
+    [$front, $back] = $card->faces();
+
+    expect($card->faces())->toHaveCount(2)
+        ->and([$front->name(), $front->image(), $front->typeLine(), $front->text()])->toBe(['Delver of Secrets', 'https://cards.scryfall.io/normal/front/delver.jpg', 'Creature — Human Wizard', 'Look at the top card.'])
+        ->and($front->detailStats())->toBe([['label' => 'Mana cost', 'value' => '{U}'], ['label' => 'Power', 'value' => '1'], ['label' => 'Toughness', 'value' => '1']])
+        ->and([$back->name(), $back->text()])->toBe(['Insectile Aberration', 'Flying'])
+        ->and($back->detailStats())->toBe([['label' => 'Power', 'value' => '3'], ['label' => 'Toughness', 'value' => '2']])
+        ->and($card->faceImages())->toBe(['https://cards.scryfall.io/normal/front/delver.jpg', 'https://cards.scryfall.io/normal/back/delver.jpg']);
+});
+
+test('a face shows loyalty or defense when it has one', function () {
+    $face = fn (array $fields) => ['image_uris' => ['normal' => 'https://cards.scryfall.io/normal/x.jpg'], ...$fields];
+    [$planeswalker, $battle] = detailCard('magic', ['card_faces' => [$face(['loyalty' => '3']), $face(['defense' => '5'])]])->faces();
+
+    expect($planeswalker->detailStats())->toBe([['label' => 'Loyalty', 'value' => '3']])
+        ->and($battle->detailStats())->toBe([['label' => 'Defense', 'value' => '5']]);
+});
+
+test('split cards, single-faced cards and Yu-Gi-Oh! cards have no faces', function () {
+    $split = detailCard('magic', ['name' => 'Fire // Ice', 'image_uris' => ['normal' => 'x.jpg'], 'card_faces' => [['name' => 'Fire'], ['name' => 'Ice']]]);
+
+    expect($split->faces())->toBe([])
+        ->and(detailCard('magic', ['name' => 'Llanowar Elves'])->faces())->toBe([])
+        ->and(detailCard('yugioh', ['name' => 'Dark Magician'])->faces())->toBe([]);
+});

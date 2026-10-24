@@ -8,6 +8,7 @@
                 <a href="{{ $card->link() }}" class="focus-ring rounded-sm after:absolute after:inset-0 after:content-['']">{{ $card->name() }}</a>
             </h2>
             <p class="text-[13px] text-muted">{{ $card->typeLine() }}</p>
+            <x-card-faces-badge :card="$card" />
             @if ($card->hasStats())
             <p class="font-mono text-[13px] text-body">{{ $card->statLine() }}</p>
             @endif

@@ -8,8 +8,8 @@
             <span aria-current="page" class="text-ink">{{ $card->name() }}</span>
         </nav>
 
-        <div class="flex flex-wrap items-start gap-14">
-            <div class="card-glow w-full max-w-[400px] flex-[1_1_320px]" @if ($card->hasFaces()) x-data="cardFaces(@js($card->faceImages()))" @endif>
+        <div class="flex flex-wrap items-start gap-14" @if ($card->hasFaces()) x-data="cardFaces(@js($card->faceImages()))" @endif>
+            <div class="card-glow w-full max-w-[400px] flex-[1_1_320px]">
                 {{-- Leans toward the pointer with a glare; holo rarities add a foil sheen (cardTilt, .card-holo). --}}
                 <div x-data="cardTilt" @pointermove="move($event)" @pointerleave="reset()" class="card-holo" @if ($card->isHolo()) data-holo @endif>
                     <img src="{{ $card->image() }}" @if ($card->hasFaces()) :src="current" @endif alt="{{ $card->name() }}"
@@ -21,6 +21,18 @@
             </div>
 
             <div class="flex min-w-0 flex-[999_1_480px] flex-col gap-7">
+                @if ($card->hasFaces())
+                {{-- Each face has its own type, stats and text; the price is the card's. --}}
+                <h1 class="heading-display text-[clamp(44px,5vw,64px)] text-ink">{{ $card->name() }}</h1>
+
+                @foreach ($card->faces() as $face)
+                @include('cards.partials.face-details', ['face' => $face, 'index' => $loop->index, 'front' => $loop->first])
+                @endforeach
+
+                <dl class="flex flex-wrap gap-3">
+                    <x-stat-box label="Price" :value="$card->formattedPrice()" />
+                </dl>
+                @else
                 <div class="flex flex-col gap-3">
                     @if ($card->typeLine())
                     <p class="eyebrow">{{ $card->typeLine() }}</p>
@@ -36,6 +48,7 @@
 
                 @if ($card->description())
                 <div class="whitespace-pre-line rounded-2xl border border-line bg-surface px-6 py-5 text-[17px] leading-[1.7] text-body">{{ $card->description() }}</div>
+                @endif
                 @endif
 
                 @if ($collection)

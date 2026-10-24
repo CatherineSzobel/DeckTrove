@@ -134,3 +134,45 @@ test('a double-faced card starts on its front and can show the other face', func
     expect($content)->toMatch('/<button[^>]*js-only[^>]*>Show other face<\/button>/')
         ->not->toMatch('/<button[^>]*x-cloak/');
 });
+
+function fakeDelver(): void
+{
+    fakeScryfallCard(['name' => 'Delver of Secrets // Insectile Aberration', 'type_line' => 'Creature — Human Wizard // Creature — Human Insect', 'card_faces' => [
+        ['name' => 'Delver of Secrets', 'mana_cost' => '{U}', 'type_line' => 'Creature — Human Wizard', 'oracle_text' => 'Look at the top card of your library.', 'power' => '1', 'toughness' => '1', 'image_uris' => ['normal' => 'https://cards.scryfall.io/normal/front/delver.jpg']],
+        ['name' => 'Insectile Aberration', 'mana_cost' => '', 'type_line' => 'Creature — Human Insect', 'oracle_text' => 'Flying', 'power' => '3', 'toughness' => '2', 'image_uris' => ['normal' => 'https://cards.scryfall.io/normal/back/delver.jpg']],
+    ]]);
+}
+
+test('without JS a double-faced card shows both faces, the back with its own image', function () {
+    fakeDelver();
+
+    $html = $this->get(route('cards.show', ['magic', MAGIC_CARD_ID]))->assertOk()->getContent();
+    $back = str($html)->after('data-face="1"')->toString();
+
+    expect($html)->toContain('Delver of Secrets // Insectile Aberration</h1>')
+        ->toContain('data-face="0"')
+        ->toContain('>Delver of Secrets</h2>')
+        ->toContain('Look at the top card of your library.')
+        ->and($back)->toContain('>Insectile Aberration</h2>')
+        ->toContain('<p class="eyebrow">Creature — Human Insect</p>')
+        ->toContain('Flying')
+        ->toMatch('/no-js-only[^>]*>\s*<img src="https:\/\/cards\.scryfall\.io\/normal\/back\/delver\.jpg"/')
+        ->toMatch('/>Power<\/dt>\s*<dd[^>]*>3<\/dd>/');
+});
+
+test('with JS the flip shows one face’s details at a time', function () {
+    fakeDelver();
+
+    $html = $this->get(route('cards.show', ['magic', MAGIC_CARD_ID]))->assertOk()->getContent();
+
+    expect($html)->toContain(':data-collapsed="index !== 0"')->toMatch('/data-collapsed="true"\s+:data-collapsed="index !== 1"/')
+        ->and(substr_count($html, '<p class="eyebrow">Creature — Human Wizard // Creature — Human Insect</p>'))->toBe(0);
+});
+
+test('a single-faced card keeps one set of details and no face blocks', function () {
+    fakeScryfallCard(['type_line' => 'Creature — Elf Druid', 'mana_cost' => '{G}', 'oracle_text' => 'Add {G}.']);
+
+    expect($this->get(route('cards.show', ['magic', MAGIC_CARD_ID]))->assertOk()->getContent())
+        ->not->toContain('data-face=')->not->toContain('no-js-only')
+        ->toContain('Add {G}.');
+});

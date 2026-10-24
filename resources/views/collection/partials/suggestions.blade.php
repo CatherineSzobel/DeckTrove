@@ -15,6 +15,7 @@
             <a href="{{ route('cards.show', [$page->series(), $card->id()]) }}" class="focus-ring flex flex-col gap-2 rounded-md">
                 <img src="{{ $card->imageSmall() }}" alt="" loading="lazy" class="aspect-[59/86] w-full rounded-md object-cover">
                 <span class="truncate text-sm font-bold text-ink">{{ $card->name() }}</span>
+                <x-card-faces-badge :card="$card" />
             </a>
             <x-collection.counter :game="$page->series()" :card="$card->id()" :name="$card->name()" :list="$page->list()" :count="0" />
         </li>

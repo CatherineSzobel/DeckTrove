@@ -21,6 +21,7 @@
                         <img src="{{ $card->imageSmall() }}" alt="" loading="lazy" class="h-11 w-8 shrink-0 rounded-sm object-cover">
                         <span class="min-w-0">
                             {{ $card->name() }}
+                            <x-card-faces-badge :card="$card" />
                             <span class="block text-xs font-normal text-muted sm:hidden">{{ $card->typeLine() }}</span>
                         </span>
                     </a>

@@ -20,9 +20,11 @@ abstract class CardMapper
     }
 
     /**
-     * Images of every face for double-faced cards; empty for regular cards.
+     * Every face of a double-faced card, each with its own image; empty for regular cards.
+     *
+     * @return list<CardFace>
      */
-    public function faceImages(array $card): array
+    public function faces(array $card): array
     {
         return [];
     }

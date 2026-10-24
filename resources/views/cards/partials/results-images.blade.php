@@ -3,6 +3,7 @@
 <div data-results class="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-3 sm:grid-cols-[repeat(auto-fill,minmax(160px,1fr))] sm:gap-5">
     @foreach ($cards as $card)
     <div id="card-{{ $card->id() }}" class="relative scroll-mt-24">
+        <x-card-faces-badge :card="$card" corner />
         <a href="{{ $card->link() }}" class="card-tile" x-data="{ card: @js($card->builderCard()) }"
             @mouseenter="showPreview(card, $el)" @mouseleave="hidePreview()" @focus="showPreview(card, $el)" @blur="hidePreview()">
             <img src="{{ $card->imageSmall() }}" alt="{{ $card->name() }}" loading="lazy" class="aspect-[59/86] w-full rounded-lg object-cover">
