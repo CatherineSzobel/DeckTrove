@@ -13,7 +13,7 @@
             </span>
         </a>
         @if ($tileCounts->shows())
-        <x-collection.counter :game="$series" :card="$card->id()" :name="$card->name()" :count="$tileCounts->count($card)" :removable="$tileCounts->removable($card)" class="mt-1" />
+        <x-collection.tile-counter :counts="$tileCounts" :card="$card" :series="$series" class="mt-1" />
         @endif
     </div>
     @endforeach

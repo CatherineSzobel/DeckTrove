@@ -312,10 +312,9 @@ final class ProfilePage
 
     private function listOverview(string $list): Collection
     {
-        return $this->profile->collectionItems()->where('collection_items.list', $list)
-            ->join('cards', 'cards.id', '=', 'collection_items.card_id')
-            ->groupBy('collection_items.card_key', 'collection_items.game')
-            ->selectRaw('collection_items.game, MIN(cards.external_id) as external_id, MIN(cards.name) as name, MIN(cards.image_url) as image_url, SUM(collection_items.quantity) as copies, MAX(collection_items.updated_at) as touched')
+        return $this->profile->collectionItems()
+            ->cardTiles($list)
+            ->selectRaw('MAX(collection_items.updated_at) as touched')
             ->orderByDesc('touched')
             ->limit(self::OVERVIEW_COLLECTION)
             ->get()
@@ -332,8 +331,8 @@ final class ProfilePage
             'liked' => Deck::public()
                 ->whereHas('likes', fn ($likes) => $likes->where('user_id', $this->profile->id))
                 ->count(),
-            'collection' => $this->profile->collectionItems()->where('list', CollectionItem::OWNED)->distinct()->count('card_key'),
-            'wishlist' => $this->profile->collectionItems()->where('list', CollectionItem::WANTED)->distinct()->count('card_key'),
+            'collection' => $this->profile->collectionItems()->owned()->distinct()->count('card_key'),
+            'wishlist' => $this->profile->collectionItems()->wanted()->distinct()->count('card_key'),
             'comments' => $this->profile->profileComments()->count(),
         };
     }

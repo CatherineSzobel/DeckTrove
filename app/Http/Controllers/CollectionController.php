@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Collection\CollectionPage;
 use App\Collection\CollectionService;
 use App\Collection\CollectionSuggestions;
-use App\Exceptions\ScryfallUnavailableException;
+use App\Exceptions\CardSourceUnavailableException;
 use App\Models\CollectionItem;
 use Illuminate\Http\Request;
 
@@ -24,7 +24,7 @@ class CollectionController extends Controller
     {
         try {
             $cost = $collection->wishlistCost($request->user());
-        } catch (ScryfallUnavailableException) {
+        } catch (CardSourceUnavailableException) {
             $cost = ['total' => null, 'unpriced' => 0];
         }
 

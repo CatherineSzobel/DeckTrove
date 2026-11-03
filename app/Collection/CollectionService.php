@@ -34,7 +34,13 @@ class CollectionService
 
     public function add(User $user, string $game, string $cardId, string $list = CollectionItem::OWNED, string $printing = '', int $amount = 1): void
     {
-        $this->addCard($user, $game, $this->card($game, $cardId), $cardId, $list, $printing, $amount);
+        $card = $this->card($game, $cardId);
+
+        if ($list === CollectionItem::OWNED && $printing !== '' && ! in_array($printing, array_column($this->cards->for($game)->printings($card->raw()), 'key'), true)) {
+            throw ValidationException::withMessages(['card' => 'That card has no such printing.']);
+        }
+
+        $this->addCard($user, $game, $card, $cardId, $list, $printing, $amount);
     }
 
     /** add() for a card that is already loaded, so bulk actions don't look every card up again. */
@@ -46,7 +52,7 @@ class CollectionService
             $this->increment($user, $game, $card, $cardId, $list, $printing, $amount);
 
             if ($list === CollectionItem::OWNED) {
-                $this->decrement($user, $game, $card->collectionKey(), CollectionItem::WANTED, '', $amount);
+                $this->decrement($this->row($user, $game, $card->collectionKey(), CollectionItem::WANTED, ''), $amount);
             }
         });
     }
@@ -54,7 +60,7 @@ class CollectionService
     public function remove(User $user, string $game, string $cardId, string $list = CollectionItem::OWNED, string $printing = ''): void
     {
         // The key comes from the user's own rows, so a card the source dropped (or a Scryfall outage) can still be removed.
-        $key = $this->storedKey($user, $game, $cardId) ?? $this->card($game, $cardId)->collectionKey();
+        $key = $this->keyFor($user, $game, $cardId);
         $printing = $list === CollectionItem::WANTED ? '' : $printing;
 
         DB::transaction(function () use ($user, $game, $key, $list, $printing) {
@@ -64,7 +70,11 @@ class CollectionService
                 throw ValidationException::withMessages(['card' => 'Choose which printing to remove.']);
             }
 
-            $this->decrement($user, $game, $key, $list, $printing, 1);
+            if (! $row) {
+                throw ValidationException::withMessages(['card' => 'There is no copy of that card to remove.']);
+            }
+
+            $this->decrement($row, 1);
         });
     }
 
@@ -108,15 +118,14 @@ class CollectionService
     }
 
     /**
-     * What a counter shows after a change: the list's copies of the card (owned total, wanted, or one printing's
-     * owned copies) and whether its "−" has a copy to take — a card-level owned "−" only takes unspecified copies.
+     * What a counter shows after a change, from the card's counts(): the list's copies of the card (owned total,
+     * wanted, or one printing's owned copies) and whether its "−" has a copy to take.
      *
+     * @param  array{owned: int, wanted: int, printings: array<string, int>}  $counts
      * @return array{count: int, removable: bool}
      */
-    public function counterState(User $user, string $game, string $cardId, string $list = CollectionItem::OWNED, string $printing = ''): array
+    public static function counterState(array $counts, string $list = CollectionItem::OWNED, string $printing = ''): array
     {
-        $counts = $this->counts($user, $game, $this->keyFor($user, $game, $cardId));
-
         if ($list === CollectionItem::WANTED) {
             return ['count' => $counts['wanted'], 'removable' => $counts['wanted'] > 0];
         }
@@ -127,7 +136,18 @@ class CollectionService
             return ['count' => $copies, 'removable' => $copies > 0];
         }
 
-        return ['count' => $counts['owned'], 'removable' => ($counts['printings'][''] ?? 0) > 0];
+        return ['count' => $counts['owned'], 'removable' => self::removable($counts)];
+    }
+
+    /**
+     * Whether a card-level owned "−" has a copy to take: it only takes unspecified copies (printing copies come off
+     * in the card page's Printings list).
+     *
+     * @param  array{owned: int, wanted: int, printings: array<string, int>}  $counts
+     */
+    public static function removable(array $counts): bool
+    {
+        return ($counts['printings'][''] ?? 0) > 0;
     }
 
     /**
@@ -226,11 +246,13 @@ class CollectionService
         $config = config("series.$series");
         $provider = $this->packs->for($series);
         $setName = (new PackViewModel($provider->find($setCode, $slug), $config['pack'] ?? []))->name();
+        // Fetched before the transaction, so no row stays locked while the source is paged.
+        $cards = $provider->cards($setCode, $slug);
 
-        return DB::transaction(function () use ($user, $series, $setCode, $slug, $config, $provider, $setName) {
+        return DB::transaction(function () use ($user, $series, $setCode, $config, $cards, $setName) {
             $added = 0;
 
-            foreach ($provider->cards($setCode, $slug) as $raw) {
+            foreach ($cards as $raw) {
                 $card = new CardViewModel((array) $raw, $config);
                 $printing = $card->printingIn($setCode, $setName);
                 $cardId = $card->id();
@@ -303,9 +325,7 @@ class CollectionService
     /** @return array<string, int> */
     private function ownedByKey(User $user, string $game, array $keys): array
     {
-        return $user->collectionItems()->owned()->forGame($game)->whereIn('card_key', $keys)
-            ->selectRaw('card_key, SUM(quantity) as copies')->groupBy('card_key')
-            ->pluck('copies', 'card_key')->map(fn ($copies) => (int) $copies)->all();
+        return array_map(fn (array $counts) => $counts['count'], $this->ownedCounts($user, $game, $keys));
     }
 
     /** @return array<string, int> */
@@ -354,10 +374,7 @@ class CollectionService
     private function increment(User $user, string $game, CardViewModel $card, string $cardId, string $list, string $printing, int $amount): void
     {
         $row = $this->row($user, $game, $card->collectionKey(), $list, $printing);
-
-        if (($row?->quantity ?? 0) + $amount > self::MAX) {
-            throw ValidationException::withMessages(['card' => 'You can keep at most '.self::MAX.' copies of a card.']);
-        }
+        $this->guardMax($row, $amount);
 
         if ($row) {
             $row->increment('quantity', $amount);
@@ -377,19 +394,20 @@ class CollectionService
         } catch (UniqueConstraintViolationException $e) {
             // A double "+" created the row first: add to that one instead.
             $row = $this->row($user, $game, $card->collectionKey(), $list, $printing) ?? throw $e;
-
-            if ($row->quantity + $amount > self::MAX) {
-                throw ValidationException::withMessages(['card' => 'You can keep at most '.self::MAX.' copies of a card.']);
-            }
-
+            $this->guardMax($row, $amount);
             $row->increment('quantity', $amount);
         }
     }
 
-    private function decrement(User $user, string $game, string $key, string $list, string $printing, int $amount): void
+    private function guardMax(?CollectionItem $row, int $amount): void
     {
-        $row = $this->row($user, $game, $key, $list, $printing);
+        if (($row?->quantity ?? 0) + $amount > self::MAX) {
+            throw ValidationException::withMessages(['card' => 'You can keep at most '.self::MAX.' copies of a card.']);
+        }
+    }
 
+    private function decrement(?CollectionItem $row, int $amount): void
+    {
         if (! $row) {
             return;
         }

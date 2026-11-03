@@ -16,14 +16,8 @@
             <input type="hidden" name="game" value="{{ $series }}">
             <input type="hidden" name="card" value="{{ $card->id() }}">
             <input type="hidden" name="want" value="{{ $collection->wantValue() }}" :value="wanted ? '0' : '1'">
-            <button type="submit" aria-pressed="{{ $collection->pressed() }}" :aria-pressed="wanted.toString()" class="collection-heart">
-                @if ($collection->wanted())
-                <x-heroicon-s-heart x-show="wanted" class="h-5 w-5" aria-hidden="true" />
-                <x-heroicon-o-heart x-show="! wanted" x-cloak class="h-5 w-5" aria-hidden="true" />
-                @else
-                <x-heroicon-s-heart x-show="wanted" x-cloak class="h-5 w-5" aria-hidden="true" />
-                <x-heroicon-o-heart x-show="! wanted" class="h-5 w-5" aria-hidden="true" />
-                @endif
+            <button type="submit" aria-pressed="{{ $collection->pressed() }}" :aria-pressed="wanted.toString()" class="btn-like collection-heart group">
+                <x-heroicon-o-heart class="h-5 w-5 group-aria-pressed:fill-current" aria-hidden="true" />
                 <span x-text="wanted ? 'Wanted' : 'Want it'">{{ $collection->heartLabel() }}</span>
             </button>
             <span x-show="error" x-text="error" x-cloak role="alert" class="text-center text-xs text-danger"></span>

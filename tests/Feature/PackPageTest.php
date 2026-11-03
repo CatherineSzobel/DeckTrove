@@ -53,13 +53,13 @@ test('the cards are tiles with their name and rarity for filtering', function ()
 });
 
 test('the first tiles deal in once, and keep their hover lift afterwards', function () {
-    expect(lobPage())->toContain('x-ref="grid" data-deal');
+    expect(lobPage())->toContain('x-ref="grid" data-deal')->toContain('<div id="card-89631139" style="--deal: 0"')->toContain('<div id="card-46986414" style="--deal: 1"');
 
     $css = file_get_contents(resource_path('css/app.css'));
 
-    expect($css)->toMatch('/@media \(prefers-reduced-motion: no-preference\)\s*\{[^@]*\[data-deal\] > :nth-child\(-n\+12\)\s*\{\s*animation: pack-deal 0\.4s ease-out backwards/')
+    expect($css)->toMatch('/@media \(prefers-reduced-motion: no-preference\)\s*\{[^@]*\[data-deal\]:not\(:has\(> :target\)\) > :nth-child\(-n\+12\)\s*\{\s*animation: pack-deal 0\.4s ease-out backwards/')
         ->toContain('animation-delay: calc(var(--deal, 0) * 40ms)')
-        ->toContain('[data-deal] > :nth-child(12) { --deal: 11; }')
+        ->not->toContain(':nth-child(12) { --deal')
         ->toContain('@keyframes pack-deal')
         ->and(substr_count($css, 'animation: pack-deal'))->toBe(1);
 });
@@ -150,5 +150,5 @@ test('logged-in players get “Add set to collection” and a counter under each
         ->toContain('Add set to collection')
         ->toContain('aria-label="Add a copy of Dark Magician"')
         ->toContain('aria-label="Add a copy of Blue-Eyes White Dragon"')
-        ->toMatch('/<div id="card-46986414" class="relative flex scroll-mt-24 flex-col" data-name="dark magician" data-rarity="Ultra Rare"/');
+        ->toMatch('/<div id="card-46986414" style="--deal: 1" class="relative flex scroll-mt-24 flex-col" data-name="dark magician" data-rarity="Ultra Rare"/');
 });

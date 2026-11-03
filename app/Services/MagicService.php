@@ -165,7 +165,8 @@ class MagicService implements CardProvider
     public function printings(array $card): array
     {
         $oracleId = $card['oracle_id'] ?? data_get($card, 'card_faces.0.oracle_id');
-        $prints = $oracleId ? $this->searchAll("oracleid:$oracleId unique:prints", 2) : [$card];
+        // 10 pages of 175 cover the most-printed cards (basic lands); each page is cached.
+        $prints = $oracleId ? $this->searchAll("oracleid:$oracleId unique:prints", 10) : [$card];
 
         return collect($prints)
             ->map(fn ($print) => [

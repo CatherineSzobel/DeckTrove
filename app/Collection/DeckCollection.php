@@ -4,6 +4,7 @@ namespace App\Collection;
 
 use App\Models\Deck;
 use App\Models\User;
+use App\Support\Money;
 
 /** The deck page's "Your collection" block (resources/views/decks/partials/collection-block.blade.php). */
 final class DeckCollection
@@ -51,8 +52,6 @@ final class DeckCollection
             return null;
         }
 
-        $currency = config('app.currency');
-
-        return 'Missing cards: about '.$currency['symbol'].number_format($this->needs->missingCost, 2);
+        return 'Missing cards: about '.Money::format($this->needs->missingCost);
     }
 }

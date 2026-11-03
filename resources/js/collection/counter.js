@@ -23,11 +23,18 @@ async function post(send, formData, form) {
     return { ok: response.ok, body };
 }
 
-/** Shows a message in `error` for ERROR_MS; an older message's timer doesn't clear a newer one. */
-function errors(wait) {
+const messageOf = (body) => (typeof body?.message === "string" && body.message !== "" ? body.message : COULD_NOT_CHANGE);
+
+/**
+ * The in-place post both widgets share: one request at a time; `accept(body)` applies an answer and returns false when
+ * it isn't one, and then (or when the post fails) a message shows in `error` for ERROR_MS. An older message's timer
+ * doesn't clear a newer one.
+ */
+function inPlacePost(send, formData, wait) {
     return {
         error: "",
         errorId: 0,
+        busy: false,
 
         showError(message) {
             const id = ++this.errorId;
@@ -36,10 +43,23 @@ function errors(wait) {
                 if (this.errorId === id) this.error = "";
             }, ERROR_MS);
         },
+
+        async postForm(event, accept) {
+            event.preventDefault();
+            if (this.busy) return;
+            this.busy = true;
+
+            try {
+                const { ok, body } = await post(send, formData, event.currentTarget);
+                if (!ok || !accept(body)) this.showError(messageOf(body));
+            } catch {
+                this.showError(COULD_NOT_CHANGE);
+            } finally {
+                this.busy = false;
+            }
+        },
     };
 }
-
-const messageOf = (body) => (typeof body?.message === "string" && body.message !== "" ? body.message : COULD_NOT_CHANGE);
 
 /** Whether an announced change is about this card. */
 const sameCard = (self, detail) => detail?.game === self.game && detail?.card === self.card && detail?.card_totals;
@@ -52,10 +72,9 @@ export function collectionCounter({
     notify = (detail) => globalThis.dispatchEvent?.(new CustomEvent(CHANGED_EVENT, { detail })),
 } = {}) {
     return {
-        ...errors(wait),
+        ...inPlacePost(send, formData, wait),
         count: 0,
         removable: false,
-        busy: false,
         game: "",
         card: "",
         list: "owned",
@@ -72,26 +91,15 @@ export function collectionCounter({
             this.printing = data.printing ?? "";
         },
 
-        async submit(event) {
-            event.preventDefault();
-            if (this.busy) return;
-            this.busy = true;
+        submit(event) {
+            return this.postForm(event, (body) => {
+                if (typeof body?.count !== "number") return false;
 
-            try {
-                const { ok, body } = await post(send, formData, event.currentTarget);
-
-                if (ok && typeof body?.count === "number") {
-                    this.count = body.count;
-                    this.removable = body.removable === true;
-                    notify({ game: this.game, card: this.card, list: this.list, printing: this.printing, count: this.count, removable: this.removable, card_totals: body.card });
-                } else {
-                    this.showError(messageOf(body));
-                }
-            } catch {
-                this.showError(COULD_NOT_CHANGE);
-            } finally {
-                this.busy = false;
-            }
+                this.count = body.count;
+                this.removable = body.removable === true;
+                notify({ game: this.game, card: this.card, list: this.list, printing: this.printing, count: this.count, removable: this.removable, card_totals: body.card });
+                return true;
+            });
         },
 
         /** The card-level owned counter (the card page row) takes the card's new total after any change to the card. */
@@ -111,9 +119,8 @@ export function collectionHeart({
     wait = (callback, ms) => setTimeout(callback, ms),
 } = {}) {
     return {
-        ...errors(wait),
+        ...inPlacePost(send, formData, wait),
         wanted: false,
-        busy: false,
         game: "",
         card: "",
 
@@ -123,24 +130,13 @@ export function collectionHeart({
             this.card = el.dataset.card ?? "";
         },
 
-        async submit(event) {
-            event.preventDefault();
-            if (this.busy) return;
-            this.busy = true;
+        submit(event) {
+            return this.postForm(event, (body) => {
+                if (typeof body?.wanted !== "boolean") return false;
 
-            try {
-                const { ok, body } = await post(send, formData, event.currentTarget);
-
-                if (ok && typeof body?.wanted === "boolean") {
-                    this.wanted = body.wanted;
-                } else {
-                    this.showError(messageOf(body));
-                }
-            } catch {
-                this.showError(COULD_NOT_CHANGE);
-            } finally {
-                this.busy = false;
-            }
+                this.wanted = body.wanted;
+                return true;
+            });
         },
 
         /** An owned copy takes the card off the wishlist on the server, so the heart follows the card's totals. */

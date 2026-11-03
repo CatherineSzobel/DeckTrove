@@ -53,7 +53,7 @@ class PublicDeckQuery
         $sort = QueryInput::string($request, 'sort');
         $sort = array_key_exists($sort, self::SORTS) ? $sort : 'newest';
 
-        $search = mb_substr(trim(QueryInput::string($request, 'q')), 0, self::SEARCH_LENGTH);
+        $search = QueryInput::search($request, 'q', self::SEARCH_LENGTH);
 
         return new self(
             $viewer,

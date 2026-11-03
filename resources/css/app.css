@@ -170,14 +170,6 @@ html:not(.js) .js-only {
     }
 
     /* The "Want it" heart: an outlined pill, accent when the card is on the wishlist. */
-    .collection-heart {
-        @apply focus-ring inline-flex min-h-11 items-center gap-2 rounded-full border-[1.5px] border-line-strong px-4 text-sm font-bold text-ink;
-
-        &[aria-pressed="true"] {
-            @apply border-accent-ink bg-warn-bg text-accent-ink;
-        }
-    }
-
     /* Session notices (x-flash): the box and the icon take the colour of their data-flash type. */
     .notice {
         @apply mb-4 flex items-center gap-3 rounded-xl border px-4 py-3 text-[15px] text-ink;
@@ -218,6 +210,11 @@ html:not(.js) .js-only {
 
     .btn-like-lg {
         @apply flex h-12 w-full items-center justify-between gap-3 pl-[18px] pr-1.5 text-ink;
+    }
+
+    /* The card page's wishlist heart: .btn-like as a pill. */
+    .collection-heart {
+        @apply inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-sm text-ink;
     }
 
     /* A card's rarity: a small outlined pill (card database Full and List views, pack pages). */
@@ -456,26 +453,15 @@ html:not(.js) .js-only {
         @apply focus-ring rounded-2xl border-[1.5px] border-line bg-surface transition hover:border-accent focus-visible:border-accent motion-safe:hover:-translate-y-0.5 motion-safe:focus-visible:-translate-y-0.5;
     }
 
-    /* The pack page's cards deal in like a booster being opened: the first 12 tiles, 40 ms apart. `backwards` only
-       holds the first frame during the delay, so the hover lift still works afterwards; pack-page.js drops
-       data-deal after the deal, so filtering doesn't replay it. */
+    /* The pack page's cards deal in like a booster being opened: the first 12 tiles, 40 ms apart (--deal is the
+       tile's index, set in packs/pack.blade.php). `backwards` only holds the first frame during the delay, so the hover
+       lift still works afterwards; pack-page.js drops data-deal after the deal, so filtering doesn't replay it. Coming
+       back to a tile (#card-<id>, after a no-JS + or −) skips the deal. */
     @media (prefers-reduced-motion: no-preference) {
-        [data-deal] > :nth-child(-n+12) {
+        [data-deal]:not(:has(> :target)) > :nth-child(-n+12) {
             animation: pack-deal 0.4s ease-out backwards;
             animation-delay: calc(var(--deal, 0) * 40ms);
         }
-
-        [data-deal] > :nth-child(2) { --deal: 1; }
-        [data-deal] > :nth-child(3) { --deal: 2; }
-        [data-deal] > :nth-child(4) { --deal: 3; }
-        [data-deal] > :nth-child(5) { --deal: 4; }
-        [data-deal] > :nth-child(6) { --deal: 5; }
-        [data-deal] > :nth-child(7) { --deal: 6; }
-        [data-deal] > :nth-child(8) { --deal: 7; }
-        [data-deal] > :nth-child(9) { --deal: 8; }
-        [data-deal] > :nth-child(10) { --deal: 9; }
-        [data-deal] > :nth-child(11) { --deal: 10; }
-        [data-deal] > :nth-child(12) { --deal: 11; }
     }
 
     /* One square in the numbered pagination (x-pagination). */

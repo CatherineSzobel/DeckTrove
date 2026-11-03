@@ -62,9 +62,9 @@
 
             <x-form-error name="card" bag="collection" />
 
-            <div x-ref="grid" @if ($dealIn)data-deal @endif class="grid grid-cols-[repeat(auto-fill,minmax(min(180px,100%),1fr))] gap-5">
+            <div x-ref="grid" data-deal class="grid grid-cols-[repeat(auto-fill,minmax(min(180px,100%),1fr))] gap-5">
                 @foreach ($cards as $card)
-                <div id="card-{{ $card->id() }}" class="relative flex scroll-mt-24 flex-col" data-name="{{ $card->searchName() }}" data-rarity="{{ $card->rarity() }}" @unless ($filter->matches($card)) hidden @endunless>
+                <div id="card-{{ $card->id() }}" style="--deal: {{ $loop->index }}" class="relative flex scroll-mt-24 flex-col" data-name="{{ $card->searchName() }}" data-rarity="{{ $card->rarity() }}" @unless ($filter->matches($card)) hidden @endunless>
                     <a href="{{ $card->link() }}" x-data="{ card: @js($card->builderCard()) }" @mouseenter="showPreview(card, $el)" @mouseleave="hidePreview()"
                         @focus="showPreview(card, $el)" @blur="hidePreview()" class="pack-tile flex flex-1 flex-col gap-3 p-3">
                         <img src="{{ $card->imageSmall() }}" alt="" loading="lazy" class="aspect-[59/86] w-full rounded-md object-cover">
@@ -76,7 +76,7 @@
                         </span>
                     </a>
                     @if ($tileCounts->shows())
-                    <x-collection.counter :game="$series" :card="$card->id()" :name="$card->name()" :count="$tileCounts->count($card)" :removable="$tileCounts->removable($card)" class="mt-1" />
+                    <x-collection.tile-counter :counts="$tileCounts" :card="$card" :series="$series" class="mt-1" />
                     @endif
                 </div>
                 @endforeach

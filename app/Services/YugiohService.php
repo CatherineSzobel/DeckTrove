@@ -102,10 +102,12 @@ class YugiohService implements CardProvider
 
     public function random(int $count): Collection
     {
-        return YugiohCard::inRandomOrder()
-            ->limit($count)
+        // Shuffling only the ids is far cheaper than shuffling whole rows (their JSON columns make each row large).
+        return YugiohCard::whereIn('id', YugiohCard::query()->select('id')->inRandomOrder()->limit($count))
             ->get()
-            ->map(fn (YugiohCard $card) => $card->toCardArray());
+            ->shuffle()
+            ->map(fn (YugiohCard $card) => $card->toCardArray())
+            ->values();
     }
 
     public function filterOptions(): array

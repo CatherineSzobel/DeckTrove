@@ -17,4 +17,10 @@ final class QueryInput
 
         return is_string($value) ? $value : '';
     }
+
+    /** A search box's text: string() trimmed and cut to $length characters. */
+    public static function search(Request $request, string $key, int $length = 100): string
+    {
+        return mb_substr(trim(self::string($request, $key)), 0, $length);
+    }
 }

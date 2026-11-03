@@ -101,11 +101,12 @@ test('the pack page doesn’t deal its cards in again after a collection action'
     routesLobSet();
     $user = User::factory()->create();
 
-    $this->actingAs($user)->get('/yugioh/pack/LOB/legend-of-blue-eyes-white-dragon')->assertSee('x-ref="grid" data-deal', false);
-
-    $this->actingAs($user)->from('/yugioh/pack/LOB/legend-of-blue-eyes-white-dragon')->followingRedirects()
+    // It comes back at the tile (#card-<id>), and the deal skips a grid holding the :target tile.
+    $this->actingAs($user)->from('/yugioh/pack/LOB/legend-of-blue-eyes-white-dragon')
         ->post(route('collection.add'), ['game' => 'yugioh', 'card' => '46986414'])
-        ->assertSee('Added to your collection.')->assertDontSee('data-deal', false);
+        ->assertRedirect('/yugioh/pack/LOB/legend-of-blue-eyes-white-dragon#card-46986414');
+
+    expect(file_get_contents(resource_path('css/app.css')))->toContain('[data-deal]:not(:has(> :target)) > :nth-child(-n+12)');
 });
 
 test('the card database and pack tiles are anchors the redirect lands on', function () {

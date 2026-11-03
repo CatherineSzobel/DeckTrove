@@ -5,6 +5,7 @@ use App\Models\User;
 use App\Models\YugiohCard;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Validation\ValidationException;
 
 uses(RefreshDatabase::class);
 
@@ -58,9 +59,25 @@ test('the Printings list has a counter per printing, linking each to its pack', 
 
 test('a stored printing the source no longer offers keeps its row', function () {
     $user = User::factory()->create();
-    app(CollectionService::class)->add($user, 'yugioh', '46986414', 'owned', 'OLD-EN001');
+    app(CollectionService::class)->add($user, 'yugioh', '46986414', 'owned', 'LOB-EN005');
+    $user->collectionItems()->update(['printing' => 'OLD-EN001']);
 
     expect(cardPageWithPrintings($user))->toContain('name="printing" value="OLD-EN001"');
+});
+
+test('a printing the card doesn’t have can’t be added', function () {
+    $user = User::factory()->create();
+
+    expect(fn () => app(CollectionService::class)->add($user, 'yugioh', '46986414', 'owned', 'anything'))
+        ->toThrow(ValidationException::class, 'That card has no such printing.')
+        ->and($user->collectionItems()->count())->toBe(0);
+});
+
+test('removing a copy that isn’t there says so', function () {
+    $user = User::factory()->create();
+
+    expect(fn () => app(CollectionService::class)->remove($user, 'yugioh', '46986414', 'wanted'))
+        ->toThrow(ValidationException::class, 'There is no copy of that card to remove.');
 });
 
 test('with every copy in printings, the row’s minus is off and points to the printings', function () {

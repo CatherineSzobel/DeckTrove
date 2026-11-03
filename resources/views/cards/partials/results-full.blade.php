@@ -23,7 +23,7 @@
         </div>
         @if ($tileCounts->shows())
         {{-- Above the name link's overlay (after:inset-0), so its buttons can be pressed. --}}
-        <x-collection.counter :game="$series" :card="$card->id()" :name="$card->name()" :count="$tileCounts->count($card)" :removable="$tileCounts->removable($card)" class="relative z-10 self-end" />
+        <x-collection.tile-counter :counts="$tileCounts" :card="$card" :series="$series" class="relative z-10 self-end" />
         @endif
     </article>
     @endforeach

@@ -6,14 +6,7 @@
     {{ $attributes->class('flex flex-col items-center') }}>
     <div class="flex items-center justify-center gap-1">
         <form method="POST" action="{{ route('collection.remove') }}" @submit="submit($event)">
-            @csrf
-            <input type="hidden" name="game" value="{{ $game }}">
-            <input type="hidden" name="card" value="{{ $card }}">
-            <input type="hidden" name="list" value="{{ $list }}">
-            <input type="hidden" name="printing" value="{{ $printing }}">
-            @if ($anchor)
-            <input type="hidden" name="anchor" value="{{ $anchor }}">
-            @endif
+            <x-collection.counter-fields :$game :$card :$list :$printing :$anchor />
             <button type="submit" @disabled(! $canRemove()) :disabled="count < 1 || ! removable" aria-label="{{ $removeLabel() }}"
                 @if ($hint()) aria-describedby="{{ $hintId() }}" title="{{ $hint() }}" @endif class="counter-button">
                 <x-heroicon-o-minus class="h-4 w-4" aria-hidden="true" />
@@ -21,14 +14,7 @@
         </form>
         <span aria-live="polite" x-text="count" :data-zero="count < 1" class="counter-count {{ $countClass() }}" @if ($isZero()) data-zero @endif>{{ $count }}</span>
         <form method="POST" action="{{ route('collection.add') }}" @submit="submit($event)">
-            @csrf
-            <input type="hidden" name="game" value="{{ $game }}">
-            <input type="hidden" name="card" value="{{ $card }}">
-            <input type="hidden" name="list" value="{{ $list }}">
-            <input type="hidden" name="printing" value="{{ $printing }}">
-            @if ($anchor)
-            <input type="hidden" name="anchor" value="{{ $anchor }}">
-            @endif
+            <x-collection.counter-fields :$game :$card :$list :$printing :$anchor />
             <button type="submit" aria-label="{{ $addLabel() }}" class="counter-button">
                 <x-heroicon-o-plus class="h-4 w-4" aria-hidden="true" />
             </button>

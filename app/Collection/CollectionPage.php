@@ -4,6 +4,7 @@ namespace App\Collection;
 
 use App\Models\CollectionItem;
 use App\Models\User;
+use App\Support\Money;
 use App\Support\QueryInput;
 use App\Support\Series;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -30,7 +31,7 @@ final class CollectionPage
 
     public static function for(User $owner, Request $request, string $list, bool $editable): self
     {
-        $search = mb_substr(trim(QueryInput::string($request, 'search')), 0, 100);
+        $search = QueryInput::search($request, 'search');
 
         return new self($owner, $list, Series::orDefault($request->query('series')), $search, $editable);
     }
@@ -113,12 +114,10 @@ final class CollectionPage
     public function cards(): LengthAwarePaginator
     {
         return $this->cards ??= $this->owner->collectionItems()
-            ->where('collection_items.list', $this->list)
+            ->cardTiles($this->list)
             ->where('collection_items.game', $this->series)
-            ->join('cards', 'cards.id', '=', 'collection_items.card_id')
             ->when($this->search !== '', fn ($query) => $query->where('cards.name', 'like', '%'.addcslashes($this->search, '%_\\').'%'))
-            ->groupBy('collection_items.card_key', 'collection_items.game')
-            ->selectRaw('collection_items.card_key, collection_items.game, SUM(collection_items.quantity) as copies, SUM(CASE WHEN collection_items.printing = \'\' THEN collection_items.quantity ELSE 0 END) as unspecified, MIN(cards.external_id) as external_id, MIN(cards.name) as name, MIN(cards.image_url) as image_url')
+            ->selectRaw('SUM(CASE WHEN collection_items.printing = \'\' THEN collection_items.quantity ELSE 0 END) as unspecified')
             ->orderBy('name')
             ->paginate(self::PER_PAGE)
             ->withQueryString()
@@ -154,14 +153,15 @@ final class CollectionPage
      */
     public function totals(?array $cost = null): array
     {
-        $rows = $this->owner->collectionItems()->where('list', $this->list)->where('game', $this->series);
+        $sums = $this->owner->collectionItems()->where('list', $this->list)->forGame($this->series)
+            ->selectRaw('COUNT(DISTINCT card_key) as cards, SUM(quantity) as copies')->first();
         $totals = [
-            ['label' => 'Unique cards', 'value' => number_format((clone $rows)->distinct()->count('card_key'))],
-            ['label' => 'Copies', 'value' => number_format((int) (clone $rows)->sum('quantity'))],
+            ['label' => 'Unique cards', 'value' => number_format((int) $sums->cards)],
+            ['label' => 'Copies', 'value' => number_format((int) $sums->copies)],
         ];
 
         if ($cost !== null) {
-            $totals[] = ['label' => 'To buy', 'value' => $cost['total'] === null ? 'Price unavailable' : 'about '.config('app.currency.symbol').number_format($cost['total'], 2)];
+            $totals[] = ['label' => 'To buy', 'value' => $cost['total'] === null ? 'Price unavailable' : 'about '.Money::format($cost['total'])];
         }
 
         return $totals;

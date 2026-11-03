@@ -72,16 +72,15 @@ class CollectionItemController extends Controller
         }
 
         if ($request->expectsJson()) {
-            [$user, $game, $card] = [$request->user(), $request->validated('game'), $request->validated('card')];
-            $counts = $this->collection->cardCounts($user, $game, $card);
+            $counts = $this->collection->cardCounts($request->user(), $request->validated('game'), $request->validated('card'));
 
             return response()->json([
                 'message' => $message,
-                ...$this->collection->counterState($user, $game, $card, $request->list(), $request->printing()),
+                ...CollectionService::counterState($counts, $request->list(), $request->printing()),
                 // The card's totals, so the page's other counters for it (the card page row, the heart) can follow.
                 'card' => [
                     'owned' => $counts['owned'],
-                    'removable' => ($counts['printings'][''] ?? 0) > 0,
+                    'removable' => CollectionService::removable($counts),
                     'wanted' => $counts['wanted'],
                     'note' => CardCollectionPanel::noteFor($counts),
                 ],

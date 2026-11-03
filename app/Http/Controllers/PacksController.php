@@ -22,7 +22,7 @@ class PacksController extends Controller
     {
         $view = QueryInput::string($request, 'view');
         $currentView = array_key_exists($view, self::VIEWS) ? $view : 'full';
-        $search = mb_substr(trim(QueryInput::string($request, 'search')), 0, 100);
+        $search = QueryInput::search($request, 'search');
         $packConfig = config("series.$series.pack");
 
         $packs = $this->packService->for($series)
@@ -66,18 +66,9 @@ class PacksController extends Controller
             'filter' => $filter,
             'countLabel' => $filter->countLabel($shown, $cards->count()),
             'noMatches' => $cards->isNotEmpty() && $shown === 0,
-            'dealIn' => ! $this->cameBackFromCollection($request),
             // The owned count under every tile, in one query (none for guests).
             'tileCounts' => TileCounts::for($request->user(), $series, $cards),
         ]);
-    }
-
-    /** Whether this page load follows a collection action (its notice or error is flashed), so the cards don’t deal in again. */
-    private function cameBackFromCollection(Request $request): bool
-    {
-        $errors = $request->session()->get('errors');
-
-        return $request->session()->has('success') || ($errors !== null && $errors->hasBag('collection'));
     }
 
     /**

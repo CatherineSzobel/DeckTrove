@@ -3,7 +3,7 @@
 namespace App\Collection;
 
 use App\Contracts\CardProvider;
-use App\Exceptions\ScryfallUnavailableException;
+use App\Exceptions\CardSourceUnavailableException;
 use App\Models\User;
 use App\ViewModels\CardViewModel;
 use Illuminate\Support\Collection;
@@ -29,7 +29,7 @@ final class CardCollectionPanel
 
         try {
             $printings = $provider->printings($card->raw());
-        } catch (ScryfallUnavailableException) {
+        } catch (CardSourceUnavailableException) {
             $printings = null;
         }
 
@@ -49,7 +49,7 @@ final class CardCollectionPanel
     /** Whether the row's "−" has an unspecified copy to take (printing copies come off in the Printings list). */
     public function removable(): bool
     {
-        return ($this->counts['printings'][''] ?? 0) > 0;
+        return CollectionService::removable($this->counts);
     }
 
     /** "Not in your collection yet", "Any printing", or "2 by printing · 1 any printing". */

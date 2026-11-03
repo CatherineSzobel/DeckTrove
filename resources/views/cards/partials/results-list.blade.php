@@ -31,7 +31,7 @@
                 <td class="px-3 py-1.5 text-body max-sm:hidden sm:px-4">{{ $card->setName() }}</td>
                 <td class="px-3 py-1.5 text-right font-mono font-bold text-ink sm:px-4">{{ $card->formattedPrice() }}</td>
                 @if ($tileCounts->shows())
-                <td class="px-2 py-1.5"><x-collection.counter :game="$series" :card="$card->id()" :name="$card->name()" :count="$tileCounts->count($card)" :removable="$tileCounts->removable($card)" /></td>
+                <td class="px-2 py-1.5"><x-collection.tile-counter :counts="$tileCounts" :card="$card" :series="$series" /></td>
                 @endif
             </tr>
             @endforeach

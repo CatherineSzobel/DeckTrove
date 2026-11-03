@@ -36,7 +36,7 @@ final class CardQuery
     public static function fromRequest(Request $request, string $series, array $filterChoices): self
     {
         $view = QueryInput::string($request, 'view');
-        $search = mb_substr(trim(QueryInput::string($request, 'search')), 0, self::SEARCH_LENGTH);
+        $search = QueryInput::search($request, 'search', self::SEARCH_LENGTH);
 
         $filters = collect(array_keys(config("series.$series.filters", [])))
             ->mapWithKeys(fn (string $key) => [$key => trim(QueryInput::string($request, $key))])

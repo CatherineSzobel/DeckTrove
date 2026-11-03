@@ -53,4 +53,16 @@ class CollectionItem extends Model
     {
         return $query->where('game', $game);
     }
+
+    /**
+     * One row per card on a list, for tiles: card_key, game, copies and the card's external_id, name and image_url
+     * (printings of a card share a key; MIN picks one of their cards). Callers add their own columns and order.
+     */
+    public function scopeCardTiles($query, string $list)
+    {
+        return $query->where('collection_items.list', $list)
+            ->join('cards', 'cards.id', '=', 'collection_items.card_id')
+            ->groupBy('collection_items.card_key', 'collection_items.game')
+            ->selectRaw('collection_items.card_key, collection_items.game, SUM(collection_items.quantity) as copies, MIN(cards.external_id) as external_id, MIN(cards.name) as name, MIN(cards.image_url) as image_url');
+    }
 }

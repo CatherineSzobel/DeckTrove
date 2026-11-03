@@ -2,7 +2,7 @@
 
 namespace App\Collection;
 
-use App\Exceptions\ScryfallUnavailableException;
+use App\Exceptions\CardSourceUnavailableException;
 use App\Models\User;
 use App\Services\CardService;
 use App\ViewModels\CardViewModel;
@@ -31,7 +31,7 @@ final class CollectionSuggestions
         try {
             $found = collect(app(CardService::class)->for($series)->search(['search' => $page->search()])->items())
                 ->map(fn (array $card) => new CardViewModel($card, $config));
-        } catch (ScryfallUnavailableException) {
+        } catch (CardSourceUnavailableException) {
             return new self($page, collect(), true);
         }
 

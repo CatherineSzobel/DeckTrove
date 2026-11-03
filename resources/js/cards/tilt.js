@@ -29,10 +29,13 @@ function apply(style, { tiltX, tiltY, shineX, shineY }) {
 }
 
 /** Alpine data; the two browser hooks are arguments so tests can run without a DOM. */
-export function cardTilt({
-    reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
-    nextFrame = (callback) => window.requestAnimationFrame(callback),
-} = {}) {
+export function cardTilt({ reducedMotion, nextFrame = (callback) => window.requestAnimationFrame(callback) } = {}) {
+    if (!reducedMotion) {
+        // One MediaQueryList for the card's life, not a new one on every pointermove.
+        const query = window.matchMedia("(prefers-reduced-motion: reduce)");
+        reducedMotion = () => query.matches;
+    }
+
     return {
         // The latest pointer position waiting for the next frame, or null.
         pointer: null,

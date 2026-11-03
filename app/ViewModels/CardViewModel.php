@@ -4,6 +4,7 @@ namespace App\ViewModels;
 
 use App\Cards\CardFace;
 use App\Cards\CardMapper;
+use App\Support\Money;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
@@ -186,7 +187,7 @@ class CardViewModel
     {
         $value = $this->priceValue();
 
-        return $value === null ? 'N/A' : config('app.currency.symbol').number_format($value, 2);
+        return $value === null ? 'N/A' : Money::format($value);
     }
 
     /**
