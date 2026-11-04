@@ -51,15 +51,15 @@ Route::middleware('auth')->group(function () {
     // Deck management
     Route::get('/decks', [DeckController::class, 'mine'])->name('decks');
     Route::post('/decks/bulk', BulkDeckController::class)->name('decks.bulk');
-    Route::post('/{series}/deck-builder', [DeckController::class, 'store'])->name('decks.store');
+    Route::post('/{series}/deck-builder', [DeckController::class, 'store'])->middleware('throttle:deck-saves')->name('decks.store');
     Route::get('/decks/{deck}/edit', [DeckController::class, 'edit'])->can('update', 'deck')->name('decks.edit');
-    Route::patch('/decks/{deck}', [DeckController::class, 'update'])->can('update', 'deck')->name('decks.update');
+    Route::patch('/decks/{deck}', [DeckController::class, 'update'])->can('update', 'deck')->middleware('throttle:deck-saves')->name('decks.update');
     Route::delete('/decks/{deck}', [DeckController::class, 'destroy'])->can('delete', 'deck')->name('decks.destroy');
 
     // Import from other tools' formats, and copy someone's public deck (visibility checked by DeckPolicy::view)
     Route::post('/{series}/decks/import', [DeckTransferController::class, 'import'])->middleware('throttle:10,1')->name('decks.import');
     Route::post('/decks/{deck}/import', [DeckTransferController::class, 'reimport'])->can('update', 'deck')->middleware('throttle:10,1')->name('decks.reimport');
-    Route::post('/decks/{deck}/copy', [DeckTransferController::class, 'copy'])->name('decks.copy');
+    Route::post('/decks/{deck}/copy', [DeckTransferController::class, 'copy'])->middleware('throttle:deck-saves')->name('decks.copy');
 
     // Likes on public decks (DeckPolicy::like: not your own deck; someone else's private deck is a 404)
     Route::post('/decks/{deck}/like', [DeckLikeController::class, 'store'])->can('like', 'deck')->middleware('throttle:likes')->name('decks.like');
@@ -84,7 +84,7 @@ Route::middleware('auth')->group(function () {
 
 // Decks (visibility is checked by DeckPolicy::view)
 Route::get('/decks/{deck}', [DeckController::class, 'show'])->name('decks.show');
-Route::get('/decks/{deck}/export', [DeckTransferController::class, 'export'])->name('decks.export');
+Route::get('/decks/{deck}/export', [DeckTransferController::class, 'export'])->middleware('throttle:card-search')->name('decks.export');
 Route::get('/public-deck', [DeckController::class, 'index'])->name('public-deck');
 Route::get('/u/{user:username}', [PublicProfileController::class, 'show'])->name('users.show');
 Route::get('/u/{user:username}/decks', [PublicProfileController::class, 'decks'])->name('users.decks');

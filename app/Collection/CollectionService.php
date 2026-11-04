@@ -54,7 +54,7 @@ class CollectionService
             if ($list === CollectionItem::OWNED) {
                 $this->decrement($this->row($user, $game, $card->collectionKey(), CollectionItem::WANTED, ''), $amount);
             }
-        });
+        }, 3); // Retried: two quick adds of a new card can deadlock on MySQL's gap locks.
     }
 
     public function remove(User $user, string $game, string $cardId, string $list = CollectionItem::OWNED, string $printing = ''): void

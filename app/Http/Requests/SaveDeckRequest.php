@@ -46,7 +46,7 @@ class SaveDeckRequest extends FormRequest
         return [
             'deck_title' => ['nullable', 'string', 'max:255'],
             'deck_description' => ['nullable', 'string', 'max:2000'],
-            'image' => ['nullable', 'url:https', 'max:2048'],
+            'image' => ['nullable', 'url:https', 'max:255'],
             'is_public' => ['boolean'],
             'allow_comments' => ['sometimes', 'boolean'],
             // Absent or empty means Casual (Laravel turns '' into null).

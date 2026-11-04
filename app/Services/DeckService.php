@@ -61,7 +61,7 @@ class DeckService
         $counts = [];
 
         foreach ($deck->deckCards()->with('card')->orderBy('id')->get() as $deckCard) {
-            $counts[$deckCard->zone][$deckCard->card->external_id] = $deckCard->count;
+            $counts[$deckCard->zone][$deckCard->card->external_id] = ($counts[$deckCard->zone][$deckCard->card->external_id] ?? 0) + $deckCard->count;
         }
 
         return $counts;

@@ -50,6 +50,9 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('likes', fn (Request $request) => Limit::perMinute(30)->by($request->user()->id));
 
         // Comments, per user: enough for a conversation, not for flooding a profile.
+        // Saving and copying decks, per user: each can look every card up at Scryfall.
+        RateLimiter::for('deck-saves', fn (Request $request) => Limit::perMinute(20)->by($request->user()->id));
+
         RateLimiter::for('comments', fn (Request $request) => Limit::perMinute(5)->by($request->user()->id));
 
         // Collections, per user: + and − on single cards, and the bulk adds (a whole deck or set) that call the card

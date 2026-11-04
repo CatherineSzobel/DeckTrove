@@ -103,7 +103,10 @@ class YugiohService implements CardProvider
     public function random(int $count): Collection
     {
         // Shuffling only the ids is far cheaper than shuffling whole rows (their JSON columns make each row large).
-        return YugiohCard::whereIn('id', YugiohCard::query()->select('id')->inRandomOrder()->limit($count))
+        // Plucked first: MySQL refuses LIMIT inside an IN subquery.
+        $ids = YugiohCard::query()->inRandomOrder()->limit($count)->pluck('id');
+
+        return YugiohCard::whereIn('id', $ids)
             ->get()
             ->shuffle()
             ->map(fn (YugiohCard $card) => $card->toCardArray())

@@ -6,7 +6,7 @@ use App\Models\YugiohCard;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\YugiohCard>
+ * @extends Factory<YugiohCard>
  */
 class YugiohCardFactory extends Factory
 {
