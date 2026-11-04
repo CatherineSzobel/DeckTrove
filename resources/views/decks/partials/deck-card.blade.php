@@ -9,6 +9,4 @@
     @endforeach
 </div>
 
-@if ($decks->hasPages())
-<div class="mt-8">{{ $decks->withPath($decksPath ?? route('public-deck'))->links() }}</div>
-@endif
+<div class="mt-8"><x-pagination :paginator="$decks->withPath($decksPath ?? route('public-deck'))" /></div>

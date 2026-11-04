@@ -41,11 +41,6 @@ final class CardCollectionPanel
         return $this->counts['owned'];
     }
 
-    public function isOwned(): bool
-    {
-        return $this->owned() > 0;
-    }
-
     /** Whether the row's "−" has an unspecified copy to take (printing copies come off in the Printings list). */
     public function removable(): bool
     {
