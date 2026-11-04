@@ -31,7 +31,7 @@
                     <x-stat-chip :value="$count" :label="Str::plural(strtolower($value), $count)" inset />
                     @endforeach
                     <x-stat-chip :value="$stats->money($stats->price)" label="deck price" warn inset data-chip="price"
-                        :title="$stats->missingPrices ? $stats->missingPrices.' '.Str::plural('card', $stats->missingPrices).' have no price' : null" />
+                        :title="$stats->missingPricesNote()" />
                 </div>
             </div>
 

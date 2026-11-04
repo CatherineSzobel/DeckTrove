@@ -218,20 +218,24 @@ class MagicService implements CardProvider
 
     public function random(int $count): Collection
     {
-        $responses = Http::pool(fn ($pool) => array_map(
-            fn ($i) => $pool->as("card$i")
-                ->baseUrl('https://api.scryfall.com')
-                ->timeout(5)
-                ->acceptJson()
-                ->withUserAgent(config('services.scryfall.user_agent'))
-                ->get('/cards/random'),
-            range(1, $count)
-        ));
+        // One call at a time through our limiter (Scryfall allows 2/s here); stops early rather than wait long.
+        $cards = collect();
 
-        return collect($responses)
-            ->filter(fn ($response) => $response instanceof Response && $response->successful())
-            ->map(fn (Response $response) => $response->json())
-            ->values();
+        try {
+            for ($i = 0; $i < $count; $i++) {
+                $card = $this->json($this->get('/cards/random'));
+
+                if (! isset($card['id'])) {
+                    break;
+                }
+
+                $cards->push($card);
+            }
+        } catch (ScryfallUnavailableException) {
+            // Show the cards fetched so far.
+        }
+
+        return $cards;
     }
 
     public function filterOptions(): array

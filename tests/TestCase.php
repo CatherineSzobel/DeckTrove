@@ -3,6 +3,7 @@
 namespace Tests;
 
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
+use Illuminate\Support\Sleep;
 
 abstract class TestCase extends BaseTestCase
 {
@@ -11,5 +12,8 @@ abstract class TestCase extends BaseTestCase
         parent::setUp();
 
         $this->withoutVite();
+
+        // The Scryfall limiter waits between calls; tests shouldn't really sleep.
+        Sleep::fake();
     }
 }

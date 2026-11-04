@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 /**
@@ -46,7 +47,12 @@ class SaveDeckRequest extends FormRequest
         return [
             'deck_title' => ['nullable', 'string', 'max:255'],
             'deck_description' => ['nullable', 'string', 'max:2000'],
-            'image' => ['nullable', 'url:https', 'max:255'],
+            // Only card image hosts: any other server would see every visitor's IP when the cover loads.
+            'image' => ['nullable', 'url:https', 'max:255', function (string $attribute, string $value, \Closure $fail) {
+                if (! in_array(parse_url($value, PHP_URL_HOST), $this->coverHosts(), true)) {
+                    $fail('The deck cover must be one of the deck’s card images.');
+                }
+            }],
             'is_public' => ['boolean'],
             'allow_comments' => ['sometimes', 'boolean'],
             // Absent or empty means Casual (Laravel turns '' into null).
@@ -55,6 +61,12 @@ class SaveDeckRequest extends FormRequest
             'cards.*' => ['array', 'max:100'],
             'cards.*.*.id' => ['required', 'string', 'max:64', 'regex:/^[A-Za-z0-9._-]+$/'],
         ];
+    }
+
+    /** Where card images come from: Scryfall, YGOPRODeck, and our own media disk for hosted Yu-Gi-Oh! images. */
+    private function coverHosts(): array
+    {
+        return ['cards.scryfall.io', 'images.ygoprodeck.com', parse_url(Storage::disk(config('filesystems.media'))->url(''), PHP_URL_HOST)];
     }
 
     public function messages(): array

@@ -2,6 +2,8 @@
 
 namespace App\Decks;
 
+use App\Support\Money;
+use Illuminate\Support\Str;
 use JsonSerializable;
 
 /**
@@ -39,7 +41,17 @@ final readonly class DeckStatsResult implements JsonSerializable
      */
     public function money(float $value): string
     {
-        return $this->currency['symbol'].number_format($value, 2);
+        return Money::format($value);
+    }
+
+    /**
+     * E.g. "1 card has no price", or null when every card has one.
+     */
+    public function missingPricesNote(): ?string
+    {
+        $missing = $this->missingPrices;
+
+        return $missing ? $missing.' '.Str::plural('card', $missing).' '.($missing === 1 ? 'has' : 'have').' no price' : null;
     }
 
     /**

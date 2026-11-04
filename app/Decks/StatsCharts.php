@@ -49,12 +49,10 @@ final readonly class StatsCharts
      */
     public function priceNote(): string
     {
-        $missing = $this->stats->missingPrices;
         $source = 'Cardmarket prices in euros';
+        $missing = $this->stats->missingPricesNote();
 
-        return $missing
-            ? $missing.' '.Str::plural('card', $missing).' '.($missing === 1 ? 'has' : 'have').' no price · '.$source
-            : $source;
+        return $missing ? "$missing · $source" : $source;
     }
 
     private function charts(array $groups): array
