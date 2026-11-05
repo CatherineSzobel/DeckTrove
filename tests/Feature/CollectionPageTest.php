@@ -26,7 +26,7 @@ test('the collection lists each card once with its total copies', function () {
     app(CollectionService::class)->add($user, 'yugioh', '46986414', printing: 'LOB-EN005');
 
     $this->actingAs($user)->get(route('collection'))->assertOk()
-        ->assertSeeInOrder(['Unique cards', '1', 'Copies', '3'])
+        ->assertSeeInOrder(['1', 'unique card', '3', 'copies'])
         // The counter shows the copies (a ×3 beside it would go stale once its + is pressed).
         ->assertSee('Dark Magician')->assertSee('data-count="3"', false)->assertDontSee('×3')
         ->assertDontSee('Blue-Eyes White Dragon')
@@ -38,7 +38,18 @@ test('the wishlist shows its cards and what they cost', function () {
     app(CollectionService::class)->add($user, 'yugioh', '46986414', CollectionItem::WANTED, amount: 2);
 
     $this->actingAs($user)->get(route('collection.wishlist'))->assertOk()
-        ->assertSeeInOrder(['To buy', 'about €4.00'])->assertSee('Dark Magician');
+        ->assertSeeInOrder(['€4.00', 'to buy (about)'])->assertSee('Dark Magician');
+});
+
+test('the page script gets just the totals, so they follow the − / +', function () {
+    $user = User::factory()->create();
+    app(CollectionService::class)->add($user, 'yugioh', '46986414', CollectionItem::WANTED, amount: 3);
+
+    $html = $this->actingAs($user)->get(route('collection.wishlist'), ['X-Requested-With' => 'XMLHttpRequest'])->assertOk()
+        ->assertHeader('Vary', 'X-Requested-With')->getContent();
+
+    expect($html)->toContain('€6.00')->toContain('to buy (about)')->toContain('copies')
+        ->not->toContain('<html')->not->toContain('Dark Magician');
 });
 
 test('search filters by name and the series switch by game', function () {
@@ -83,7 +94,7 @@ test('the wishlist still loads, with the price unavailable, when Scryfall is dow
     $user->collectionItems()->create(['list' => 'wanted', 'game' => 'magic', 'card_key' => 'bolt', 'card_id' => $card->id, 'quantity' => 1]);
 
     $this->actingAs($user)->get(route('collection.wishlist', ['series' => 'magic']))->assertOk()
-        ->assertSeeInOrder(['To buy', 'Price unavailable'])->assertSee('Lightning Bolt');
+        ->assertSee('price unavailable')->assertSee('Lightning Bolt');
 });
 
 test('array query values fall back to the defaults instead of failing', function () {

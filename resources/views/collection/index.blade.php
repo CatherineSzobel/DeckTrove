@@ -16,10 +16,8 @@
             </form>
         </div>
 
-        <div class="grid grid-cols-[repeat(auto-fill,minmax(min(220px,100%),1fr))] gap-3">
-            @foreach ($totals as $total)
-            <x-stat-tile :label="$total['label']" :value="$total['value']" />
-            @endforeach
+        <div id="collection-totals" class="flex flex-wrap gap-2" aria-live="polite">
+            @include('collection.partials.totals')
         </div>
 
         <p class="flex flex-wrap items-center gap-2 text-sm text-muted">

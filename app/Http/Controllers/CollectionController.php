@@ -35,6 +35,11 @@ class CollectionController extends Controller
     {
         $page = CollectionPage::for($request->user(), $request, $list, editable: true);
 
+        // The page's script asks for just the totals after a − / + (resources/js/collection/totals.js).
+        if ($request->ajax()) {
+            return response()->view('collection.partials.totals', ['totals' => $page->totals($cost)])->header('Vary', 'X-Requested-With');
+        }
+
         return view('collection.index', [
             'page' => $page,
             'suggestions' => CollectionSuggestions::for($request->user(), $page),

@@ -152,12 +152,14 @@ final class CollectionPage
         $sums = $this->owner->collectionItems()->where('list', $this->list)->forGame($this->series)
             ->selectRaw('COUNT(DISTINCT card_key) as cards, SUM(quantity) as copies')->first();
         $totals = [
-            ['label' => 'Unique cards', 'value' => number_format((int) $sums->cards)],
-            ['label' => 'Copies', 'value' => number_format((int) $sums->copies)],
+            ['value' => number_format((int) $sums->cards), 'label' => Str::plural('unique card', (int) $sums->cards), 'warn' => false],
+            ['value' => number_format((int) $sums->copies), 'label' => Str::plural('copy', (int) $sums->copies), 'warn' => false],
         ];
 
         if ($cost !== null) {
-            $totals[] = ['label' => 'To buy', 'value' => $cost['total'] === null ? 'Price unavailable' : 'about '.Money::format($cost['total'])];
+            $totals[] = $cost['total'] === null
+                ? ['value' => '—', 'label' => 'price unavailable', 'warn' => true]
+                : ['value' => Money::format($cost['total']), 'label' => 'to buy (about)', 'warn' => true];
         }
 
         return $totals;
