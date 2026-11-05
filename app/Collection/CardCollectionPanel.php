@@ -2,12 +2,8 @@
 
 namespace App\Collection;
 
-use App\Contracts\CardProvider;
-use App\Exceptions\CardSourceUnavailableException;
 use App\Models\User;
 use App\ViewModels\CardViewModel;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
 
 /**
  * The card page's collection parts (logged-in players): the "In your collection" row
@@ -17,23 +13,12 @@ final class CardCollectionPanel
 {
     /**
      * @param  array{owned: int, wanted: int, printings: array<string, int>}  $counts
-     * @param  list<array{key: string, label: string, set_name: string, code: string, pack_code: string}>|null  $printings  null when they couldn't be loaded
      */
-    private function __construct(private array $counts, private ?array $printings, private string $cardName) {}
+    private function __construct(private array $counts) {}
 
-    public static function for(?User $user, string $series, CardViewModel $card, CardProvider $provider): ?self
+    public static function for(?User $user, string $series, CardViewModel $card): ?self
     {
-        if (! $user) {
-            return null;
-        }
-
-        try {
-            $printings = $provider->printings($card->raw());
-        } catch (CardSourceUnavailableException) {
-            $printings = null;
-        }
-
-        return new self(app(CollectionService::class)->counts($user, $series, $card->collectionKey()), $printings, $card->name());
+        return $user ? new self(app(CollectionService::class)->counts($user, $series, $card->collectionKey())) : null;
     }
 
     public function owned(): int
@@ -103,32 +88,12 @@ final class CardCollectionPanel
     }
 
     /**
-     * The Printings list's rows with a counter each: every printing the source offers, plus any stored printing it no
-     * longer offers (without a pack link). Null when the printings couldn't be loaded: the page then shows its usual
-     * list without counters.
+     * Copies per printing key, for the Printings list's counters (CardViewModel::printRows).
      *
-     * @return Collection<int, array{set_name: string, code: string, url: ?string, printing: string, count: int, name: string}>|null
+     * @return array<string, int>
      */
-    public function printRows(string $series): ?Collection
+    public function printingCounts(): array
     {
-        if ($this->printings === null) {
-            return null;
-        }
-
-        $rows = collect($this->printings)->map(fn (array $printing) => [
-            'set_name' => $printing['set_name'],
-            'code' => $printing['code'],
-            'url' => $printing['pack_code'] !== '' ? route('packs.show', [$series, $printing['pack_code'], Str::slug($printing['set_name'])]) : null,
-            'printing' => $printing['key'],
-            'count' => $this->counts['printings'][$printing['key']] ?? 0,
-            'name' => "{$this->cardName} ({$printing['label']})",
-        ]);
-        $offered = $rows->pluck('printing')->all();
-
-        foreach (collect($this->counts['printings'])->except(['', ...$offered]) as $key => $count) {
-            $rows->push(['set_name' => (string) $key, 'code' => (string) $key, 'url' => null, 'printing' => (string) $key, 'count' => $count, 'name' => "{$this->cardName} ($key)"]);
-        }
-
-        return $rows->values();
+        return $this->counts['printings'];
     }
 }

@@ -193,8 +193,7 @@ test('image tiles show the card preview on hover and focus, with the description
 
     $html = $this->get(route('cards.index', ['yugioh', 'view' => 'images']))->getContent();
 
-    expect($html)->toContain('@mouseenter="showPreview(card, $el)" @mouseleave="hidePreview()"')
-        ->toContain('@focus="showPreview(card, $el)" @blur="hidePreview()"')
+    expect($html)->toContain('x-bind="previewTrigger"')
         ->toContain('Unique preview text.')
         ->toMatch('/class="card-tile"[\s\S]*?x-data="\{ card:|x-data="\{ card:[\s\S]*?class="card-tile"/')
         ->and(substr_count($html, 'data-card-preview'))->toBe(1)
@@ -203,18 +202,18 @@ test('image tiles show the card preview on hover and focus, with the description
 
 test('the full and list views have no card preview handlers on their cards', function (string $view) {
     expect($this->get(route('cards.index', ['yugioh', 'view' => $view]))->getContent())
-        ->not->toContain('showPreview(card, $el)');
+        ->not->toContain('previewTrigger');
 })->with(['full', 'list']);
 
 test('the AJAX images response has the preview handlers too', function () {
     $html = $this->get(route('cards.index', ['yugioh', 'view' => 'images']), ['X-Requested-With' => 'XMLHttpRequest'])->getContent();
 
-    expect($html)->toContain('@mouseenter="showPreview(card, $el)"')
+    expect($html)->toContain('x-bind="previewTrigger"')
         ->not->toContain('data-card-preview');
 });
 
 test('the view nav is a ref, so the component finds it from any event', function () {
-    $this->get(route('cards.index', 'yugioh'))->assertSee('<nav aria-label="Card view" x-ref="views"', false);
+    $this->get(route('cards.index', 'yugioh'))->assertSee('<nav aria-label="Card view" class="inline-flex flex-wrap gap-1 rounded-xl border border-line p-1 bg-canvas" x-ref="views"', false);
 });
 
 test('on phones the list view drops the type column and shows the type under the name', function () {

@@ -110,7 +110,7 @@ test('game pages offer the same section in the other game', function (string $ro
     expect($html)
         ->toContain('data-game-switch')
         ->toContain('href="'.route($target, 'magic').'" data-game="magic"')
-        ->toMatch('/data-game="yugioh"\s+aria-current="page"/');
+        ->toMatch('/data-game="yugioh"[^>]*aria-current="page"/');
 })->with([
     'cards' => ['cards.index', [], 'cards.index'],
     'packs' => ['packs.index', [], 'packs.index'],

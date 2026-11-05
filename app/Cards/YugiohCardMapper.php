@@ -92,16 +92,6 @@ class YugiohCardMapper extends CardMapper
         return data_get($card, 'card_prices.0.cardmarket_price');
     }
 
-    public function printSets(array $card): array
-    {
-        return collect($card['card_sets'] ?? [])
-            ->map(fn ($set) => [
-                'set_code' => $set['set_code'] ?? '',
-                'set_name' => $set['set_name'] ?? 'Unknown',
-            ])
-            ->all();
-    }
-
     public function collectionKey(array $card): string
     {
         return (string) ($card['id'] ?? '');

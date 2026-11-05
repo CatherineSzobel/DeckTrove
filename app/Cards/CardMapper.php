@@ -90,11 +90,6 @@ abstract class CardMapper
     }
 
     /**
-     * @return list<array{set_code: string, set_name: string}>
-     */
-    abstract public function printSets(array $card): array;
-
-    /**
      * What counts as "the same card" in a collection: every printing of a card shares it, so a deck needing 4 is
      * covered by 4 copies of any printing. Falls back to the card id.
      */

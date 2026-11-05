@@ -13,12 +13,7 @@
             </div>
 
             <div class="flex flex-wrap items-center gap-3">
-                <nav aria-label="Series" class="inline-flex flex-wrap gap-1 rounded-xl border border-line bg-surface p-1">
-                    <a href="{{ $query->url(['game' => null, 'format' => null]) }}" data-game="all" @if (! $filters['game']) aria-current="true" @endif class="segment">All series</a>
-                    @foreach (config('series') as $key => $config)
-                    <a href="{{ $query->url(['game' => $key, 'format' => null]) }}" data-game="{{ $key }}" @if ($filters['game'] === $key) aria-current="true" @endif class="segment">{{ $config['label'] }}</a>
-                    @endforeach
-                </nav>
+                <x-segment-links :links="$query->seriesLinks('All series')" label="Series" as="nav" key-as="game" current="true" bg="bg-surface" />
 
                 @auth
                 <a href="{{ route('decks.builder', session('series', array_key_first(config('series')))) }}" class="btn-primary">
@@ -47,12 +42,7 @@
                 <button type="submit" class="sr-only">Search</button>
             </div>
 
-            <nav aria-label="Sort decks" class="inline-flex gap-1 rounded-xl border border-line bg-canvas p-1 max-sm:w-full">
-                @foreach ($sorts as $key => $label)
-                <a href="{{ $query->url(['sort' => $key]) }}" data-sort="{{ $key }}" @if ($filters['sort'] === $key) aria-current="true" @endif
-                    class="segment max-sm:flex-1">{{ $label }}</a>
-                @endforeach
-            </nav>
+            <x-segment-links :links="$query->sortLinks()" label="Sort decks" as="nav" key-as="sort" current="true" link-class="max-sm:flex-1" class="max-sm:w-full" />
 
             @if ($formats)
             <div class="flex items-center gap-2.5">

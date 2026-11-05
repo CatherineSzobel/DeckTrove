@@ -65,8 +65,7 @@
             <div x-ref="grid" data-deal class="grid grid-cols-[repeat(auto-fill,minmax(min(180px,100%),1fr))] gap-5">
                 @foreach ($cards as $card)
                 <div id="card-{{ $card->id() }}" style="--deal: {{ $loop->index }}" class="relative flex scroll-mt-24 flex-col" data-name="{{ $card->searchName() }}" data-rarity="{{ $card->rarity() }}" @unless ($filter->matches($card)) hidden @endunless>
-                    <a href="{{ $card->link() }}" x-data="{ card: @js($card->builderCard()) }" @mouseenter="showPreview(card, $el)" @mouseleave="hidePreview()"
-                        @focus="showPreview(card, $el)" @blur="hidePreview()" class="pack-tile flex flex-1 flex-col gap-3 p-3">
+                    <a href="{{ $card->link() }}" x-data="{ card: @js($card->builderCard()) }" x-bind="previewTrigger" class="pack-tile flex flex-1 flex-col gap-3 p-3">
                         <img src="{{ $card->imageSmall() }}" alt="" loading="lazy" class="aspect-[59/86] w-full rounded-md object-cover">
                         <span class="flex min-w-0 flex-col gap-1.5 px-0.5 pb-0.5">
                             <span class="truncate text-[15px] font-bold text-ink">{{ $card->name() }}</span>

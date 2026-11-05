@@ -1,0 +1,19 @@
+{
+    "_about": "Copy-limit cases run by both DeckService::copyErrors (tests/Feature/DeckRuleParityTest.php) and the builder's rules.js (resources/js/deckbuilder/rules-parity.test.js), so the two can't drift. `rules` must match config('series.yugioh.deck'); `limits` is the card's format limits (CardViewModel::copyLimits).",
+    "rules": {
+        "max_copies": 3,
+        "unlimited_types": [],
+        "extra_types": ["Fusion", "Synchro", "XYZ", "Link"],
+        "formats": { "tcg": { "label": "TCG Advanced" }, "ocg": { "label": "OCG" } }
+    },
+    "cases": [
+        { "case": "three copies are fine", "type": "Normal Monster", "limits": {}, "format": "", "copies": 3, "error": null },
+        { "case": "a fourth copy is refused", "type": "Normal Monster", "limits": {}, "format": "", "copies": 4, "error": "You can only have 3 copies of Test Card." },
+        { "case": "a limited card in its format", "type": "Spell Card", "limits": { "tcg": 1 }, "format": "tcg", "copies": 2, "error": "You can only have 1 copy of Test Card in TCG Advanced." },
+        { "case": "a semi-limited card in its format", "type": "Trap Card", "limits": { "tcg": 2 }, "format": "tcg", "copies": 3, "error": "You can only have 2 copies of Test Card in TCG Advanced." },
+        { "case": "a forbidden card in its format", "type": "Effect Monster", "limits": { "tcg": 0 }, "format": "tcg", "copies": 1, "error": "Test Card is not allowed in TCG Advanced." },
+        { "case": "a format limit does not apply in Casual", "type": "Spell Card", "limits": { "tcg": 1 }, "format": "", "copies": 3, "error": null },
+        { "case": "another format's limit does not apply", "type": "Spell Card", "limits": { "ocg": 0 }, "format": "tcg", "copies": 3, "error": null },
+        { "case": "the normal limit still applies within a format", "type": "Spell Card", "limits": { "ocg": 0 }, "format": "tcg", "copies": 4, "error": "You can only have 3 copies of Test Card." }
+    ]
+}

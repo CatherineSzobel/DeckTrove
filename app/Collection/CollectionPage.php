@@ -104,11 +104,7 @@ final class CollectionPage
     /** One link per series, keeping the list (and dropping the search). */
     public function seriesLinks(string $route, array $parameters = []): array
     {
-        return collect(config('series'))->map(fn (array $config, string $series) => [
-            'label' => $config['label'],
-            'href' => route($route, [...$parameters, 'series' => $series]),
-            'current' => $series === $this->series,
-        ])->values()->all();
+        return Series::links(fn (string $series) => route($route, [...$parameters, 'series' => $series]), $this->series);
     }
 
     public function cards(): LengthAwarePaginator
@@ -116,8 +112,8 @@ final class CollectionPage
         return $this->cards ??= $this->owner->collectionItems()
             ->cardTiles($this->list)
             ->where('collection_items.game', $this->series)
-            ->when($this->search !== '', fn ($query) => $query->where('cards.name', 'like', '%'.addcslashes($this->search, '%_\\').'%'))
-            ->selectRaw('SUM(CASE WHEN collection_items.printing = \'\' THEN collection_items.quantity ELSE 0 END) as unspecified')
+            ->when($this->search !== '', fn ($query) => $query->where('cards.name', 'like', QueryInput::like($this->search)))
+            ->selectRaw(CollectionItem::UNSPECIFIED_SUM.' as unspecified')
             ->orderBy('name')
             ->paginate(self::PER_PAGE)
             ->withQueryString()

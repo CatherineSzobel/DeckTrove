@@ -45,7 +45,6 @@ class DeckController extends Controller
             'decks' => $decks,
             'query' => $query,
             'filters' => $query->filters(),
-            'sorts' => PublicDeckQuery::SORTS,
             'formats' => $query->formatOptions(),
         ]);
     }

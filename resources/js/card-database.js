@@ -7,6 +7,7 @@
 import { buildUrl, countFilters, syncValues, viewUrl } from "./cards/query.js";
 import { collectionCounter } from "./collection/counter.js";
 import { cardPreview } from "./deckbuilder/preview.js";
+import { fetchPartial } from "./http.js";
 
 document.addEventListener("alpine:init", () => {
     window.Alpine.data("collectionCounter", () => collectionCounter());
@@ -68,7 +69,7 @@ document.addEventListener("alpine:init", () => {
         },
 
         async fetchHtml(url, signal) {
-            const response = await fetch(url, { headers: { "X-Requested-With": "XMLHttpRequest" }, signal });
+            const response = await fetchPartial(url, { signal });
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             return response.text();
         },

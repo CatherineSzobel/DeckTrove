@@ -244,7 +244,7 @@ class DeckService
      *
      * @return array<string, int>
      */
-    private function totalCopies(array $counts): array
+    public function totalCopies(array $counts): array
     {
         $copies = [];
 

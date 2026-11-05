@@ -6,6 +6,7 @@ use App\Cards\CardQuery;
 use App\Cards\FilterChoices;
 use App\Collection\CardCollectionPanel;
 use App\Collection\TileCounts;
+use App\Exceptions\CardSourceUnavailableException;
 use App\Services\CardService;
 use App\ViewModels\CardViewModel;
 use Illuminate\Http\Request;
@@ -50,9 +51,16 @@ class CardsController extends Controller
         $card = $provider->find($id);
 
         $viewModel = new CardViewModel($card, $config);
-        $collection = CardCollectionPanel::for(request()->user(), $series, $viewModel, $provider);
-        // A player's printings carry counters; guests (or a Scryfall outage) get the usual list of packs.
-        $printRows = $collection?->printRows($series);
+        $collection = CardCollectionPanel::for(request()->user(), $series, $viewModel);
+
+        try {
+            $printings = $provider->printings($card);
+        } catch (CardSourceUnavailableException) {
+            $printings = null; // the list says "No printings listed" and players get no counters
+        }
+
+        // Counters only on printings the source confirmed, so a "+" can't post a printing it would refuse.
+        $counters = $collection && $printings !== null;
 
         return view('cards.card', [
             'series' => $series,
@@ -60,8 +68,8 @@ class CardsController extends Controller
             'relatedLabel' => $config['related_label'],
             'card' => $viewModel,
             'collection' => $collection,
-            'printList' => $printRows ?? $viewModel->printPacks($series),
-            'printCounters' => $printRows ? ['game' => $series, 'card' => $viewModel->id()] : null,
+            'printList' => $viewModel->printRows($series, $printings ?? [], $counters ? $collection->printingCounts() : []),
+            'printCounters' => $counters ? ['game' => $series, 'card' => $viewModel->id()] : null,
             'setCards' => $provider->related($card)->map(fn ($c) => new CardViewModel($c, $config)),
         ]);
     }

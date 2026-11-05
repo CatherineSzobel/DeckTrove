@@ -2,6 +2,7 @@
 
 namespace App\View\Components;
 
+use App\Support\Series;
 use Illuminate\Contracts\View\View;
 use Illuminate\View\Component;
 
@@ -11,18 +12,20 @@ use Illuminate\View\Component;
  */
 class GameSwitch extends Component
 {
-    /** The route each game's link goes to. */
-    public string $target;
+    /** @var list<array{key: string, label: string, href: string, current: bool}> */
+    public array $links;
 
     public function __construct(public string $series)
     {
         $route = request()->route()?->getName() ?? '';
 
-        $this->target = match (true) {
+        $target = match (true) {
             str_starts_with($route, 'packs.') => 'packs.index',
             $route === 'decks.builder' => 'decks.builder',
             default => 'cards.index',
         };
+
+        $this->links = Series::links(fn (string $key) => route($target, $key), $series);
     }
 
     public function render(): View

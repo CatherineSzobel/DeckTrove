@@ -5,11 +5,12 @@
  * is announced (`collection-changed` on window) with the card's totals, so the page's other counters for the same card
  * (the card page row, the heart) follow it.
  */
+import { JSON_HEADERS } from "../http.js";
+
 export const COULD_NOT_CHANGE = "Couldn’t change that card. Try again.";
 export const ERROR_MS = 4000;
 export const CHANGED_EVENT = "collection-changed";
 
-const JSON_HEADERS = { Accept: "application/json", "X-Requested-With": "XMLHttpRequest" };
 
 /** POSTs a form as the server's JSON routes expect; resolves to { ok, body } (body null when it isn't JSON). */
 async function post(send, formData, form) {

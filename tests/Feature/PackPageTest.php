@@ -132,8 +132,7 @@ test('card tiles show the card preview on hover and focus, with the description'
     $html = lobPage();
 
     expect($html)->toContain('x-data="{ card: ')
-        ->toContain('@mouseenter="showPreview(card, $el)" @mouseleave="hidePreview()"')
-        ->toContain('@focus="showPreview(card, $el)" @blur="hidePreview()"')
+        ->toContain('x-bind="previewTrigger"')
         ->toContain('The ultimate wizard.')
         ->toContain('@scroll.window.passive="hideOnScroll()"')
         ->and(substr_count($html, 'data-card-preview'))->toBe(1);

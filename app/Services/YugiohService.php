@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Contracts\CardProvider;
 use App\Models\YugiohCard;
 use App\Support\Paginates;
+use App\Support\QueryInput;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -28,7 +29,7 @@ class YugiohService implements CardProvider
             ->select(['data', 'images_hosted_at'])
             ->when($term !== '', function ($query) use ($term) {
                 // Case-insensitive on every database: LIKE on SQLite/MySQL, ILIKE on Postgres.
-                $like = "%$term%";
+                $like = QueryInput::like($term);
 
                 $query->where(fn ($q) => $q
                     ->whereLike('name', $like)

@@ -24,11 +24,7 @@
                 <button type="submit" class="btn-primary">Search</button>
             </form>
 
-            <nav aria-label="Pack view" class="inline-flex gap-1 rounded-xl border border-line bg-canvas p-1">
-                @foreach ($viewLinks as $link)
-                <a href="{{ $link['href'] }}" data-view="{{ $link['key'] }}" @if ($link['current']) aria-current="page" @endif class="segment">{{ $link['label'] }}</a>
-                @endforeach
-            </nav>
+            <x-segment-links :links="$viewLinks" label="Pack view" as="nav" key-as="view" />
         </section>
 
         @if ($resultLine)

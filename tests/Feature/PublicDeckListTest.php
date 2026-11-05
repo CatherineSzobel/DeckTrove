@@ -157,7 +157,7 @@ test("the list exposes like counts, the viewer's likes, sorts and formats", func
                 && $deck->liked_by_viewer === true
                 && $deck->format_label === 'TCG Advanced';
         })
-        ->assertViewHas('sorts', ['newest' => 'Newest', 'liked' => 'Most liked', 'trending' => 'Trending'])
+        ->assertViewHas('query', fn ($query) => array_column($query->sortLinks(), 'label') === ['Newest', 'Most liked', 'Trending'])
         ->assertViewHas('formats', ['casual' => 'Casual', 'tcg' => 'TCG Advanced', 'ocg' => 'OCG']);
 });
 

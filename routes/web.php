@@ -7,7 +7,6 @@ use App\Http\Controllers\CollectionItemController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DeckCollectionController;
-use App\Http\Controllers\DeckCommentController;
 use App\Http\Controllers\DeckController;
 use App\Http\Controllers\DeckLikeController;
 use App\Http\Controllers\DeckTransferController;
@@ -15,7 +14,6 @@ use App\Http\Controllers\IndexController;
 use App\Http\Controllers\PackCollectionController;
 use App\Http\Controllers\PacksController;
 use App\Http\Controllers\PasswordResetController;
-use App\Http\Controllers\ProfileCommentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicProfileController;
 use App\Http\Controllers\RegisterUserController;
@@ -67,8 +65,8 @@ Route::middleware('auth')->group(function () {
 
     // Comments on profiles and decks (StoreCommentRequest: only while the target accepts comments; someone else's
     // private deck is a 404 through DeckPolicy::view)
-    Route::post('/u/{user:username}/comments', [ProfileCommentController::class, 'store'])->middleware('throttle:comments')->name('users.comments.store');
-    Route::post('/decks/{deck}/comments', [DeckCommentController::class, 'store'])->can('view', 'deck')->middleware('throttle:comments')->name('decks.comments.store');
+    Route::post('/u/{user:username}/comments', [CommentController::class, 'store'])->middleware('throttle:comments')->name('users.comments.store');
+    Route::post('/decks/{deck}/comments', [CommentController::class, 'store'])->can('view', 'deck')->middleware('throttle:comments')->name('decks.comments.store');
     Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->can('delete', 'comment')->name('comments.destroy');
 
     // Collections and wishlists (App\Collection\CollectionService)

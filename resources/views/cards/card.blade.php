@@ -77,9 +77,7 @@
             <div class="grid grid-cols-[repeat(auto-fill,minmax(120px,1fr))] gap-3.5">
                 @foreach ($setCards as $setCard)
                 <a href="{{ $setCard->link() }}" aria-label="{{ $setCard->name() }}" class="card-tile"
-                    x-data="{ card: @js($setCard->builderCard()) }"
-                    @mouseenter="showPreview(card, $el)" @mouseleave="hidePreview()"
-                    @focus="showPreview(card, $el)" @blur="hidePreview()">
+                    x-data="{ card: @js($setCard->builderCard()) }" x-bind="previewTrigger">
                     <img src="{{ $setCard->imageSmall() }}" alt="" loading="lazy" class="aspect-[59/86] w-full rounded-lg object-cover">
                 </a>
                 @endforeach

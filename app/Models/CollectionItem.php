@@ -20,6 +20,9 @@ class CollectionItem extends Model
 
     public const WANTED = 'wanted';
 
+    /** SQL for the copies with no printing, the only ones a tile's "−" takes (CollectionService::removable in PHP). */
+    public const UNSPECIFIED_SUM = "SUM(CASE WHEN collection_items.printing = '' THEN collection_items.quantity ELSE 0 END)";
+
     protected $fillable = ['list', 'game', 'card_key', 'card_id', 'printing', 'quantity'];
 
     protected $attributes = ['list' => self::OWNED, 'printing' => ''];

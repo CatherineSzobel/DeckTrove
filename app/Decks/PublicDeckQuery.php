@@ -124,6 +124,29 @@ class PublicDeckQuery
     }
 
     /**
+     * The series switch for this list (x-segment-links), starting with "All"; picking a series clears the format.
+     */
+    public function seriesLinks(string $all = 'All'): array
+    {
+        return Series::links(fn (?string $game) => $this->url(['game' => $game, 'format' => null]), $this->game, $all);
+    }
+
+    /**
+     * The sort switch for this list (x-segment-links).
+     *
+     * @return list<array{key: string, label: string, href: string, current: bool}>
+     */
+    public function sortLinks(): array
+    {
+        return collect(self::SORTS)->map(fn (string $label, string $key) => [
+            'key' => $key,
+            'label' => $label,
+            'href' => $this->url(['sort' => $key]),
+            'current' => $key === $this->sort,
+        ])->values()->all();
+    }
+
+    /**
      * The applied filters as query parameters, with some changed: links for the page's controls, e.g.
      * route('public-deck', $query->queryWith(['sort' => 'liked'])). Null removes a filter; `page` is never kept, so
      * any change starts again at page one.
@@ -204,9 +227,9 @@ class PublicDeckQuery
                 'likes', fn (Builder $likes) => $likes->where('user_id', $liker->id)
             ))
             ->when($this->search, fn (Builder $query, string $search) => $query->where(fn (Builder $query) => $query
-                ->whereLike('name', "%{$search}%", caseSensitive: false)
-                ->orWhereLike('description', "%{$search}%", caseSensitive: false)
-                ->orWhereHas('user', fn (Builder $user) => $user->whereLike('username', "%{$search}%", caseSensitive: false))))
+                ->whereLike('name', QueryInput::like($search), caseSensitive: false)
+                ->orWhereLike('description', QueryInput::like($search), caseSensitive: false)
+                ->orWhereHas('user', fn (Builder $user) => $user->whereLike('username', QueryInput::like($search), caseSensitive: false))))
             ->when($this->game, fn (Builder $query, string $game) => $query->where('game', $game))
             ->when($this->format, fn (Builder $query, string $format) => $format === 'casual'
                 ? $query->whereNull('format')

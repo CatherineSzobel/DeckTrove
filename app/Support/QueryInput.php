@@ -23,4 +23,13 @@ final class QueryInput
     {
         return mb_substr(trim(self::string($request, $key)), 0, $length);
     }
+
+    /**
+     * A "contains" LIKE pattern for search text, with its own % and _ taken literally. The backslash escape is MySQL's
+     * default; SQLite has none, so there a search containing % or _ won't match (local dev only).
+     */
+    public static function like(string $search): string
+    {
+        return '%'.addcslashes($search, '%_\\').'%';
+    }
 }

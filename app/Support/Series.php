@@ -28,4 +28,23 @@ final class Series
     {
         return self::isKnown($key) ? $key : null;
     }
+
+    /**
+     * One link per series for a series switch (x-segment-links), after an "All" link (series null) when $all names it.
+     *
+     * @param  callable(?string): string  $href  the link for a series, or for "All" with null
+     * @return list<array{key: string, label: string, href: string, current: bool}>
+     */
+    public static function links(callable $href, ?string $current, ?string $all = null): array
+    {
+        $series = array_map(fn (array $config) => $config['label'], config('series'));
+        $choices = $all === null ? $series : ['all' => $all, ...$series];
+
+        return collect($choices)->map(fn (string $label, string $key) => [
+            'key' => $key,
+            'label' => $label,
+            'href' => $href($key === 'all' ? null : $key),
+            'current' => $key === 'all' ? $current === null : $key === $current,
+        ])->values()->all();
+    }
 }

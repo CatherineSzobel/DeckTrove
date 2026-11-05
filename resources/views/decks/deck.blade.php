@@ -102,8 +102,7 @@
                         @foreach ($sections[$zone] as $card)
                         <x-deck.card-slot :card="$card" :href="$card->link()" :over="$cardProblems[$card->id()] ?? null"
                             :x-data="'{ card: '.Js::from($card->builderCard()).' }'"
-                            x-on:mouseenter="showPreview(card, $el)" x-on:mouseleave="hidePreview()"
-                            x-on:focus="showPreview(card, $el)" x-on:blur="hidePreview()" />
+                            x-bind="previewTrigger" />
                         @endforeach
                     </div>
                 </section>

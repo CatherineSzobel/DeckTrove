@@ -32,7 +32,7 @@ test('the page has the eyebrow, the heading and one game switch', function () {
 test('the full view shows each pack as a tile with its cover, meta line and card count', function () {
     $html = $this->get(route('packs.index', 'yugioh'))->getContent();
 
-    expect($html)->toMatch('/data-view="full"\s+aria-current="page"/')
+    expect($html)->toMatch('/data-view="full"[^>]*aria-current="page"/')
         ->toContain('href="'.url('/yugioh/pack/LOB/legend-of-blue-eyes-white-dragon').'" class="pack-tile')
         ->toContain('LOB · Released Mar 8, 2002')
         ->toContain('>126</span>')

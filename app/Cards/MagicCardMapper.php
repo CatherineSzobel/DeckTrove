@@ -123,14 +123,6 @@ class MagicCardMapper extends CardMapper
         return data_get($card, 'prices.eur');
     }
 
-    public function printSets(array $card): array
-    {
-        return [[
-            'set_code' => $card['set'] ?? '',
-            'set_name' => $card['set_name'] ?? 'Unknown',
-        ]];
-    }
-
     /** Scryfall's oracle id is shared by every printing (double-faced cards keep it on their faces). */
     public function collectionKey(array $card): string
     {

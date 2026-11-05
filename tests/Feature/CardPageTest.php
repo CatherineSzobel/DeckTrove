@@ -59,7 +59,7 @@ test('printings are listed with their pack codes', function () {
     $this->get(route('cards.show', ['yugioh', '46986414']))
         ->assertSee('Printings')
         ->assertSee('href="'.route('packs.show', ['yugioh', 'LOB', 'legend-of-blue-eyes-white-dragon']).'"', false)
-        ->assertSee('>LOB</span>', false)
+        ->assertSee('>LOB-', false)
         ->assertDontSee('more-printings', false);
 });
 
@@ -104,7 +104,7 @@ test('hovering or focusing a related card shows its details', function () {
 
     expect($content)
         ->toMatch('/<section aria-labelledby="related" x-data="cardPreview" @scroll\.window\.passive="hideOnScroll\(\)"/')
-        ->toMatch('/aria-label="Dark Magician Girl" class="card-tile"\s+x-data="\{ card: [^"]*Dark Magician Girl[^"]*\}"\s+@mouseenter="showPreview\(card, \$el\)" @mouseleave="hidePreview\(\)"\s+@focus="showPreview\(card, \$el\)" @blur="hidePreview\(\)"/')
+        ->toMatch('/aria-label="Dark Magician Girl" class="card-tile"\s+x-data="\{ card: [^"]*Dark Magician Girl[^"]*\}" x-bind="previewTrigger"/')
         ->toContain('data-card-preview');
 });
 

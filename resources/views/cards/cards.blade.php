@@ -32,11 +32,7 @@
                             <button type="submit" class="btn-primary">Search</button>
                         </div>
 
-                        <nav aria-label="Card view" x-ref="views" class="inline-flex gap-1 rounded-xl border border-line bg-canvas p-1">
-                            @foreach ($query->viewLinks() as $link)
-                            <a href="{{ $link['href'] }}" data-view="{{ $link['key'] }}" data-label="{{ $link['label'] }}" @if ($link['current']) aria-current="page" @endif class="segment">{{ $link['label'] }}</a>
-                            @endforeach
-                        </nav>
+                        <x-segment-links :links="$query->viewLinks()" label="Card view" as="nav" key-as="view" x-ref="views" />
 
                         <button type="button" @click="showFilters = !showFilters" aria-controls="filters" :aria-expanded="showFilters"
                             :data-active="activeCount > 0" @if ($query->activeCount()) data-active @endif class="filter-toggle js-only">

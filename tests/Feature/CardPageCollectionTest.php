@@ -106,8 +106,8 @@ test('a Magic card page still works for a player when Scryfall can’t list the 
 
     $html = $this->actingAs(User::factory()->create())->get(route('cards.show', ['magic', $id]))->assertOk()->getContent();
 
-    // The row's own counter posts an empty printing; no per-printing counter may appear.
-    expect($html)->toContain('id="in-collection"')->toContain('Dominaria')->not->toMatch('/name="printing" value="[^"]+"/');
+    // The row's own counter posts an empty printing; no per-printing counter may appear, and the list says it's empty.
+    expect($html)->toContain('id="in-collection"')->toContain('No printings listed.')->not->toMatch('/name="printing" value="[^"]+"/');
 });
 
 test('without JS, the row and the Printings counters go back to their own section', function () {

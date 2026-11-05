@@ -283,12 +283,6 @@ final class ProfilePage
         return $this->deckQuery()?->filters() ?? $this->baseQuery->filters();
     }
 
-    /** @return array<string, string> */
-    public function sorts(): array
-    {
-        return PublicDeckQuery::SORTS;
-    }
-
     public function trending(): bool
     {
         return $this->filters()['sort'] === 'trending';

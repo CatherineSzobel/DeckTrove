@@ -110,7 +110,7 @@ class CollectionService
 
         return $user->collectionItems()->owned()->forGame($game)
             ->whereIn('card_key', array_values(array_unique($cardKeys)))
-            ->selectRaw("card_key, SUM(quantity) AS copies, SUM(CASE WHEN printing = '' THEN quantity ELSE 0 END) AS unspecified")
+            ->selectRaw('card_key, SUM(quantity) AS copies, '.CollectionItem::UNSPECIFIED_SUM.' AS unspecified')
             ->groupBy('card_key')
             ->get()
             ->mapWithKeys(fn ($row) => [(string) $row->card_key => ['count' => (int) $row->copies, 'removable' => (int) $row->unspecified > 0]])
@@ -299,13 +299,7 @@ class CollectionService
     private function deckLines(Deck $deck): array
     {
         $config = config("series.{$deck->game}");
-        $copies = [];
-
-        foreach ($this->decks->zoneCounts($deck) as $zoneCounts) {
-            foreach ($zoneCounts as $id => $count) {
-                $copies[(string) $id] = ($copies[(string) $id] ?? 0) + $count;
-            }
-        }
+        $copies = $this->decks->totalCopies($this->decks->zoneCounts($deck));
 
         $raw = $this->cards->for($deck->game)->findMany(array_keys($copies));
         $names = $deck->cards()->pluck('name', 'external_id');

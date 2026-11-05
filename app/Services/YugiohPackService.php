@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Contracts\PackProvider;
 use App\Models\YugiohSet;
+use App\Support\QueryInput;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
@@ -16,8 +17,8 @@ class YugiohPackService implements PackProvider
     {
         return YugiohSet::query()
             ->when($search !== '', fn ($query) => $query->where(fn ($q) => $q
-                ->whereLike('name', "%$search%")
-                ->orWhereLike('code', "%$search%")))
+                ->whereLike('name', QueryInput::like($search))
+                ->orWhereLike('code', QueryInput::like($search))))
             ->orderByDesc('released_at')
             ->orderBy('name')
             ->paginate($perPage, page: $page)
