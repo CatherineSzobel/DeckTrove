@@ -2,7 +2,9 @@
 
 namespace App\ViewModels;
 
+use App\Cards\CardFace;
 use App\Cards\CardMapper;
+use App\Support\Money;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
@@ -13,9 +15,18 @@ class CardViewModel
 {
     protected CardMapper $mapper;
 
+    /** @var list<CardFace>|null */
+    private ?array $faces = null;
+
     public function __construct(protected array $card, protected array $config)
     {
         $this->mapper = app($config['mapper']);
+    }
+
+    /** The raw card this presents, e.g. to store its name and image locally. */
+    public function raw(): array
+    {
+        return $this->card;
     }
 
     public function id(): ?string
@@ -51,7 +62,17 @@ class CardViewModel
      */
     public function faceImages(): array
     {
-        return $this->mapper->faceImages($this->card);
+        return array_map(fn (CardFace $face) => $face->image(), $this->faces());
+    }
+
+    /**
+     * Every face of a double-faced card, each with its own image, name, type, text and stats; empty for regular cards.
+     *
+     * @return list<CardFace>
+     */
+    public function faces(): array
+    {
+        return $this->faces ??= $this->mapper->faces($this->card);
     }
 
     /**
@@ -146,6 +167,14 @@ class CardViewModel
         return ucfirst($this->rarity());
     }
 
+    /**
+     * Whether the card page gives this card the rainbow foil sheen (the series' `holo_rarities`).
+     */
+    public function isHolo(): bool
+    {
+        return $this->mapper->isHolo($this->card, $this->config['holo_rarities'] ?? []);
+    }
+
     public function priceValue(): ?float
     {
         return $this->mapper->priceValue($this->card);
@@ -158,7 +187,7 @@ class CardViewModel
     {
         $value = $this->priceValue();
 
-        return $value === null ? 'N/A' : config('app.currency.symbol').number_format($value, 2);
+        return $value === null ? 'N/A' : Money::format($value);
     }
 
     /**
@@ -171,30 +200,42 @@ class CardViewModel
         return $this->mapper->statFacets($this->card);
     }
 
-    public function printSets(): array
+    public function collectionKey(): string
     {
-        return $this->mapper->printSets($this->card);
+        return $this->mapper->collectionKey($this->card);
+    }
+
+    public function printingIn(string $setCode, ?string $setName = null): string
+    {
+        return $this->mapper->printingIn($this->card, $setCode, $setName);
     }
 
     /**
-     * The sets this card was printed in, once each, with a link to the pack page. A print code looks like
-     * "LOB-EN001"; the pack code is the part before the dash, and the set name's slug picks between products that
-     * share a pack code.
+     * The card page's Printings list, the same rows for guests and players: each printing from the card source
+     * (CardProvider::printings), linked to its pack page, with the player's copies of it ($counts, printing key =>
+     * copies). Printings a player still owns that the source no longer offers come last, without a link.
      *
-     * @return Collection<int, array{set_name: string, code: string, url: string}>
+     * @param  list<array{key: string, label: string, set_name: string, code: string, pack_code: string}>  $printings
+     * @param  array<string, int>  $counts
+     * @return Collection<int, array{set_name: string, code: string, url: ?string, printing: string, count: int, name: string}>
      */
-    public function printPacks(string $series): Collection
+    public function printRows(string $series, array $printings, array $counts = []): Collection
     {
-        return collect($this->printSets())
-            ->map(fn (array $set) => ['code' => explode('-', $set['set_code'] ?? '')[0], 'set_name' => $set['set_name'] ?? 'Unknown'])
-            ->filter(fn (array $set) => $set['code'] !== '')
-            ->unique('set_name')
-            ->map(fn (array $set) => [
-                'set_name' => $set['set_name'],
-                'code' => $set['code'],
-                'url' => route('packs.show', [$series, $set['code'], Str::slug($set['set_name'])]),
-            ])
-            ->values();
+        $rows = collect($printings)->map(fn (array $printing) => [
+            'set_name' => $printing['set_name'],
+            'code' => $printing['code'],
+            'url' => $printing['pack_code'] !== '' ? route('packs.show', [$series, $printing['pack_code'], Str::slug($printing['set_name'])]) : null,
+            'printing' => $printing['key'],
+            'count' => $counts[$printing['key']] ?? 0,
+            'name' => "{$this->name()} ({$printing['label']})",
+        ]);
+        $offered = $rows->pluck('printing')->all();
+
+        foreach (collect($counts)->except(['', ...$offered]) as $key => $count) {
+            $rows->push(['set_name' => (string) $key, 'code' => (string) $key, 'url' => null, 'printing' => (string) $key, 'count' => $count, 'name' => "{$this->name()} ($key)"]);
+        }
+
+        return $rows->values();
     }
 
     /**

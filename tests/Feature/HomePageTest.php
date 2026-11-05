@@ -13,7 +13,7 @@ test('the home page has the header, the hero and its buttons', function () {
         ->toContain(e(collect(config('series'))->pluck('label')->implode(' · ')).' · more on the way')
         ->toContain('href="#games" class="btn-primary"')
         ->toContain('href="'.route('decks.builder', array_key_first(config('series'))).'" class="btn-secondary">Open the deck builder</a>')
-        ->toContain('alt="DeckTrove card database showing Yu-Gi-Oh! search results"')
+        ->toContain('alt="DeckTrove pack page" data-shot="4"')
         ->toContain('Browsing cards is open to everyone — sign in to build and save decks.');
 });
 

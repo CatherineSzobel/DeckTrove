@@ -2,9 +2,7 @@
 
 namespace App\Exceptions;
 
-use RuntimeException;
-
-class ScryfallUnavailableException extends RuntimeException
+class ScryfallUnavailableException extends CardSourceUnavailableException
 {
     public function __construct(string $message = 'The Magic card database (Scryfall) is unavailable right now. Please try again in a moment.')
     {

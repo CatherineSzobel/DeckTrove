@@ -31,9 +31,9 @@ test('the series links are All and each series, with the current one marked', fu
     $service = app(DashboardService::class);
 
     expect($service->seriesLinks(null))->toBe([
-        ['label' => 'All', 'href' => route('dashboard'), 'current' => true],
-        ['label' => 'Yu-Gi-Oh!', 'href' => route('dashboard', ['tcg' => 'yugioh']), 'current' => false],
-        ['label' => 'Magic: The Gathering', 'href' => route('dashboard', ['tcg' => 'magic']), 'current' => false],
+        ['key' => 'all', 'label' => 'All', 'href' => route('dashboard'), 'current' => true],
+        ['key' => 'yugioh', 'label' => 'Yu-Gi-Oh!', 'href' => route('dashboard', ['tcg' => 'yugioh']), 'current' => false],
+        ['key' => 'magic', 'label' => 'Magic: The Gathering', 'href' => route('dashboard', ['tcg' => 'magic']), 'current' => false],
     ]);
     expect(collect($service->seriesLinks('magic'))->pluck('current')->all())->toBe([false, false, true]);
 });
@@ -73,8 +73,8 @@ test('the random cards switch links each series back to the section, keeping the
     $service = app(DashboardService::class);
 
     expect($service->randomSeriesLinks('magic', null))->toBe([
-        ['label' => 'Yu-Gi-Oh!', 'href' => route('dashboard', ['cards' => 'yugioh']).'#discover', 'current' => false],
-        ['label' => 'Magic: The Gathering', 'href' => route('dashboard', ['cards' => 'magic']).'#discover', 'current' => true],
+        ['key' => 'yugioh', 'label' => 'Yu-Gi-Oh!', 'href' => route('dashboard', ['cards' => 'yugioh']).'#discover', 'current' => false],
+        ['key' => 'magic', 'label' => 'Magic: The Gathering', 'href' => route('dashboard', ['cards' => 'magic']).'#discover', 'current' => true],
     ]);
     expect($service->randomSeriesLinks('yugioh', 'magic')[1]['href'])
         ->toBe(route('dashboard', ['tcg' => 'magic', 'cards' => 'magic']).'#discover');

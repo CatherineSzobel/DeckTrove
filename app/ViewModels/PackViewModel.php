@@ -51,13 +51,18 @@ class PackViewModel
         return Arr::get($this->pack, $this->config['type']);
     }
 
+    public function slug(): ?string
+    {
+        return Arr::get($this->pack, $this->config['slug'] ?? '') ?: null;
+    }
+
     public function link(): string
     {
         if (! $this->code()) {
             return '#';
         }
 
-        $slug = Arr::get($this->pack, $this->config['slug'] ?? '');
+        $slug = $this->slug();
 
         return url("{$this->config['link_prefix']}/pack/{$this->code()}".($slug ? "/$slug" : ''));
     }

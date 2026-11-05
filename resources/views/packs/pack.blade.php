@@ -25,6 +25,15 @@
                     <x-stat-box :label="$fact['label']" :value="$fact['value']" size="sm" />
                     @endforeach
                 </dl>
+                @auth
+                <form method="POST" action="{{ route('packs.collection', [$series, $pack->code(), $pack->slug()]) }}" class="self-start">
+                    @csrf
+                    <button type="submit" class="btn-secondary">
+                        <x-heroicon-o-rectangle-stack class="h-5 w-5" aria-hidden="true" />
+                        Add set to collection
+                    </button>
+                </form>
+                @endauth
             </div>
         </section>
 
@@ -51,18 +60,24 @@
                 <p aria-live="polite" x-text="countLabel" class="ml-auto font-mono text-[13px] text-muted">{{ $countLabel }}</p>
             </form>
 
-            <div x-ref="grid" class="grid grid-cols-[repeat(auto-fill,minmax(min(180px,100%),1fr))] gap-5">
+            <x-form-error name="card" bag="collection" />
+
+            <div x-ref="grid" data-deal class="grid grid-cols-[repeat(auto-fill,minmax(min(180px,100%),1fr))] gap-5">
                 @foreach ($cards as $card)
-                <a href="{{ $card->link() }}" data-name="{{ $card->searchName() }}" data-rarity="{{ $card->rarity() }}" @unless ($filter->matches($card)) hidden @endunless
-                    x-data="{ card: @js($card->builderCard()) }" @mouseenter="showPreview(card, $el)" @mouseleave="hidePreview()"
-                    @focus="showPreview(card, $el)" @blur="hidePreview()" class="pack-tile flex flex-col gap-3 p-3">
-                    <img src="{{ $card->imageSmall() }}" alt="" loading="lazy" class="aspect-[59/86] w-full rounded-md object-cover">
-                    <span class="flex min-w-0 flex-col gap-1.5 px-0.5 pb-0.5">
-                        <span class="truncate text-[15px] font-bold text-ink">{{ $card->name() }}</span>
-                        <span class="truncate text-xs text-muted">{{ $card->typeLine() }}</span>
-                        <span class="rarity-pill max-w-full self-start" title="{{ $card->rarityLabel() }}"><span class="min-w-0 truncate">{{ $card->rarityLabel() }}</span></span>
-                    </span>
-                </a>
+                <div id="card-{{ $card->id() }}" style="--deal: {{ $loop->index }}" class="relative flex scroll-mt-24 flex-col" data-name="{{ $card->searchName() }}" data-rarity="{{ $card->rarity() }}" @unless ($filter->matches($card)) hidden @endunless>
+                    <a href="{{ $card->link() }}" x-data="{ card: @js($card->builderCard()) }" x-bind="previewTrigger" class="pack-tile flex flex-1 flex-col gap-3 p-3">
+                        <img src="{{ $card->imageSmall() }}" alt="" loading="lazy" class="aspect-[59/86] w-full rounded-md object-cover">
+                        <span class="flex min-w-0 flex-col gap-1.5 px-0.5 pb-0.5">
+                            <span class="truncate text-[15px] font-bold text-ink">{{ $card->name() }}</span>
+                            <span class="truncate text-xs text-muted">{{ $card->typeLine() }}</span>
+                            <x-card-faces-badge :card="$card" />
+                            <span class="rarity-pill max-w-full self-start" title="{{ $card->rarityLabel() }}"><span class="min-w-0 truncate">{{ $card->rarityLabel() }}</span></span>
+                        </span>
+                    </a>
+                    @if ($tileCounts->shows())
+                    <x-collection.tile-counter :counts="$tileCounts" :card="$card" :series="$series" class="mt-1" />
+                    @endif
+                </div>
                 @endforeach
             </div>
 

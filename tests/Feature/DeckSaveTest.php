@@ -95,6 +95,17 @@ test('the deck image must be an https url', function () {
         ->assertSessionHasErrors('image');
 });
 
+test('the deck image must come from a card image host', function () {
+    $user = User::factory()->create();
+    $post = fn (string $image) => $this->actingAs($user)->post(route('decks.store', 'yugioh'), [
+        'cards' => cardsPayload(['main' => [DARK_MAGICIAN]]),
+        'image' => $image,
+    ]);
+
+    $post('https://tracker.example/pixel.png')->assertSessionHasErrors('image');
+    $post('https://images.ygoprodeck.com/images/cards/46986414.jpg')->assertSessionDoesntHaveErrors();
+});
+
 test('decks below the minimum size are saved as private', function () {
     $user = User::factory()->create();
 

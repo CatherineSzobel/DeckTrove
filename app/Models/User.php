@@ -24,7 +24,7 @@ class User extends Authenticatable implements Commentable
      *
      * @var list<string>
      */
-    protected $fillable = ['username', 'email', 'password', 'about', 'avatar', 'show_liked_decks', 'allow_comments'];
+    protected $fillable = ['username', 'email', 'password', 'about', 'avatar', 'show_liked_decks', 'allow_comments', 'collection_public', 'wishlist_public'];
 
     /**
      * The database defaults, also on a model that was just created (before a reload).
@@ -34,6 +34,8 @@ class User extends Authenticatable implements Commentable
     protected $attributes = [
         'show_liked_decks' => false,
         'allow_comments' => true,
+        'collection_public' => false,
+        'wishlist_public' => false,
     ];
 
     /**
@@ -58,6 +60,8 @@ class User extends Authenticatable implements Commentable
             'password' => 'hashed',
             'show_liked_decks' => 'boolean',
             'allow_comments' => 'boolean',
+            'collection_public' => 'boolean',
+            'wishlist_public' => 'boolean',
         ];
     }
 
@@ -80,6 +84,12 @@ class User extends Authenticatable implements Commentable
     public function likes(): HasMany
     {
         return $this->hasMany(DeckLike::class);
+    }
+
+    /** Cards this user owns or wants (App\Collection\CollectionService). */
+    public function collectionItems(): HasMany
+    {
+        return $this->hasMany(CollectionItem::class);
     }
 
     /** Comments other players (and this user) left on this user's profile; each knows its profile without a query. */

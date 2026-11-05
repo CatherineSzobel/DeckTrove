@@ -4,6 +4,7 @@ namespace App\Decks;
 
 use App\Services\MagicService;
 use Illuminate\Support\Collection;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Plain-text Magic deck lists, as used by MTG Arena, MTGO and most deck sites:
@@ -19,6 +20,9 @@ use Illuminate\Support\Collection;
  */
 class MagicTextFormat implements DeckFormat
 {
+    // Every 75 entries cost a Scryfall request; a real deck, even 100 cards with a sideboard, needs far fewer.
+    private const MAX_ENTRIES = 300;
+
     private const LINE = '/^(?:SB:\s*)?(\d+)x?\s+(.+?)(?:\s+\(([A-Za-z0-9]{2,6})\)(?:\s+(\S+))?)?(?:\s+\*[A-Z]+\*)?$/u';
 
     public function __construct(private readonly MagicService $magic) {}
@@ -124,6 +128,10 @@ class MagicTextFormat implements DeckFormat
                     : ['name' => $name],
             ];
             $seenCard = true;
+        }
+
+        if (count($entries) > self::MAX_ENTRIES) {
+            throw ValidationException::withMessages(['list' => 'That deck list is too long: it can have at most '.self::MAX_ENTRIES.' lines of cards.']);
         }
 
         return $entries;

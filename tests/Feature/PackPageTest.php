@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\User;
 use App\Models\YugiohCard;
 use App\Models\YugiohPrinting;
 use App\Models\YugiohSet;
@@ -49,6 +50,18 @@ test('the cards are tiles with their name and rarity for filtering', function ()
         ->toContain('<option value="Secret Rare"')
         ->toContain('>2 cards</p>')
         ->toMatch('/data-no-matches x-ref="noMatches"\s+hidden/');
+});
+
+test('the first tiles deal in once, and keep their hover lift afterwards', function () {
+    expect(lobPage())->toContain('x-ref="grid" data-deal')->toContain('<div id="card-89631139" style="--deal: 0"')->toContain('<div id="card-46986414" style="--deal: 1"');
+
+    $css = file_get_contents(resource_path('css/app.css'));
+
+    expect($css)->toMatch('/@media \(prefers-reduced-motion: no-preference\)\s*\{[^@]*\[data-deal\]:not\(:has\(> :target\)\) > :nth-child\(-n\+12\)\s*\{\s*animation: pack-deal 0\.4s ease-out backwards/')
+        ->toContain('animation-delay: calc(var(--deal, 0) * 40ms)')
+        ->not->toContain(':nth-child(12) { --deal')
+        ->toContain('@keyframes pack-deal')
+        ->and(substr_count($css, 'animation: pack-deal'))->toBe(1);
 });
 
 test('the name filter hides the other cards on the server', function () {
@@ -119,9 +132,22 @@ test('card tiles show the card preview on hover and focus, with the description'
     $html = lobPage();
 
     expect($html)->toContain('x-data="{ card: ')
-        ->toContain('@mouseenter="showPreview(card, $el)" @mouseleave="hidePreview()"')
-        ->toContain('@focus="showPreview(card, $el)" @blur="hidePreview()"')
+        ->toContain('x-bind="previewTrigger"')
         ->toContain('The ultimate wizard.')
         ->toContain('@scroll.window.passive="hideOnScroll()"')
         ->and(substr_count($html, 'data-card-preview'))->toBe(1);
+});
+
+test('logged-in players get “Add set to collection” and a counter under each tile; guests get neither', function () {
+    $html = lobPage();
+
+    expect($html)->not->toContain('Add set to collection')->not->toContain('collectionCounter');
+
+    $html = test()->actingAs(User::factory()->create())->get(route('packs.show', ['yugioh', 'LOB', 'legend-of-blue-eyes-white-dragon']))->getContent();
+
+    expect($html)->toContain('action="'.route('packs.collection', ['yugioh', 'LOB', 'legend-of-blue-eyes-white-dragon']).'"')
+        ->toContain('Add set to collection')
+        ->toContain('aria-label="Add a copy of Dark Magician"')
+        ->toContain('aria-label="Add a copy of Blue-Eyes White Dragon"')
+        ->toMatch('/<div id="card-46986414" style="--deal: 1" class="relative flex scroll-mt-24 flex-col" data-name="dark magician" data-rarity="Ultra Rare"/');
 });

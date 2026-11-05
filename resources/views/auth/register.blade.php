@@ -1,7 +1,7 @@
 {{-- Create account: a plain POST form (RegisterUserController@store) next to the "About DeckTrove" showcase. --}}
 
 <x-layout title="Create account">
-    <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-16 px-4 py-12 sm:px-6 lg:py-[72px]">
+    <div class="mx-auto flex max-w-7xl overflow-x-clip flex-wrap items-center justify-center gap-16 px-4 py-12 sm:px-6 lg:py-[72px]">
         <x-auth.card eyebrow="Join DeckTrove" title="Create account">
             <x-slot:intro><p class="text-base text-body">Save your decks and share them with the community.</p></x-slot:intro>
 

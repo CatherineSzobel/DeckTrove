@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\User;
+use App\Support\Series;
 use App\ViewModels\CardViewModel;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -49,13 +50,7 @@ class DashboardService
      */
     public function seriesLinks(?string $selected): array
     {
-        return [
-            ['label' => 'All', 'href' => route('dashboard'), 'current' => $selected === null],
-            ...collect(config('series'))
-                ->map(fn (array $config, string $series) => ['label' => $config['label'], 'href' => route('dashboard', ['tcg' => $series]), 'current' => $selected === $series])
-                ->values()
-                ->all(),
-        ];
+        return Series::links(fn (?string $series) => route('dashboard', array_filter(['tcg' => $series])), $selected, 'All');
     }
 
     /**
@@ -65,14 +60,7 @@ class DashboardService
      */
     public function randomSeriesLinks(string $current, ?string $deckFilter): array
     {
-        return collect(config('series'))
-            ->map(fn (array $config, string $series) => [
-                'label' => $config['label'],
-                'href' => route('dashboard', array_filter(['tcg' => $deckFilter, 'cards' => $series])).'#discover',
-                'current' => $series === $current,
-            ])
-            ->values()
-            ->all();
+        return Series::links(fn (string $series) => route('dashboard', array_filter(['tcg' => $deckFilter, 'cards' => $series])).'#discover', $current);
     }
 
     /**

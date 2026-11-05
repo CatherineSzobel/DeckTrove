@@ -1,6 +1,6 @@
 <?php
 
-use App\Exceptions\ScryfallUnavailableException;
+use App\Exceptions\CardSourceUnavailableException;
 use App\Http\Middleware\RememberSeries;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -19,7 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [RememberSeries::class, AuthenticateSession::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->render(function (ScryfallUnavailableException $e, Request $request) {
+        $exceptions->render(function (CardSourceUnavailableException $e, Request $request) {
             if ($request->expectsJson()) {
                 return response()->json(['message' => $e->getMessage()], 503);
             }

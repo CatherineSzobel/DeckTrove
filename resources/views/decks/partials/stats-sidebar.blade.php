@@ -89,5 +89,9 @@
         @endforeach
 
         <p class="-mt-2 text-xs text-muted">{{ $charts->priceNote() }}</p>
+
+        @if ($collection)
+        @include('decks.partials.collection-block')
+        @endif
     </div>
 </aside>

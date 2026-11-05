@@ -20,9 +20,11 @@ abstract class CardMapper
     }
 
     /**
-     * Images of every face for double-faced cards; empty for regular cards.
+     * Every face of a double-faced card, each with its own image; empty for regular cards.
+     *
+     * @return list<CardFace>
      */
-    public function faceImages(array $card): array
+    public function faces(array $card): array
     {
         return [];
     }
@@ -62,6 +64,19 @@ abstract class CardMapper
 
     abstract public function rarity(array $card): ?string;
 
+    /**
+     * Whether the card gets the rainbow foil sheen on the card page: its rarity contains one of the series'
+     * `holo_rarities` words, ignoring case. Series whose foil isn't a rarity override this.
+     *
+     * @param  list<string>  $holoRarities
+     */
+    public function isHolo(array $card, array $holoRarities): bool
+    {
+        $rarity = (string) $this->rarity($card);
+
+        return $rarity !== '' && collect($holoRarities)->contains(fn (string $word) => stripos($rarity, $word) !== false);
+    }
+
     abstract public function price(array $card): ?string;
 
     /**
@@ -75,9 +90,16 @@ abstract class CardMapper
     }
 
     /**
-     * @return list<array{set_code: string, set_name: string}>
+     * What counts as "the same card" in a collection: every printing of a card shares it, so a deck needing 4 is
+     * covered by 4 copies of any printing. Falls back to the card id.
      */
-    abstract public function printSets(array $card): array;
+    abstract public function collectionKey(array $card): string;
+
+    /**
+     * The printing a collection records when the card is added from a set's page (e.g. "LOB-EN005", or a Magic
+     * printing id), or '' when the card has none in that set.
+     */
+    abstract public function printingIn(array $card, string $setCode, ?string $setName = null): string;
 
     /**
      * The most copies of a card allowed in a format (a key of the series' `deck.formats`): 0 when the card is

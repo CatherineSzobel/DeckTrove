@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Cards\CardCache;
 use App\Models\Card;
 use App\Models\Deck;
 use App\Models\DeckCard;
@@ -61,7 +62,7 @@ class DeckService
         $counts = [];
 
         foreach ($deck->deckCards()->with('card')->orderBy('id')->get() as $deckCard) {
-            $counts[$deckCard->zone][$deckCard->card->external_id] = $deckCard->count;
+            $counts[$deckCard->zone][$deckCard->card->external_id] = ($counts[$deckCard->zone][$deckCard->card->external_id] ?? 0) + $deckCard->count;
         }
 
         return $counts;
@@ -256,7 +257,7 @@ class DeckService
      *
      * @return array<string, int>
      */
-    private function totalCopies(array $counts): array
+    public function totalCopies(array $counts): array
     {
         $copies = [];
 
@@ -279,30 +280,8 @@ class DeckService
 
     private function syncCards(Deck $deck, array $counts, Collection $cards): void
     {
-        $config = config("series.{$deck->game}");
         $now = now();
-
-        // One query for all cards, relying on the unique (game, external_id) index.
-        Card::upsert(
-            $cards->map(function (array $raw, $externalId) use ($deck, $config, $now) {
-                $viewModel = new CardViewModel($raw, $config);
-
-                return [
-                    'game' => $deck->game,
-                    'external_id' => (string) $externalId,
-                    'name' => $viewModel->name(),
-                    'image_url' => $viewModel->image(),
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ];
-            })->values()->all(),
-            ['game', 'external_id'],
-            ['name', 'image_url', 'updated_at'],
-        );
-
-        $cardIds = Card::where('game', $deck->game)
-            ->whereIn('external_id', $cards->keys()->map(fn ($id) => (string) $id))
-            ->pluck('id', 'external_id');
+        $cardIds = CardCache::store($deck->game, $cards);
 
         $deck->deckCards()->delete();
 

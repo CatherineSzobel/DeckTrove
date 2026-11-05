@@ -56,6 +56,8 @@ class ProfileController extends Controller
             'aboutCounter' => "{$aboutLength} / 500",
             'showLikedDecks' => $hasOld ? (bool) $request->old('show_liked_decks') : $user->show_liked_decks,
             'allowComments' => $hasOld ? (bool) $request->old('allow_comments') : $user->allow_comments,
+            'collectionPublic' => $hasOld ? (bool) $request->old('collection_public') : $user->collection_public,
+            'wishlistPublic' => $hasOld ? (bool) $request->old('wishlist_public') : $user->wishlist_public,
             // "Your decks": newest first, as on My decks.
             'decks' => $decks,
             'deckTotal' => $decks->count(),
@@ -73,6 +75,8 @@ class ProfileController extends Controller
             'avatar' => $request->hasFile('avatar') ? $this->avatars->store($request->file('avatar')) : $oldAvatar,
             'show_liked_decks' => $request->boolean('show_liked_decks'),
             'allow_comments' => $request->boolean('allow_comments'),
+            'collection_public' => $request->boolean('collection_public'),
+            'wishlist_public' => $request->boolean('wishlist_public'),
         ]);
 
         // Only remove the old avatar once the new one is stored and saved.

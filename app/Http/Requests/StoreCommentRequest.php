@@ -9,14 +9,17 @@ use Illuminate\Foundation\Http\FormRequest;
 
 /**
  * A comment: 1–500 characters of plain text, only while its target accepts comments (403 otherwise). Errors go in
- * the `comment` bag so they stay apart from other forms. Subclasses say what the comment is on.
+ * the `comment` bag so they stay apart from other forms.
  */
-abstract class StoreCommentRequest extends FormRequest
+class StoreCommentRequest extends FormRequest
 {
     protected $errorBag = 'comment';
 
-    /** The profile or deck from the route. */
-    abstract protected function target(): Commentable;
+    /** What the comment is on: the deck or the profile from the route. */
+    public function target(): Commentable
+    {
+        return $this->route('deck') ?? $this->route('user');
+    }
 
     public function authorize(): bool
     {

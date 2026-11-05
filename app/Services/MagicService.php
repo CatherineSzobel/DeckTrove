@@ -162,6 +162,24 @@ class MagicService implements CardProvider
         return collect($names)->contains(fn ($name) => strcasecmp($name, $identifier['name'] ?? '') === 0);
     }
 
+    public function printings(array $card): array
+    {
+        $oracleId = $card['oracle_id'] ?? data_get($card, 'card_faces.0.oracle_id');
+        // 10 pages of 175 cover the most-printed cards (basic lands); each page is cached.
+        $prints = $oracleId ? $this->searchAll("oracleid:$oracleId unique:prints", 10) : [$card];
+
+        return collect($prints)
+            ->map(fn ($print) => [
+                'key' => (string) $print['id'],
+                'label' => ($print['set_name'] ?? 'Unknown').' ('.Str::upper($print['set'] ?? '').' #'.($print['collector_number'] ?? '?').')',
+                'set_name' => $print['set_name'] ?? 'Unknown',
+                'code' => Str::upper($print['set'] ?? '').' #'.($print['collector_number'] ?? '?'),
+                'pack_code' => (string) ($print['set'] ?? ''),
+            ])
+            ->values()
+            ->all();
+    }
+
     public function related(array $card, int $limit = 6): Collection
     {
         $setCode = $card['set'] ?? null;
@@ -200,20 +218,24 @@ class MagicService implements CardProvider
 
     public function random(int $count): Collection
     {
-        $responses = Http::pool(fn ($pool) => array_map(
-            fn ($i) => $pool->as("card$i")
-                ->baseUrl(config('services.scryfall.url'))
-                ->timeout(5)
-                ->acceptJson()
-                ->withUserAgent(config('services.scryfall.user_agent'))
-                ->get('/cards/random'),
-            range(1, $count)
-        ));
+        // One call at a time through our limiter (Scryfall allows 2/s here); stops early rather than wait long.
+        $cards = collect();
 
-        return collect($responses)
-            ->filter(fn ($response) => $response instanceof Response && $response->successful())
-            ->map(fn (Response $response) => $response->json())
-            ->values();
+        try {
+            for ($i = 0; $i < $count; $i++) {
+                $card = $this->json($this->get('/cards/random'));
+
+                if (! isset($card['id'])) {
+                    break;
+                }
+
+                $cards->push($card);
+            }
+        } catch (ScryfallUnavailableException) {
+            // Show the cards fetched so far.
+        }
+
+        return $cards;
     }
 
     public function filterOptions(): array

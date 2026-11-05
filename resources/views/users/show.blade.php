@@ -1,6 +1,6 @@
 {{--
     A user's public profile: the profile card with jump links, then Public decks, Liked decks and Comments, each a
-    short list with a link to its full page. Never the email, never private decks (also not for the owner, who edits
+    short list (cards for Collection and Wishlist) with a link to its full page. Never the email, never private decks (also not for the owner, who edits
     their profile at /profile/edit). App\Profiles\ProfilePage decides which sections show, their counts and lists.
 --}}
 
@@ -85,6 +85,20 @@
                     @else
                     <x-empty-state title="No liked decks yet" heading="h3">{{ $user->username }} hasn’t liked any decks yet.</x-empty-state>
                     @endif
+                </section>
+                @endif
+
+                @if ($page->showsCollection())
+                <section id="collection" aria-labelledby="collection-title" class="flex scroll-mt-6 flex-col gap-5">
+                    @include('users.partials.section-heading', ['id' => 'collection', 'title' => 'Collection', 'more' => $page->moreLink('collection'), 'private' => $page->collectionIsPrivate()])
+                    @include('users.partials.card-strip', ['cards' => $page->overviewCollection(), 'empty' => 'No cards in this collection yet'])
+                </section>
+                @endif
+
+                @if ($page->showsWishlist())
+                <section id="wishlist" aria-labelledby="wishlist-title" class="flex scroll-mt-6 flex-col gap-5">
+                    @include('users.partials.section-heading', ['id' => 'wishlist', 'title' => 'Wishlist', 'more' => $page->moreLink('wishlist'), 'private' => $page->wishlistIsPrivate()])
+                    @include('users.partials.card-strip', ['cards' => $page->overviewWishlist(), 'empty' => 'No cards on this wishlist yet'])
                 </section>
                 @endif
 

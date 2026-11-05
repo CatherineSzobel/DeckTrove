@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Contracts\CardProvider;
 use App\Models\YugiohCard;
 use App\Support\Paginates;
+use App\Support\QueryInput;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -28,7 +29,7 @@ class YugiohService implements CardProvider
             ->select(['data', 'images_hosted_at'])
             ->when($term !== '', function ($query) use ($term) {
                 // Case-insensitive on every database: LIKE on SQLite/MySQL, ILIKE on Postgres.
-                $like = "%$term%";
+                $like = QueryInput::like($term);
 
                 $query->where(fn ($q) => $q
                     ->whereLike('name', $like)
@@ -70,6 +71,22 @@ class YugiohService implements CardProvider
         return YugiohCard::whereIn('id', $ids)->get()->mapWithKeys(fn (YugiohCard $card) => [$card->id => $card->toCardArray()]);
     }
 
+    public function printings(array $card): array
+    {
+        return collect($card['card_sets'] ?? [])
+            ->filter(fn ($set) => ($set['set_code'] ?? '') !== '')
+            ->unique('set_code')
+            ->map(fn ($set) => [
+                'key' => $set['set_code'],
+                'label' => ($set['set_name'] ?? 'Unknown').' ('.$set['set_code'].')',
+                'set_name' => $set['set_name'] ?? 'Unknown',
+                'code' => $set['set_code'],
+                'pack_code' => explode('-', $set['set_code'])[0],
+            ])
+            ->values()
+            ->all();
+    }
+
     public function related(array $card, int $limit = 6): Collection
     {
         if (empty($card['archetype'])) {
@@ -86,10 +103,15 @@ class YugiohService implements CardProvider
 
     public function random(int $count): Collection
     {
-        return YugiohCard::inRandomOrder()
-            ->limit($count)
+        // Shuffling only the ids is far cheaper than shuffling whole rows (their JSON columns make each row large).
+        // Plucked first: MySQL refuses LIMIT inside an IN subquery.
+        $ids = YugiohCard::query()->inRandomOrder()->limit($count)->pluck('id');
+
+        return YugiohCard::whereIn('id', $ids)
             ->get()
-            ->map(fn (YugiohCard $card) => $card->toCardArray());
+            ->shuffle()
+            ->map(fn (YugiohCard $card) => $card->toCardArray())
+            ->values();
     }
 
     public function filterOptions(): array

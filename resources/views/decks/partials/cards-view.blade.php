@@ -5,7 +5,7 @@
 @foreach ($cards as $card)
 <div data-card-id="{{ $card->id() }}" x-data="{ card: {{ Js::from($card->builderCard()) }} }" class="flex min-w-0 flex-col gap-1.5">
     <button type="button" @click="setCover(card)" title="Set as deck cover" aria-label="Use {{ $card->name() }} as the deck cover"
-        @mouseenter="showPreview(card, $el)" @mouseleave="hidePreview()" @focus="showPreview(card, $el)" @blur="hidePreview()"
+        x-bind="previewTrigger"
         class="focus-ring relative block aspect-[59/86] rounded-md bg-surface-2 shadow-md">
         <img src="{{ $card->imageSmall() }}" alt="{{ $card->name() }}" loading="lazy" class="h-full w-full rounded-md object-cover">
 

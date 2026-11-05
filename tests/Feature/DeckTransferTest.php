@@ -166,6 +166,17 @@ test('mtgo style lists put cards after the blank line in the sideboard', functio
     expect($deck->deckCards()->where('zone', 'side')->sum('count'))->toBe(2);
 });
 
+test('a magic list with too many lines is refused before asking scryfall', function () {
+    Http::fake();
+    $user = User::factory()->create();
+
+    $this->actingAs($user)->post(route('decks.import', 'magic'), ['list' => str_repeat("1 Forest\n", 301)])
+        ->assertSessionHasErrors('list');
+
+    Http::assertNothingSent();
+    expect($user->decks()->count())->toBe(0);
+});
+
 test('an import needs a file or a list', function () {
     $this->actingAs(User::factory()->create())
         ->post(route('decks.import', 'yugioh'), [])

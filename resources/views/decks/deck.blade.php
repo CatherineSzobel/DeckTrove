@@ -31,7 +31,7 @@
                     <x-stat-chip :value="$count" :label="Str::plural(strtolower($value), $count)" inset />
                     @endforeach
                     <x-stat-chip :value="$stats->money($stats->price)" label="deck price" warn inset data-chip="price"
-                        :title="$stats->missingPrices ? $stats->missingPrices.' '.Str::plural('card', $stats->missingPrices).' have no price' : null" />
+                        :title="$stats->missingPricesNote()" />
                 </div>
             </div>
 
@@ -102,8 +102,7 @@
                         @foreach ($sections[$zone] as $card)
                         <x-deck.card-slot :card="$card" :href="$card->link()" :over="$cardProblems[$card->id()] ?? null"
                             :x-data="'{ card: '.Js::from($card->builderCard()).' }'"
-                            x-on:mouseenter="showPreview(card, $el)" x-on:mouseleave="hidePreview()"
-                            x-on:focus="showPreview(card, $el)" x-on:blur="hidePreview()" />
+                            x-bind="previewTrigger" />
                         @endforeach
                     </div>
                 </section>

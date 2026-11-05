@@ -2,19 +2,23 @@
 
 namespace App\Profiles;
 
+use App\Collection\CollectionPage;
 use App\Comments\CommentDraft;
 use App\Decks\PublicDeckQuery;
+use App\Models\CollectionItem;
 use App\Models\Deck;
 use App\Models\DeckLike;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * A public profile and its list pages. The overview (users/show.blade.php) has the profile card with jump links and
- * three short sections: Public decks, Liked decks (the owner, and others while show_liked_decks is on) and Comments
- * (while allow_comments is on), each linking to its full list page (users/decks, liked, comments). Only what the page
+ * short sections: Public decks, Liked decks (the owner, and others while show_liked_decks is on), Collection and
+ * Wishlist (the owner, and others while collection_public / wishlist_public is on) and Comments (while allow_comments
+ * is on), each linking to its full list page (users/decks, liked, collection, wishlist, comments). Only what the page
  * shows is queried.
  */
 final class ProfilePage
@@ -29,7 +33,9 @@ final class ProfilePage
 
     public const OVERVIEW_COMMENTS = 5;
 
-    private const HEADINGS = ['decks' => 'Public decks', 'liked' => 'Liked decks', 'comments' => 'Comments'];
+    public const OVERVIEW_COLLECTION = 8;
+
+    private const HEADINGS = ['decks' => 'Public decks', 'liked' => 'Liked decks', 'collection' => 'Collection', 'wishlist' => 'Wishlist', 'comments' => 'Comments'];
 
     /** @var array<string, int> */
     private array $counts = [];
@@ -81,6 +87,30 @@ final class ProfilePage
     public function showsLiked(): bool
     {
         return $this->isOwner() || $this->profile->show_liked_decks;
+    }
+
+    /** The collection shows to the owner, and to others while collection_public is on. */
+    public function showsCollection(): bool
+    {
+        return Gate::forUser($this->viewer)->allows('viewCollection', $this->profile);
+    }
+
+    /** The wishlist shows to the owner, and to others while wishlist_public is on. */
+    public function showsWishlist(): bool
+    {
+        return Gate::forUser($this->viewer)->allows('viewWishlist', $this->profile);
+    }
+
+    /** The owner sees their collection while others can't. */
+    public function collectionIsPrivate(): bool
+    {
+        return $this->showsCollection() && ! $this->profile->collection_public;
+    }
+
+    /** The owner sees their wishlist while others can't. */
+    public function wishlistIsPrivate(): bool
+    {
+        return $this->showsWishlist() && ! $this->profile->wishlist_public;
     }
 
     /** Comments show (and can be posted) while allow_comments is on. */
@@ -155,6 +185,14 @@ final class ProfilePage
             $sections[] = ['id' => 'liked', 'label' => 'Liked decks', 'count' => $this->likedCount()];
         }
 
+        if ($this->showsCollection()) {
+            $sections[] = ['id' => 'collection', 'label' => 'Collection', 'count' => $this->count('collection')];
+        }
+
+        if ($this->showsWishlist()) {
+            $sections[] = ['id' => 'wishlist', 'label' => 'Wishlist', 'count' => $this->count('wishlist')];
+        }
+
         if ($this->showsComments()) {
             $sections[] = ['id' => 'comments', 'label' => 'Comments', 'count' => $this->commentCount()];
         }
@@ -176,6 +214,17 @@ final class ProfilePage
         return $this->overview['liked'] ??= PublicDeckQuery::defaults($this->viewer)
             ->likedBy($this->profile)
             ->take(self::OVERVIEW_LIKED);
+    }
+
+    /** The newest cards on the collection, for the overview: one row per card with its copies. */
+    public function overviewCollection(): Collection
+    {
+        return $this->overview['collection'] ??= $this->listOverview(CollectionItem::OWNED);
+    }
+
+    public function overviewWishlist(): Collection
+    {
+        return $this->overview['wishlist'] ??= $this->listOverview(CollectionItem::WANTED);
     }
 
     /** The newest comments for the overview. */
@@ -200,6 +249,12 @@ final class ProfilePage
                 : null,
             'liked' => $this->likedCount() > self::OVERVIEW_LIKED
                 ? ['label' => "All {$this->likedCount()} liked", 'href' => route('users.liked', $this->profile)]
+                : null,
+            'collection' => $this->count('collection') > self::OVERVIEW_COLLECTION
+                ? ['label' => "All {$this->count('collection')} cards", 'href' => route('users.collection', $this->profile)]
+                : null,
+            'wishlist' => $this->count('wishlist') > self::OVERVIEW_COLLECTION
+                ? ['label' => "All {$this->count('wishlist')} cards", 'href' => route('users.wishlist', $this->profile)]
                 : null,
             'comments' => $this->commentCount() > self::OVERVIEW_COMMENTS
                 ? ['label' => 'Show older comments ('.($this->commentCount() - self::OVERVIEW_COMMENTS).')', 'href' => route('users.comments', $this->profile)]
@@ -228,12 +283,6 @@ final class ProfilePage
         return $this->deckQuery()?->filters() ?? $this->baseQuery->filters();
     }
 
-    /** @return array<string, string> */
-    public function sorts(): array
-    {
-        return PublicDeckQuery::SORTS;
-    }
-
     public function trending(): bool
     {
         return $this->filters()['sort'] === 'trending';
@@ -255,6 +304,20 @@ final class ProfilePage
         return $this->commentDraft;
     }
 
+    private function listOverview(string $list): Collection
+    {
+        return $this->profile->collectionItems()
+            ->cardTiles($list)
+            ->selectRaw('MAX(collection_items.updated_at) as touched')
+            ->orderByDesc('touched')
+            ->limit(self::OVERVIEW_COLLECTION)
+            ->get()
+            ->each(function ($row) {
+                $row->copies_label = CollectionPage::copiesLabel((int) $row->copies);
+                $row->label = "{$row->name}, {$row->copies_label}";
+            });
+    }
+
     private function count(string $list): int
     {
         return $this->counts[$list] ??= match ($list) {
@@ -262,6 +325,8 @@ final class ProfilePage
             'liked' => Deck::public()
                 ->whereHas('likes', fn ($likes) => $likes->where('user_id', $this->profile->id))
                 ->count(),
+            'collection' => $this->profile->collectionItems()->owned()->distinct()->count('card_key'),
+            'wishlist' => $this->profile->collectionItems()->wanted()->distinct()->count('card_key'),
             'comments' => $this->profile->profileComments()->count(),
         };
     }

@@ -64,27 +64,24 @@ test('nobody can comment on a private deck or one with comments off', function (
     expect(Comment::count())->toBe(0);
 });
 
-test('deck comments follow the comment rules', function () {
-    $deck = commentableDeck();
-    $author = User::factory()->create();
+// The body rules themselves (length, blank, line breaks) are tested on profiles: both go through StoreCommentRequest.
+test('deck comments go through the comment rules', function () {
+    $this->actingAs(User::factory()->create())->post(route('decks.comments.store', commentableDeck()), ['body' => ''])
+        ->assertSessionHasErrorsIn('comment', 'body');
 
-    foreach (['', "   \n  ", ['x'], str_repeat('a', 501)] as $body) {
-        $this->actingAs($author)->post(route('decks.comments.store', $deck), ['body' => $body])
-            ->assertSessionHasErrorsIn('comment', 'body');
-    }
-    $this->actingAs($author)->post(route('decks.comments.store', $deck), ['body' => str_repeat("abcd\r\n", 90).'end'])
-        ->assertSessionHasNoErrors();
-
-    expect(Comment::count())->toBe(1)
-        ->and(mb_strlen(Comment::first()->body))->toBe(453);
+    expect(Comment::count())->toBe(0);
 });
 
-test('deck comments share the 5 a minute limit', function () {
+test('deck and profile comments share one 5 a minute limit', function () {
     $deck = commentableDeck();
+    $profile = User::factory()->create();
     $author = User::factory()->create();
 
-    foreach (range(1, 5) as $i) {
-        $this->actingAs($author)->post(route('decks.comments.store', $deck), ['body' => "Comment {$i}"])->assertRedirect();
+    foreach (range(1, 3) as $i) {
+        $this->actingAs($author)->post(route('decks.comments.store', $deck), ['body' => "Deck {$i}"])->assertRedirect();
+    }
+    foreach (range(1, 2) as $i) {
+        $this->actingAs($author)->post(route('users.comments.store', $profile), ['body' => "Profile {$i}"])->assertRedirect();
     }
 
     $this->actingAs($author)->post(route('decks.comments.store', $deck), ['body' => 'One too many'])->assertTooManyRequests();

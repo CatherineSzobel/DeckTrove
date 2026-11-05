@@ -7,7 +7,7 @@ use Illuminate\View\Component;
 
 /**
  * The "About DeckTrove" side of Log in and Create account (resources/views/components/auth/showcase.blade.php):
- * two screenshots and three numbered selling points, which differ per page.
+ * four screenshots that take turns and three numbered selling points, which differ per page.
  */
 class Showcase extends Component
 {

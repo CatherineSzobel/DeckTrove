@@ -11,6 +11,7 @@ export default defineConfig({
                 'resources/js/layout.js',
                 'resources/js/card-database.js',
                 'resources/js/card-page.js',
+                'resources/js/collection-page.js',
                 'resources/js/deck-builder.js',
                 'resources/js/deck-page.js',
                 'resources/js/edit-profile-page.js',

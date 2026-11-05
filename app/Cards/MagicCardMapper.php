@@ -20,6 +20,9 @@ class MagicCardMapper extends CardMapper
      */
     private const STAT_TYPES = ['Creature', 'Planeswalker', 'Battle', 'Instant', 'Sorcery', 'Artifact', 'Enchantment'];
 
+    /** A face's stats as the card page shows them, in this order; a face only shows the ones it has. */
+    private const FACE_STATS = ['mana_cost' => 'Mana cost', 'power' => 'Power', 'toughness' => 'Toughness', 'loyalty' => 'Loyalty', 'defense' => 'Defense'];
+
     private const COLOR_NAMES = ['W' => 'White', 'U' => 'Blue', 'B' => 'Black', 'R' => 'Red', 'G' => 'Green'];
 
     public function image(array $card): string
@@ -36,13 +39,29 @@ class MagicCardMapper extends CardMapper
             ?? $this->image($card);
     }
 
-    public function faceImages(array $card): array
+    /**
+     * Only faces with their own image count: split, flip and adventure cards list faces too, but print them on one
+     * side, so they stay single-faced.
+     */
+    public function faces(array $card): array
     {
-        return collect($card['card_faces'] ?? [])
-            ->pluck('image_uris.normal')
-            ->filter()
-            ->values()
-            ->all();
+        $faces = collect($card['card_faces'] ?? [])->filter(fn (array $face) => filled(data_get($face, 'image_uris.normal')));
+
+        if ($faces->count() < 2) {
+            return [];
+        }
+
+        return $faces->map(fn (array $face) => new CardFace(
+            $face['name'] ?? '',
+            data_get($face, 'image_uris.normal'),
+            $face['type_line'] ?? '',
+            $face['oracle_text'] ?? '',
+            collect(self::FACE_STATS)
+                ->map(fn (string $label, string $field) => ['label' => $label, 'value' => (string) ($face[$field] ?? '')])
+                ->reject(fn (array $stat) => $stat['value'] === '')
+                ->values()
+                ->all(),
+        ))->values()->all();
     }
 
     /**
@@ -104,12 +123,16 @@ class MagicCardMapper extends CardMapper
         return data_get($card, 'prices.eur');
     }
 
-    public function printSets(array $card): array
+    /** Scryfall's oracle id is shared by every printing (double-faced cards keep it on their faces). */
+    public function collectionKey(array $card): string
     {
-        return [[
-            'set_code' => $card['set'] ?? '',
-            'set_name' => $card['set_name'] ?? 'Unknown',
-        ]];
+        return (string) ($card['oracle_id'] ?? data_get($card, 'card_faces.0.oracle_id') ?? $card['id'] ?? '');
+    }
+
+    /** A Scryfall card already is one printing. */
+    public function printingIn(array $card, string $setCode, ?string $setName = null): string
+    {
+        return (string) ($card['id'] ?? '');
     }
 
     /**

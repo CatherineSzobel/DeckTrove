@@ -92,14 +92,20 @@ class YugiohCardMapper extends CardMapper
         return data_get($card, 'card_prices.0.cardmarket_price');
     }
 
-    public function printSets(array $card): array
+    public function collectionKey(array $card): string
     {
-        return collect($card['card_sets'] ?? [])
-            ->map(fn ($set) => [
-                'set_code' => $set['set_code'] ?? '',
-                'set_name' => $set['set_name'] ?? 'Unknown',
-            ])
-            ->all();
+        return (string) ($card['id'] ?? '');
+    }
+
+    /** The set's print code ("LOB-EN005"); the set name picks between products that share a code. */
+    public function printingIn(array $card, string $setCode, ?string $setName = null): string
+    {
+        $inSet = collect($card['card_sets'] ?? [])
+            ->filter(fn ($set) => strcasecmp(explode('-', $set['set_code'] ?? '')[0], $setCode) === 0);
+
+        $match = $setName === null ? null : $inSet->first(fn ($set) => ($set['set_name'] ?? null) === $setName);
+
+        return (string) (($match ?? $inSet->first())['set_code'] ?? '');
     }
 
     /**

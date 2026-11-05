@@ -1,7 +1,7 @@
 {{-- The home page (App\Home\HomePage): hero, the games, three steps and a call to action. Full-width sections. --}}
 
 <x-layout :contained="false">
-    <section aria-labelledby="hero-title" class="mx-auto flex max-w-7xl flex-wrap items-center gap-14 px-4 py-12 sm:px-6 lg:py-[88px]">
+    <section aria-labelledby="hero-title" class="mx-auto overflow-x-clip flex max-w-7xl flex-wrap items-center gap-14 px-4 py-12 sm:px-6 lg:py-[88px]">
         <div class="flex min-w-0 flex-[1_1_440px] flex-col gap-6">
             <p class="eyebrow">{{ $home->eyebrow() }}</p>
             <h1 id="hero-title" class="heading-display text-[clamp(52px,7vw,96px)] text-ink">Every card.<br>Every deck.<br><span class="text-accent-ink">One trove.</span></h1>
@@ -18,8 +18,7 @@
             @endif
         </div>
 
-        <x-showcase-shots class="min-w-0 flex-[1_1_440px]"
-            :alts="['DeckTrove card database showing Yu-Gi-Oh! search results', 'DeckTrove deck builder with main, extra and side deck zones']" />
+        <x-showcase-shots class="min-w-0 flex-[1_1_440px]" />
     </section>
 
     <section id="games" aria-labelledby="games-title" class="scroll-mt-6 border-y border-line bg-surface">

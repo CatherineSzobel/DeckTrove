@@ -2,6 +2,7 @@
 
 namespace App\View\Components;
 
+use App\Support\Series;
 use Illuminate\Contracts\View\View;
 use Illuminate\View\Component;
 
@@ -20,7 +21,7 @@ class SiteHeader extends Component
 
     public function __construct(?string $series = null)
     {
-        $series ??= array_key_first(config('series'));
+        $series ??= Series::default();
         $this->homeUrl = auth()->check() ? route('dashboard') : route('index');
 
         $this->links = array_values(array_filter([
@@ -29,6 +30,9 @@ class SiteHeader extends Component
             ['key' => 'public-decks', 'label' => 'Public decks', 'href' => route('decks.index'), 'active' => request()->routeIs('decks.index')],
             auth()->check()
                 ? ['key' => 'deck-builder', 'label' => 'Deck builder', 'href' => route('decks.builder', $series), 'active' => request()->routeIs('decks.builder', 'decks.edit')]
+                : null,
+            auth()->check()
+                ? ['key' => 'collection', 'label' => 'Collection', 'href' => route('collection'), 'active' => request()->routeIs('collection', 'collection.*')]
                 : null,
         ]));
     }

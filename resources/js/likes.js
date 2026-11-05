@@ -2,11 +2,7 @@
  * Like buttons on deck cards and the deck page (resources/views/components/deck/like-button.blade.php). The button
  * is a real form, so it works without JS; with JS it toggles in place from the server's answer.
  */
-
-/** The page's CSRF token, from the layout's <meta name="csrf-token">. */
-function csrfToken() {
-    return document.querySelector('meta[name="csrf-token"]')?.content ?? "";
-}
+import { csrfToken, JSON_HEADERS } from "./http.js";
 
 /**
  * Likes (POST) or unlikes (DELETE) a deck. Resolves to the server's { liked, likes_count }; throws when the request
@@ -15,7 +11,7 @@ function csrfToken() {
 export async function sendLike(url, liked, { fetch = globalThis.fetch, token = csrfToken() } = {}) {
     const response = await fetch(url, {
         method: liked ? "DELETE" : "POST",
-        headers: { Accept: "application/json", "X-CSRF-TOKEN": token, "X-Requested-With": "XMLHttpRequest" },
+        headers: { ...JSON_HEADERS, "X-CSRF-TOKEN": token },
     });
 
     if (!response.ok) throw Object.assign(new Error(`HTTP ${response.status}`), { status: response.status });

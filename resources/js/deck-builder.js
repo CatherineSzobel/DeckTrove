@@ -6,6 +6,7 @@
 import * as deckRules from "./deckbuilder/rules.js";
 import { cardPreview } from "./deckbuilder/preview.js";
 import { searchFailedNotice } from "./deckbuilder/search.js";
+import { fetchPartial } from "./http.js";
 
 document.addEventListener("alpine:init", () => {
     window.Alpine.data("deckBuilder", () => ({
@@ -112,7 +113,7 @@ document.addEventListener("alpine:init", () => {
             Object.entries(this.filters).forEach(([key, value]) => value && params.set(key, value));
 
             try {
-                const response = await fetch(`${this.searchUrl}?${params}`, { headers: { "X-Requested-With": "XMLHttpRequest" } });
+                const response = await fetchPartial(`${this.searchUrl}?${params}`);
                 if (!response.ok) throw Object.assign(new Error(`HTTP ${response.status}`), { status: response.status });
 
                 // Alpine picks up the new results (and their x-data) as soon as they are in the page.

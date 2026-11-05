@@ -95,7 +95,7 @@ test('card previews use the shared panel that stays inside the window', function
     $this->get(route('decks.show', deckPageDeck([darkMagicianEntry()])))
         ->assertOk()
         ->assertSee('data-card-preview', false)
-        ->assertSee('x-on:mouseenter="showPreview(card, $el)"', false)
+        ->assertSee('x-bind="previewTrigger"', false)
         ->assertSee('x-data="cardPreview"', false)
         ->assertDontSee('group-hover:flex', false);
 });

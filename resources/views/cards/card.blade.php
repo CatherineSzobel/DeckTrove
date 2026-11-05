@@ -1,4 +1,4 @@
-{{-- A card's page: the image (both faces for double-faced cards), type, stats, text, printings and related cards. --}}
+{{-- A card's page: the image (both faces for double-faced cards; it tilts toward the pointer), type, stats, text, printings and related cards. --}}
 
 <x-layout :title="$card->name()" :game-switch="false" :js="['resources/js/card-page.js']">
     <div class="mx-auto flex max-w-7xl flex-col gap-10 px-4 py-8 sm:px-6">
@@ -8,16 +8,31 @@
             <span aria-current="page" class="text-ink">{{ $card->name() }}</span>
         </nav>
 
-        <div class="flex flex-wrap items-start gap-14">
-            <div class="card-glow w-full max-w-[400px] flex-[1_1_320px]" @if ($card->hasFaces()) x-data="cardFaces(@js($card->faceImages()))" @endif>
-                <img src="{{ $card->image() }}" @if ($card->hasFaces()) :src="current" @endif alt="{{ $card->name() }}"
-                    class="relative aspect-[59/86] w-full rounded-[14px] object-cover shadow-[0_30px_60px_rgba(0,0,0,0.45)]">
+        <div class="flex flex-wrap items-start gap-14" @if ($card->hasFaces()) x-data="cardFaces(@js($card->faceImages()))" @endif>
+            <div class="card-glow w-full max-w-[400px] flex-[1_1_320px]">
+                {{-- Leans toward the pointer with a glare; holo rarities add a foil sheen (cardTilt, .card-holo). --}}
+                <div x-data="cardTilt" @pointermove="move($event)" @pointerleave="reset()" class="card-holo" @if ($card->isHolo()) data-holo @endif>
+                    <img src="{{ $card->image() }}" @if ($card->hasFaces()) :src="current" @endif alt="{{ $card->name() }}"
+                        class="relative aspect-[59/86] w-full rounded-[14px] object-cover shadow-[0_30px_60px_rgba(0,0,0,0.45)]">
+                </div>
                 @if ($card->hasFaces())
                 <button type="button" @click="next()" x-text="label" class="js-only btn-secondary relative mt-4 w-full">Show other face</button>
                 @endif
             </div>
 
             <div class="flex min-w-0 flex-[999_1_480px] flex-col gap-7">
+                @if ($card->hasFaces())
+                {{-- Each face has its own type, stats and text; the price is the card's. --}}
+                <h1 class="heading-display text-[clamp(44px,5vw,64px)] text-ink">{{ $card->name() }}</h1>
+
+                @foreach ($card->faces() as $face)
+                @include('cards.partials.face-details', ['face' => $face, 'index' => $loop->index, 'front' => $loop->first])
+                @endforeach
+
+                <dl class="flex flex-wrap gap-3">
+                    <x-stat-box label="Price" :value="$card->formattedPrice()" />
+                </dl>
+                @else
                 <div class="flex flex-col gap-3">
                     @if ($card->typeLine())
                     <p class="eyebrow">{{ $card->typeLine() }}</p>
@@ -34,10 +49,15 @@
                 @if ($card->description())
                 <div class="whitespace-pre-line rounded-2xl border border-line bg-surface px-6 py-5 text-[17px] leading-[1.7] text-body">{{ $card->description() }}</div>
                 @endif
+                @endif
+
+                @if ($collection)
+                @include('cards.partials.collection-row')
+                @endif
 
                 <section aria-labelledby="printings" class="flex flex-col gap-3">
                     <h2 id="printings" class="heading-display text-[28px] text-ink">Printings</h2>
-                    <x-print-list :packs="$card->printPacks($series)" />
+                    <x-print-list :packs="$printList" :counters="$printCounters" />
                 </section>
 
                 <div class="flex flex-wrap gap-3">
@@ -51,15 +71,19 @@
         </div>
 
         @if ($setCards->isNotEmpty())
-        <section aria-labelledby="related" class="flex flex-col gap-4 border-t border-line pt-8">
+        {{-- Hovering or focusing a related card shows its details in the shared card preview. --}}
+        <section aria-labelledby="related" x-data="cardPreview" @scroll.window.passive="hideOnScroll()" class="flex flex-col gap-4 border-t border-line pt-8">
             <h2 id="related" class="heading-display text-[28px] text-ink">{{ $relatedLabel }}</h2>
             <div class="grid grid-cols-[repeat(auto-fill,minmax(120px,1fr))] gap-3.5">
                 @foreach ($setCards as $setCard)
-                <a href="{{ $setCard->link() }}" aria-label="{{ $setCard->name() }}" class="card-tile">
+                <a href="{{ $setCard->link() }}" aria-label="{{ $setCard->name() }}" class="card-tile"
+                    x-data="{ card: @js($setCard->builderCard()) }" x-bind="previewTrigger">
                     <img src="{{ $setCard->imageSmall() }}" alt="" loading="lazy" class="aspect-[59/86] w-full rounded-lg object-cover">
                 </a>
                 @endforeach
             </div>
+
+            <x-deck.card-preview />
         </section>
         @endif
     </div>

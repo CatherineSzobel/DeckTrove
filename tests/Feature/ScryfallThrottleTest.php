@@ -39,6 +39,16 @@ test('a full search limiter waits for the next second, then sends', function () 
     Http::assertSentCount(1);
 });
 
+test('random cards go through the search limiter and stop early when it stays full', function () {
+    Http::fake(['api.scryfall.com/cards/random' => Http::response(['id' => 'abc', 'name' => 'Random Card'])]);
+
+    // The fake sleep never frees the limiter, so only the first SEARCH_PER_SECOND calls go out.
+    $cards = app(MagicService::class)->random(10);
+
+    expect($cards)->toHaveCount(MagicService::SEARCH_PER_SECOND);
+    Http::assertSentCount(MagicService::SEARCH_PER_SECOND);
+});
+
 test('a limiter that stays full gives up after waiting at most a second, without calling Scryfall', function () {
     foreach (range(1, MagicService::SEARCH_PER_SECOND) as $i) {
         RateLimiter::hit(MagicService::SEARCH_LIMITER, 60);

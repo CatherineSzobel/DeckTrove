@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Collection\TileCounts;
 use App\Packs\PackCardFilter;
 use App\Services\PackService;
+use App\Support\QueryInput;
 use App\ViewModels\CardCollectionViewModel;
 use App\ViewModels\CardViewModel;
 use App\ViewModels\PackViewModel;
@@ -18,8 +20,9 @@ class PackController extends Controller
 
     public function index(Request $request, string $series)
     {
-        $currentView = array_key_exists((string) $request->query('view'), self::VIEWS) ? $request->query('view') : 'full';
-        $search = is_string($request->query('search')) ? mb_substr(trim($request->query('search')), 0, 100) : '';
+        $view = QueryInput::string($request, 'view');
+        $currentView = array_key_exists($view, self::VIEWS) ? $view : 'full';
+        $search = QueryInput::search($request, 'search');
         $packConfig = config("series.$series.pack");
 
         $packs = $this->packService->for($series)
@@ -63,6 +66,8 @@ class PackController extends Controller
             'filter' => $filter,
             'countLabel' => $filter->countLabel($shown, $cards->count()),
             'noMatches' => $cards->isNotEmpty() && $shown === 0,
+            // The owned count under every tile, in one query (none for guests).
+            'tileCounts' => TileCounts::for($request->user(), $series, $cards),
         ]);
     }
 

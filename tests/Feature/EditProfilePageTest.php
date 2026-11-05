@@ -222,3 +222,25 @@ test('a failed deck selection keeps the saved privacy choices ticked', function 
         ->toMatch('/name="show_liked_decks" value="1"\s+checked/')
         ->toMatch('/name="allow_comments" value="1"\s+checked/');
 });
+
+test('the collection and wishlist toggles are unticked by default, in the privacy section', function () {
+    expect(editProfilePage(User::factory()->create()))
+        ->toContain('id="privacy"')
+        ->toContain('Show my collection on my public profile')
+        ->toContain('Show my wishlist on my public profile')
+        ->not->toMatch('/name="collection_public" value="1"\s+checked/')
+        ->not->toMatch('/name="wishlist_public" value="1"\s+checked/');
+});
+
+test('a failed save keeps the collection and wishlist choices', function () {
+    User::factory()->create(['username' => 'joey']);
+    $user = User::factory()->create(['username' => 'kaiba', 'wishlist_public' => true]);
+
+    $html = $this->actingAs($user)->from(route('profile.edit'))->followingRedirects()
+        ->put(route('profile.update'), ['username' => 'joey', 'collection_public' => '1'])
+        ->getContent();
+
+    expect($html)
+        ->toMatch('/name="collection_public" value="1"\s+checked/')
+        ->not->toMatch('/name="wishlist_public" value="1"\s+checked/');
+});

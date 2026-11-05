@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Cards\FilterChoices;
+use App\Collection\DeckCollection;
 use App\Decks\DeckComments;
 use App\Decks\DeckStats;
 use App\Decks\PublicDeckQuery;
@@ -11,6 +12,7 @@ use App\Http\Requests\SaveDeckRequest;
 use App\Models\Deck;
 use App\Services\CardService;
 use App\Services\DeckService;
+use App\Support\Series;
 use App\ViewModels\CardViewModel;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -42,7 +44,6 @@ class DeckController extends Controller
             'decks' => $decks,
             'query' => $query,
             'filters' => $query->filters(),
-            'sorts' => PublicDeckQuery::SORTS,
             'formats' => $query->formatOptions(),
         ]);
     }
@@ -68,7 +69,7 @@ class DeckController extends Controller
                 'game' => $deck->game,
                 'text' => Str::lower(trim($deck->name.' '.$deck->description)),
             ])->values()->all(),
-            'builderSeries' => session('series', array_key_first(config('series'))),
+            'builderSeries' => Series::orDefault(session('series')),
         ]);
     }
 
@@ -104,6 +105,7 @@ class DeckController extends Controller
             'liked' => $request->user() !== null && $deck->likes()->where('user_id', $request->user()->id)->exists(),
             'canLike' => Gate::allows('like', $deck),
             'comments' => $comments,
+            'collection' => DeckCollection::for($request->user(), $deck),
         ]);
     }
 

@@ -8,9 +8,21 @@
  */
 /**
  * Alpine state for the shared card preview (resources/views/components/deck/card-preview.blade.php): one panel,
- * shown next to the hovered or focused card. Used by the deck builder, the deck page, the card database and
- * the pack page.
+ * shown next to the hovered or focused card. Used by the deck builder, the deck page, the card database, the pack
+ * page and the card page's related cards.
  */
+/**
+ * x-bind="previewTrigger" on a card element whose scope has `card`: hovering or focusing it shows the preview.
+ */
+export function previewTrigger() {
+    return {
+        "@mouseenter"() { this.showPreview(this.card, this.$el); },
+        "@mouseleave"() { this.hidePreview(); },
+        "@focus"() { this.showPreview(this.card, this.$el); },
+        "@blur"() { this.hidePreview(); },
+    };
+}
+
 export function cardPreview() {
     return {
         preview: null,

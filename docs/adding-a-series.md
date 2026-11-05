@@ -42,7 +42,7 @@ for searches.
 
 | Class | Interface | Responsible for | Example to copy |
 |---|---|---|---|
-| `App\Services\PokemonService` | `App\Contracts\CardProvider` | search, find, findMany, related, random, filterOptions | `YugiohService` |
+| `App\Services\PokemonService` | `App\Contracts\CardProvider` | search, find, findMany, printings, related, random, filterOptions | `YugiohService` |
 | `App\Cards\PokemonCardMapper` | extends `App\Cards\CardMapper` | reading a raw card: image, type, stats, rarity, price... | `YugiohCardMapper` |
 | `App\Services\PokemonPackService` | `App\Contracts\PackProvider` | sets: list, find, cards in a set | `YugiohPackService` |
 | `App\Decks\PokemonLiveFormat` | `App\Decks\DeckFormat` | deck import/export in a format other tools read | `MagicTextFormat` |
@@ -62,6 +62,11 @@ Notes for Pokémon:
   group key => value (e.g. `['supertype' => 'Pokémon', 'energy' => 'Fire']`). Leave out groups that don't apply
   to the card, and return `[]` for a card with no data (only `id` and `name`). Every key must be a group in
   `deck.stats`.
+- **Collections**: `collectionKey($card)` returns what counts as "the same card" across printings (Pokémon: the
+  card id is per printing, so use the name + set-independent fields you trust, or the id if there is nothing
+  better); `printingIn($card, $setCode, $setName)` returns the printing recorded when a card is added from a
+  pack page (Pokémon: the card id). The provider's `printings($card)` lists a card's printings for "Track by
+  printing" (see `YugiohService::printings()`).
 - **Prices**: `price($card)` returns the card's price in euros as a string (`config('app.currency')`), or null;
   `priceValue()` turns it into a number for deck stats, so there's nothing else to implement.
 - **Deck format**: Pokémon TCG Live exports lists like `4 Pikachu SVI 63` under `Pokémon:`, `Trainer:` and

@@ -26,6 +26,15 @@ interface CardProvider
     public function findMany(array $ids): Collection;
 
     /**
+     * A card's printings, for tracking a collection by printing. `key` is what a collection stores, `label` names the
+     * printing in full; `set_name` and `code` are shown on the card page's Printings list, `pack_code` links the row to
+     * its pack page.
+     *
+     * @return list<array{key: string, label: string, set_name: string, code: string, pack_code: string}>
+     */
+    public function printings(array $card): array;
+
+    /**
      * A few cards related to the given card, for "more like this" sections.
      */
     public function related(array $card, int $limit = 6): Collection;

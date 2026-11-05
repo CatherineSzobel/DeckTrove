@@ -4,6 +4,8 @@ namespace App\Decks;
 
 use App\Models\Deck;
 use App\Models\User;
+use App\Support\QueryInput;
+use App\Support\Series;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -41,18 +43,17 @@ class PublicDeckQuery
         $series = config('series');
         $viewer = $request->user();
 
-        $game = self::string($request, 'game');
-        $game = array_key_exists((string) $game, $series) ? $game : null;
+        $game = Series::orNull($request->query('game'));
 
         // A format only means something within one game. `casual` is a deck without a format.
-        $format = self::string($request, 'format');
+        $format = QueryInput::string($request, 'format');
         $formats = $game ? array_keys($series[$game]['deck']['formats'] ?? []) : [];
         $format = $game && ($format === 'casual' || in_array($format, $formats, true)) ? $format : null;
 
-        $sort = self::string($request, 'sort');
-        $sort = array_key_exists((string) $sort, self::SORTS) ? $sort : 'newest';
+        $sort = QueryInput::string($request, 'sort');
+        $sort = array_key_exists($sort, self::SORTS) ? $sort : 'newest';
 
-        $search = mb_substr(trim((string) self::string($request, 'q')), 0, self::SEARCH_LENGTH);
+        $search = QueryInput::search($request, 'q', self::SEARCH_LENGTH);
 
         return new self(
             $viewer,
@@ -120,6 +121,29 @@ class PublicDeckQuery
             'format' => $this->format,
             'liked' => $this->liked,
         ];
+    }
+
+    /**
+     * The series switch for this list (x-segment-links), starting with "All"; picking a series clears the format.
+     */
+    public function seriesLinks(string $all = 'All'): array
+    {
+        return Series::links(fn (?string $game) => $this->url(['game' => $game, 'format' => null]), $this->game, $all);
+    }
+
+    /**
+     * The sort switch for this list (x-segment-links).
+     *
+     * @return list<array{key: string, label: string, href: string, current: bool}>
+     */
+    public function sortLinks(): array
+    {
+        return collect(self::SORTS)->map(fn (string $label, string $key) => [
+            'key' => $key,
+            'label' => $label,
+            'href' => $this->url(['sort' => $key]),
+            'current' => $key === $this->sort,
+        ])->values()->all();
     }
 
     /**
@@ -203,9 +227,9 @@ class PublicDeckQuery
                 'likes', fn (Builder $likes) => $likes->where('user_id', $liker->id)
             ))
             ->when($this->search, fn (Builder $query, string $search) => $query->where(fn (Builder $query) => $query
-                ->whereLike('name', "%{$search}%", caseSensitive: false)
-                ->orWhereLike('description', "%{$search}%", caseSensitive: false)
-                ->orWhereHas('user', fn (Builder $user) => $user->whereLike('username', "%{$search}%", caseSensitive: false))))
+                ->whereLike('name', QueryInput::like($search), caseSensitive: false)
+                ->orWhereLike('description', QueryInput::like($search), caseSensitive: false)
+                ->orWhereHas('user', fn (Builder $user) => $user->whereLike('username', QueryInput::like($search), caseSensitive: false))))
             ->when($this->game, fn (Builder $query, string $game) => $query->where('game', $game))
             ->when($this->format, fn (Builder $query, string $format) => $format === 'casual'
                 ? $query->whereNull('format')
@@ -225,15 +249,5 @@ class PublicDeckQuery
 
         // Newest breaks ties, then the id, so pages stay stable when values are equal.
         return $query->latest()->orderByDesc('id');
-    }
-
-    /**
-     * A query parameter as a string, or null when it's missing or not a string (e.g. `game[]=...`).
-     */
-    private static function string(Request $request, string $key): ?string
-    {
-        $value = $request->query($key);
-
-        return is_string($value) ? $value : null;
     }
 }

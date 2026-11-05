@@ -2,6 +2,7 @@
 
 namespace App\Cards;
 
+use App\Support\QueryInput;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
 
@@ -34,20 +35,20 @@ final class CardQuery
 
     public static function fromRequest(Request $request, string $series, array $filterChoices): self
     {
-        $view = self::string($request, 'view');
-        $search = mb_substr(trim((string) self::string($request, 'search')), 0, self::SEARCH_LENGTH);
+        $view = QueryInput::string($request, 'view');
+        $search = QueryInput::search($request, 'search', self::SEARCH_LENGTH);
 
         $filters = collect(array_keys(config("series.$series.filters", [])))
-            ->mapWithKeys(fn (string $key) => [$key => trim((string) self::string($request, $key))])
+            ->mapWithKeys(fn (string $key) => [$key => trim(QueryInput::string($request, $key))])
             ->reject(fn (string $value) => $value === '')
             ->all();
 
         return new self(
             $series,
-            array_key_exists((string) $view, self::VIEWS) ? $view : self::DEFAULT_VIEW,
+            array_key_exists($view, self::VIEWS) ? $view : self::DEFAULT_VIEW,
             $search === '' ? null : $search,
             $filters,
-            max((int) self::string($request, 'page'), 1),
+            max((int) QueryInput::string($request, 'page'), 1),
             $filterChoices,
         );
     }
@@ -185,15 +186,5 @@ final class CardQuery
         }
 
         return array_filter($query, fn ($value) => $value !== null);
-    }
-
-    /**
-     * A query parameter as a string, or null when it's missing or not a string (e.g. `race[]=...`).
-     */
-    private static function string(Request $request, string $key): ?string
-    {
-        $value = $request->query($key);
-
-        return is_string($value) ? $value : null;
     }
 }

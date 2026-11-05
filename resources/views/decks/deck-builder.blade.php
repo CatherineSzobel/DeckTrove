@@ -148,7 +148,7 @@
                         <div x-show="count(zone)" class="grid grid-cols-[repeat(auto-fill,minmax(76px,1fr))] gap-2.5">
                             <template x-for="(card, index) in zones[zone]" :key="card.uid">
                                 <button type="button" @click="removeAt(zone, index)"
-                                    @mouseenter="showPreview(card, $el)" @mouseleave="hidePreview()" @focus="showPreview(card, $el)" @blur="hidePreview()"
+                                    x-bind="previewTrigger"
                                     :title="removeTitle(card)" :aria-label="removeLabel(zone, card)"
                                     class="focus-ring relative block aspect-[59/86] rounded-md bg-surface-2 shadow-md transition-transform hover:-translate-y-0.5"
                                     :class="problemFor(card.id) && 'outline-2 outline-offset-2 outline-danger'">

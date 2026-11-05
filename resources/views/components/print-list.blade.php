@@ -6,14 +6,14 @@
 <div x-data="printList({{ $more->count() }})" class="flex flex-col gap-1">
     <ul class="border-t border-line">
         @foreach ($first as $pack)
-        <x-print-list-row :pack="$pack" />
+        <x-print-list-row :pack="$pack" :counters="$counters" />
         @endforeach
     </ul>
 
     @if ($more->isNotEmpty())
     <ul id="more-printings" data-collapsed="true" :data-collapsed="!open">
         @foreach ($more as $pack)
-        <x-print-list-row :pack="$pack" />
+        <x-print-list-row :pack="$pack" :counters="$counters" />
         @endforeach
     </ul>
     <button type="button" @click="toggle()" :aria-expanded="open" aria-controls="more-printings" x-text="label"
