@@ -25,14 +25,14 @@ Route::get('/', IndexController::class)->name('index');
 // Auth
 Route::middleware('guest')->group(function () {
     Route::get('/register', [RegisterUserController::class, 'create'])->name('register');
-    Route::post('/register', [RegisterUserController::class, 'store'])->middleware('throttle:10,1');
+    Route::post('/register', [RegisterUserController::class, 'store'])->middleware('throttle:register');
     Route::get('/login', [SessionController::class, 'create'])->name('login');
     Route::post('/login', [SessionController::class, 'store'])->middleware('throttle:login');
 
     Route::get('/forgot-password', [PasswordResetController::class, 'create'])->name('password.request');
-    Route::post('/forgot-password', [PasswordResetController::class, 'store'])->middleware('throttle:5,1')->name('password.email');
+    Route::post('/forgot-password', [PasswordResetController::class, 'store'])->middleware('throttle:password-email')->name('password.email');
     Route::get('/reset-password/{token}', [PasswordResetController::class, 'edit'])->name('password.reset');
-    Route::post('/reset-password', [PasswordResetController::class, 'update'])->middleware('throttle:10,1')->name('password.store');
+    Route::post('/reset-password', [PasswordResetController::class, 'update'])->middleware('throttle:password-reset')->name('password.store');
 });
 
 Route::middleware('auth')->group(function () {
@@ -42,9 +42,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/settings', [ProfileController::class, 'settings'])->name('settings');
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::put('/profile', [ProfileController::class, 'update'])->middleware('throttle:10,1')->name('profile.update');
-    Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::put('/profile', [ProfileController::class, 'update'])->middleware('throttle:profile')->name('profile.update');
+    Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->middleware('throttle:current-password')->name('profile.password');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->middleware('throttle:current-password')->name('profile.destroy');
 
     // Deck management
     Route::get('/decks', [DeckController::class, 'mine'])->name('decks.mine');
@@ -55,8 +55,8 @@ Route::middleware('auth')->group(function () {
     Route::delete('/decks/{deck}', [DeckController::class, 'destroy'])->can('delete', 'deck')->name('decks.destroy');
 
     // Import from other tools' formats, and copy someone's public deck (visibility checked by DeckPolicy::view)
-    Route::post('/{series}/decks/import', [DeckTransferController::class, 'import'])->middleware('throttle:10,1')->name('decks.import');
-    Route::post('/decks/{deck}/import', [DeckTransferController::class, 'reimport'])->can('update', 'deck')->middleware('throttle:10,1')->name('decks.reimport');
+    Route::post('/{series}/decks/import', [DeckTransferController::class, 'import'])->middleware('throttle:imports')->name('decks.import');
+    Route::post('/decks/{deck}/import', [DeckTransferController::class, 'reimport'])->can('update', 'deck')->middleware('throttle:imports')->name('decks.reimport');
     Route::post('/decks/{deck}/copy', [DeckTransferController::class, 'copy'])->middleware('throttle:deck-saves')->name('decks.copy');
 
     // Likes on public decks (DeckPolicy::like: not your own deck; someone else's private deck is a 404)

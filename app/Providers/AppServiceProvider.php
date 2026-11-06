@@ -54,14 +54,30 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('login', fn (Request $request) => Limit::perMinute(5)
             ->by(Str::lower((string) $request->input('username')).'|'.$request->ip()));
 
-        // Liking and unliking, per user. Named so it keeps its own counter: plain `throttle:N,M` routes all share one
-        // counter per user (e.g. with deck imports).
+        // Every throttled route uses a named limiter: plain `throttle:N,M` routes all share one counter per user (or
+        // per IP for guests), so one form would use up another's budget.
+
+        // Guest forms, per IP.
+        RateLimiter::for('register', fn (Request $request) => Limit::perMinute(10)->by($request->ip()));
+        RateLimiter::for('password-email', fn (Request $request) => Limit::perMinute(5)->by($request->ip()));
+        RateLimiter::for('password-reset', fn (Request $request) => Limit::perMinute(10)->by($request->ip()));
+
+        // Changing the password and deleting the account both check the current password, so they're limited like
+        // logging in: someone at a logged-in browser can't guess it.
+        RateLimiter::for('current-password', fn (Request $request) => Limit::perMinute(5)->by($request->user()->id));
+
+        RateLimiter::for('profile', fn (Request $request) => Limit::perMinute(10)->by($request->user()->id));
+
+        // Deck imports and re-imports, per user: each looks every card up.
+        RateLimiter::for('imports', fn (Request $request) => Limit::perMinute(10)->by($request->user()->id));
+
+        // Liking and unliking, per user.
         RateLimiter::for('likes', fn (Request $request) => Limit::perMinute(30)->by($request->user()->id));
 
-        // Comments, per user: enough for a conversation, not for flooding a profile.
         // Saving and copying decks, per user: each can look every card up at Scryfall.
         RateLimiter::for('deck-saves', fn (Request $request) => Limit::perMinute(20)->by($request->user()->id));
 
+        // Comments, per user: enough for a conversation, not for flooding a profile.
         RateLimiter::for('comments', fn (Request $request) => Limit::perMinute(5)->by($request->user()->id));
 
         // Collections, per user: + and − on single cards, and the bulk adds (a whole deck or set) that call the card

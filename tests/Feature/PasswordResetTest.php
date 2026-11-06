@@ -84,3 +84,15 @@ test('reset link requests are rate limited', function () {
 
     $this->post(route('password.email'), ['email' => 'user6@example.com'])->assertStatus(429);
 });
+
+test('reset link requests don’t use up sign-ups from the same network', function () {
+    Notification::fake();
+
+    foreach (range(1, 5) as $attempt) {
+        $this->post(route('password.email'), ['email' => "user$attempt@example.com"]);
+    }
+
+    $this->post(route('register'), ['username' => 'newplayer', 'email' => 'new@example.com', 'password' => 'password123', 'password_confirmation' => 'password123'])
+        ->assertRedirect();
+    expect(User::where('username', 'newplayer')->exists())->toBeTrue();
+});

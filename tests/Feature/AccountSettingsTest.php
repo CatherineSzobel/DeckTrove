@@ -129,3 +129,30 @@ test('guests cannot change passwords or delete accounts', function () {
     $this->put(route('profile.password'))->assertRedirect(route('login'));
     $this->delete(route('profile.destroy'))->assertRedirect(route('login'));
 });
+
+test('guessing the current password is limited across the password and delete forms', function () {
+    $user = User::factory()->create();
+
+    foreach (range(1, 3) as $attempt) {
+        $this->actingAs($user)->put(route('profile.password'), ['current_password' => "guess$attempt", 'password' => 'brand-new-password', 'password_confirmation' => 'brand-new-password'])
+            ->assertSessionHasErrorsIn('updatePassword', 'current_password');
+    }
+    foreach (range(4, 5) as $attempt) {
+        $this->actingAs($user)->delete(route('profile.destroy'), ['password' => "guess$attempt"])->assertSessionHasErrorsIn('deleteAccount', 'password');
+    }
+
+    $this->actingAs($user)->put(route('profile.password'), ['current_password' => 'password', 'password' => 'brand-new-password', 'password_confirmation' => 'brand-new-password'])
+        ->assertTooManyRequests();
+    expect(Hash::check('password', $user->fresh()->password))->toBeTrue();
+});
+
+test('each throttled form keeps its own counter', function () {
+    $user = User::factory()->create();
+
+    foreach (range(1, 10) as $attempt) {
+        $this->actingAs($user)->post(route('decks.import', 'yugioh'))->assertStatus(302);
+    }
+
+    // Imports used up their 10; saving the profile has its own budget.
+    $this->actingAs($user)->put(route('profile.update'), ['username' => $user->username])->assertRedirect();
+});
