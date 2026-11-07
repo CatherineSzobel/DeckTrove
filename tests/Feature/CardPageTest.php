@@ -132,7 +132,15 @@ test('a double-faced card starts on its front and can show the other face', func
         ->getContent();
 
     expect($content)->toMatch('/<button[^>]*js-only[^>]*>Show other face<\/button>/')
-        ->not->toMatch('/<button[^>]*x-cloak/');
+        ->not->toMatch('/<button[^>]*x-cloak/')
+        ->toContain(':class="{ \'is-flipping\': flipping }"');
+});
+
+test('the flip only turns the card without reduced motion', function () {
+    $css = file_get_contents(resource_path('css/app.css'));
+
+    expect($css)->toMatch('/@media \(prefers-reduced-motion: no-preference\)\s*\{\s*\.card-face\s*\{[^@]*&\.is-flipping\s*\{\s*transform: perspective\(900px\) rotateY\(90deg\)/')
+        ->and(substr_count($css, '.is-flipping'))->toBe(1);
 });
 
 function fakeDelver(): void

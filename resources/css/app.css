@@ -294,6 +294,18 @@ html:not(.js) .js-only {
         }
     }
 
+    /* A double-faced card's flip (cardFaces, resources/js/cards/faces.js): it turns edge-on while `flipping`, the face
+       changes, and it turns back. Without motion the face just changes. */
+    @media (prefers-reduced-motion: no-preference) {
+        .card-face {
+            transition: transform 150ms ease-in-out;
+
+            &.is-flipping {
+                transform: perspective(900px) rotateY(90deg);
+            }
+        }
+    }
+
     /* Results that are being replaced (aria-busy while the new ones load). */
     .results-region[aria-busy="true"] {
         @apply opacity-60 transition-opacity;

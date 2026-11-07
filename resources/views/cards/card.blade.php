@@ -12,8 +12,8 @@
             <div class="card-glow w-full max-w-[400px] flex-[1_1_320px]">
                 {{-- Leans toward the pointer with a glare; holo rarities add a foil sheen (cardTilt, .card-holo). --}}
                 <div x-data="cardTilt" @pointermove="move($event)" @pointerleave="reset()" class="card-holo" @if ($card->isHolo()) data-holo @endif>
-                    <img src="{{ $card->image() }}" @if ($card->hasFaces()) :src="current" @endif alt="{{ $card->name() }}"
-                        class="relative aspect-[59/86] w-full rounded-[14px] object-cover shadow-[0_30px_60px_rgba(0,0,0,0.45)]">
+                    <img src="{{ $card->image() }}" @if ($card->hasFaces()) :src="current" :class="{ 'is-flipping': flipping }" @endif alt="{{ $card->name() }}"
+                        class="card-face relative aspect-[59/86] w-full rounded-[14px] object-cover shadow-[0_30px_60px_rgba(0,0,0,0.45)]">
                 </div>
                 @if ($card->hasFaces())
                 <button type="button" @click="next()" x-text="label" class="js-only btn-secondary relative mt-4 w-full">Show other face</button>
