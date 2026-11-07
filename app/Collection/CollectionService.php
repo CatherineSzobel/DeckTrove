@@ -43,13 +43,16 @@ class CollectionService
         $this->addCard($user, $game, $card, $cardId, $list, $printing, $amount);
     }
 
-    /** add() for a card that is already loaded, so bulk actions don't look every card up again. */
-    private function addCard(User $user, string $game, CardViewModel $card, string $cardId, string $list, string $printing, int $amount): void
+    /**
+     * add() for a card that is already loaded, so bulk actions don't look every card up again. $cardRowId is its
+     * `cards` row when the caller already stored it (CardCache).
+     */
+    private function addCard(User $user, string $game, CardViewModel $card, string $cardId, string $list, string $printing, int $amount, ?int $cardRowId = null): void
     {
         $printing = $list === CollectionItem::WANTED ? '' : $printing;
 
-        DB::transaction(function () use ($user, $game, $card, $cardId, $list, $printing, $amount) {
-            $this->increment($user, $game, $card, $cardId, $list, $printing, $amount);
+        DB::transaction(function () use ($user, $game, $card, $cardId, $list, $printing, $amount, $cardRowId) {
+            $this->increment($user, $game, $card, $cardId, $list, $printing, $amount, $cardRowId);
 
             if ($list === CollectionItem::OWNED) {
                 $this->decrement($this->row($user, $game, $card->collectionKey(), CollectionItem::WANTED, ''), $amount);
@@ -249,20 +252,31 @@ class CollectionService
         // Fetched before the transaction, so no row stays locked while the source is paged.
         $cards = $provider->cards($setCode, $slug);
 
-        return DB::transaction(function () use ($user, $series, $setCode, $config, $cards, $setName) {
+        // A set entry without an id can't be stored.
+        $cards = collect($cards)->map(fn ($raw) => new CardViewModel((array) $raw, $config))->filter(fn (CardViewModel $card) => $card->id() !== null);
+
+        return DB::transaction(function () use ($user, $series, $setCode, $cards, $setName) {
+            // One upsert for every card's local row and one query for the copies already owned, not one each per card.
+            $cardRows = CardCache::store($series, $cards->mapWithKeys(fn (CardViewModel $card) => [$card->id() => $card->raw()]));
+            $owned = $user->collectionItems()->owned()->forGame($series)
+                ->whereIn('card_key', $cards->map(fn (CardViewModel $card) => $card->collectionKey())->unique()->values())
+                ->get(['card_key', 'printing', 'quantity'])
+                ->groupBy('card_key')
+                ->map(fn ($rows) => $rows->pluck('quantity', 'printing')->all())
+                ->all();
             $added = 0;
 
-            foreach ($cards as $raw) {
-                $card = new CardViewModel((array) $raw, $config);
+            foreach ($cards as $card) {
+                $key = $card->collectionKey();
                 $printing = $card->printingIn($setCode, $setName);
-                $cardId = $card->id();
 
-                // A set entry without an id can't be stored.
-                if ($cardId === null || ($this->counts($user, $series, $card->collectionKey())['printings'][$printing] ?? 0) >= self::MAX) {
+                if (($owned[$key][$printing] ?? 0) >= self::MAX) {
                     continue;
                 }
 
-                $this->addCard($user, $series, $card, $cardId, CollectionItem::OWNED, $printing, 1);
+                $this->addCard($user, $series, $card, $card->id(), CollectionItem::OWNED, $printing, 1, $cardRows[(string) $card->id()]);
+                // Two entries of the set can share a card key and printing.
+                $owned[$key][$printing] = ($owned[$key][$printing] ?? 0) + 1;
                 $added++;
             }
 
@@ -365,7 +379,7 @@ class CollectionService
         return new CardViewModel($raw, config("series.$game"));
     }
 
-    private function increment(User $user, string $game, CardViewModel $card, string $cardId, string $list, string $printing, int $amount): void
+    private function increment(User $user, string $game, CardViewModel $card, string $cardId, string $list, string $printing, int $amount, ?int $cardRowId = null): void
     {
         $row = $this->row($user, $game, $card->collectionKey(), $list, $printing);
         $this->guardMax($row, $amount);
@@ -381,7 +395,7 @@ class CollectionService
                 'list' => $list,
                 'game' => $game,
                 'card_key' => $card->collectionKey(),
-                'card_id' => CardCache::store($game, collect([$cardId => $card->raw()]))[$cardId],
+                'card_id' => $cardRowId ?? CardCache::store($game, collect([$cardId => $card->raw()]))[$cardId],
                 'printing' => $printing,
                 'quantity' => $amount,
             ]);

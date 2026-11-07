@@ -98,6 +98,10 @@ test('search results carry their card data for the builder', function () {
         ->assertOk()->assertSee($json, false)->assertDontSee('<html', false);
 });
 
+test('array query values fall back to no filter instead of failing', function (string $series) {
+    $this->get(route('decks.builder', $series).'?search[]=x&type[]=y&page[]=2')->assertOk();
+})->with(['yugioh', 'magic']);
+
 test('the filter panel lists the series filters', function () {
     $this->actingAs(User::factory()->create())->get(route('decks.builder', 'yugioh'))
         ->assertSee('id="filterPanel"', false)

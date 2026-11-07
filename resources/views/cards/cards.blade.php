@@ -65,7 +65,7 @@
 
         <x-form-error name="card" bag="collection" />
 
-        <div id="card-results" class="results-region" x-ref="region" @click="onRegionClick($event)" :aria-busy="loading">
+        <div id="card-results" tabindex="-1" class="results-region focus:outline-none" x-ref="region" @click="onRegionClick($event)" :aria-busy="loading">
             @include('cards.partials.results')
         </div>
 

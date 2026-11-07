@@ -107,6 +107,24 @@ test('adding a set records each card with that set’s printing', function () {
         ->and($user->collectionItems()->sole())->printing->toBe('LOB-EN005')->quantity->toBe(1);
 });
 
+test('adding a set again adds a copy, takes it off the wishlist, and skips a printing at the maximum', function () {
+    $user = User::factory()->create();
+    $set = YugiohSet::factory()->create(['code' => 'LOB', 'name' => 'Legend of Blue Eyes White Dragon', 'slug' => 'legend-of-blue-eyes-white-dragon']);
+    YugiohPrinting::create(['yugioh_card_id' => 46986414, 'yugioh_set_id' => $set->id, 'code' => 'LOB-EN005', 'rarity' => 'Ultra Rare']);
+    $service = app(CollectionService::class);
+    $service->add($user, 'yugioh', '46986414', CollectionItem::WANTED);
+
+    expect($service->addSet($user, 'yugioh', 'LOB', null))->toBe(1)
+        ->and($service->addSet($user, 'yugioh', 'LOB', null))->toBe(1)
+        ->and($user->collectionItems()->owned()->sole()->quantity)->toBe(2)
+        ->and($user->collectionItems()->wanted()->exists())->toBeFalse();
+
+    $user->collectionItems()->owned()->update(['quantity' => CollectionService::MAX]);
+
+    expect($service->addSet($user, 'yugioh', 'LOB', null))->toBe(0)
+        ->and($user->collectionItems()->owned()->sole()->quantity)->toBe(CollectionService::MAX);
+});
+
 test('topping up a Magic deck looks the cards up once, not once per card', function () {
     $ids = ['aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'cccccccc-cccc-4ccc-8ccc-cccccccccccc'];
     Http::fake(['api.scryfall.com/cards/collection' => Http::response(['data' => collect($ids)->map(fn ($id) => [

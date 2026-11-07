@@ -50,7 +50,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/decks', [DeckController::class, 'mine'])->name('decks.mine');
     Route::post('/decks/bulk', BulkDeckController::class)->name('decks.bulk');
     Route::post('/{series}/deck-builder', [DeckController::class, 'store'])->middleware('throttle:deck-saves')->name('decks.store');
-    Route::get('/decks/{deck}/edit', [DeckController::class, 'edit'])->can('update', 'deck')->name('decks.edit');
+    // The builder's card search runs here too, so it shares the card search's limit.
+    Route::get('/decks/{deck}/edit', [DeckController::class, 'edit'])->can('update', 'deck')->middleware('throttle:card-search')->name('decks.edit');
     Route::patch('/decks/{deck}', [DeckController::class, 'update'])->can('update', 'deck')->middleware('throttle:deck-saves')->name('decks.update');
     Route::delete('/decks/{deck}', [DeckController::class, 'destroy'])->can('delete', 'deck')->name('decks.destroy');
 

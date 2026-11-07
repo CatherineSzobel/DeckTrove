@@ -68,16 +68,26 @@ class ProfileController extends Controller
     {
         $user = $request->user();
         $oldAvatar = $user->avatar;
+        $avatar = $request->hasFile('avatar') ? $this->avatars->store($request->file('avatar')) : $oldAvatar;
 
-        // Checkboxes: an unticked box isn't sent, so a missing one means off.
-        $user->update([
-            ...$request->safe()->except('avatar'),
-            'avatar' => $request->hasFile('avatar') ? $this->avatars->store($request->file('avatar')) : $oldAvatar,
-            'show_liked_decks' => $request->boolean('show_liked_decks'),
-            'allow_comments' => $request->boolean('allow_comments'),
-            'collection_public' => $request->boolean('collection_public'),
-            'wishlist_public' => $request->boolean('wishlist_public'),
-        ]);
+        try {
+            // Checkboxes: an unticked box isn't sent, so a missing one means off.
+            $user->update([
+                ...$request->safe()->except('avatar'),
+                'avatar' => $avatar,
+                'show_liked_decks' => $request->boolean('show_liked_decks'),
+                'allow_comments' => $request->boolean('allow_comments'),
+                'collection_public' => $request->boolean('collection_public'),
+                'wishlist_public' => $request->boolean('wishlist_public'),
+            ]);
+        } catch (\Throwable $e) {
+            // The new picture isn't saved on the user, so it would be left on the disk with nothing pointing at it.
+            if ($avatar !== $oldAvatar) {
+                $this->avatars->delete($avatar);
+            }
+
+            throw $e;
+        }
 
         // Only remove the old avatar once the new one is stored and saved.
         if ($user->avatar !== $oldAvatar) {

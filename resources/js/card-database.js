@@ -36,7 +36,7 @@ document.addEventListener("alpine:init", () => {
         apply(href = null) {
             const url = href ?? buildUrl(location.pathname, new FormData(this.$refs.form));
             history.pushState({}, "", url);
-            this.refresh(url);
+            return this.refresh(url);
         },
 
         async refresh(url) {
@@ -79,9 +79,12 @@ document.addEventListener("alpine:init", () => {
             if (!link || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
 
             event.preventDefault();
-            this.apply(link.href);
-            // A page link sits below the cards: go back up to the start of the new page.
-            if (pageLink) this.$refs.region.scrollIntoView({ block: "start" });
+            // The clicked link is replaced with the results, so focus moves to the results instead of the page's top.
+            // A page link sits below the cards: that also goes back up to the start of the new page.
+            this.apply(link.href).then(() => {
+                this.$refs.region.focus({ preventScroll: true });
+                if (pageLink) this.$refs.region.scrollIntoView({ block: "start" });
+            });
         },
     }));
 });

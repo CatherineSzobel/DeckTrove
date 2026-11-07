@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Card;
 use App\Models\Deck;
 use App\Models\DeckLike;
 use App\Models\User;
@@ -16,17 +17,40 @@ test('guests are sent to log in', function () {
     $this->post(route('decks.bulk'), ['decks' => [1], 'action' => 'public'])->assertRedirect(route('login'));
 });
 
+/** Gives the deck a full main deck (60 copies of one card), enough to be public in every series. */
+function withFullMainDeck(Deck $deck): Deck
+{
+    $card = Card::create(['game' => $deck->game, 'external_id' => (string) $deck->id, 'name' => 'Filler']);
+    $deck->deckCards()->create(['card_id' => $card->id, 'zone' => 'main', 'count' => 60]);
+
+    return $deck;
+}
+
 test('make public changes only the chosen decks', function () {
     $user = User::factory()->create();
-    [$a, $b, $c] = Deck::factory()->for($user)->count(3)->create()->all();
+    [$a, $b, $c] = Deck::factory()->for($user)->count(3)->create()->map(fn (Deck $deck) => withFullMainDeck($deck))->all();
 
     bulk($user, ['decks' => [$a->id, $b->id], 'action' => 'public'])
         ->assertRedirect(route('profile.edit').'#your-decks')
-        ->assertSessionHas('success', '2 decks made public.');
+        ->assertSessionHas('success', '2 decks made public.')
+        ->assertSessionMissing('warning');
 
     expect($a->fresh()->is_public)->toBeTrue()
         ->and($b->fresh()->is_public)->toBeTrue()
         ->and($c->fresh()->is_public)->toBeFalse();
+});
+
+test('make public leaves decks below the main deck minimum private, as the builder does', function () {
+    $user = User::factory()->create();
+    $full = withFullMainDeck(Deck::factory()->for($user)->create());
+    $empty = Deck::factory()->for($user)->create();
+
+    bulk($user, ['decks' => [$full->id, $empty->id], 'action' => 'public'])
+        ->assertSessionHas('success', '1 deck made public.')
+        ->assertSessionHas('warning', '1 deck stayed private: too few main deck cards to be public.');
+
+    expect($full->fresh()->is_public)->toBeTrue()
+        ->and($empty->fresh()->is_public)->toBeFalse();
 });
 
 test('make private changes only the chosen decks', function () {

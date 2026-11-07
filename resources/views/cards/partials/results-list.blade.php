@@ -13,7 +13,7 @@
                 @endif
             </tr>
         </thead>
-        <tbody data-results>
+        <tbody>
             @foreach ($cards as $card)
             <tr id="card-{{ $card->id() }}" class="scroll-mt-24 border-t border-line">
                 <td class="px-3 py-1.5 sm:px-4">

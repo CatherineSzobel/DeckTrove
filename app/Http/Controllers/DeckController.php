@@ -12,6 +12,7 @@ use App\Http\Requests\SaveDeckRequest;
 use App\Models\Deck;
 use App\Services\CardService;
 use App\Services\DeckService;
+use App\Support\QueryInput;
 use App\Support\Series;
 use App\ViewModels\CardViewModel;
 use Illuminate\Http\Request;
@@ -29,16 +30,11 @@ class DeckController extends Controller
 
     /**
      * Public decks: search, game and format filters, your liked decks, and three sort orders (see PublicDeckQuery).
-     * AJAX requests get just the deck grid.
      */
     public function index(Request $request)
     {
         $query = PublicDeckQuery::fromRequest($request);
         $decks = $query->paginate(18);
-
-        if ($request->ajax()) {
-            return response()->json(['html' => view('decks.partials.deck-card', compact('decks'))->render()]);
-        }
 
         return view('decks.public-deck', [
             'decks' => $decks,
@@ -208,7 +204,12 @@ class DeckController extends Controller
     private function searchCards(Request $request, string $series)
     {
         $config = config("series.$series");
-        $params = $request->only([...array_keys($config['filters']), 'search', 'page']);
+        // Plain strings only, as on the card database (CardQuery): `search[]=x` would reach the services as an array.
+        $params = collect([...array_keys($config['filters']), 'page'])
+            ->mapWithKeys(fn (string $key) => [$key => QueryInput::string($request, $key)])
+            ->put('search', QueryInput::search($request, 'search'))
+            ->filter(fn (string $value) => $value !== '')
+            ->all();
 
         return $this->cardService->for($series)
             ->search($params)

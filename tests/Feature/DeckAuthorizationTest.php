@@ -110,7 +110,7 @@ test('the public deck list only shows public decks and can be filtered by game',
         ->assertSee('Public Yugioh')
         ->assertDontSee('Secret Deck');
 
-    $this->getJson(route('decks.index', ['game' => 'magic']), ['X-Requested-With' => 'XMLHttpRequest'])
-        ->assertOk()
-        ->assertJsonPath('html', fn (string $html) => str_contains($html, 'Public Magic') && ! str_contains($html, 'Public Yugioh'));
+    $this->get(route('decks.index', ['game' => 'magic']))
+        ->assertSee('Public Magic')
+        ->assertDontSee('Public Yugioh');
 });

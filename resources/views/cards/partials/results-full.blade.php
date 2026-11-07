@@ -1,5 +1,5 @@
 {{-- Full view: one card per box with its text, set, rarity and price. The name's link covers the whole box. --}}
-<div data-results class="grid grid-cols-[repeat(auto-fill,minmax(min(340px,100%),1fr))] gap-4">
+<div class="grid grid-cols-[repeat(auto-fill,minmax(min(340px,100%),1fr))] gap-4">
     @foreach ($cards as $card)
     <article id="card-{{ $card->id() }}" class="relative flex scroll-mt-24 gap-4 rounded-2xl border border-line bg-surface p-4 transition hover:border-accent focus-within:border-accent">
         <img src="{{ $card->imageSmall() }}" alt="" loading="lazy" class="aspect-[59/86] w-[120px] shrink-0 self-start rounded-md object-cover shadow-md">

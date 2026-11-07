@@ -47,7 +47,7 @@ test('the card database answers AJAX requests with the results as HTML', functio
     $this->get(route('cards.index', ['yugioh', 'search' => 'blue']), ['X-Requested-With' => 'XMLHttpRequest'])
         ->assertOk()
         ->assertSee('Blue-Eyes White Dragon')
-        ->assertSee('data-results', false)
+        ->assertSee('data-result-count', false)
         ->assertDontSee('<html', false);
 });
 

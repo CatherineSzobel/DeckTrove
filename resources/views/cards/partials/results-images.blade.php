@@ -1,6 +1,6 @@
 {{-- Images view: card images; the name and type show on hover and keyboard focus (.card-tile in app.css), and the
     description in the shared card preview (cardPreview() in resources/js/deckbuilder/preview.js, panel in cards.blade.php). --}}
-<div data-results class="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-3 sm:grid-cols-[repeat(auto-fill,minmax(160px,1fr))] sm:gap-5">
+<div class="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-3 sm:grid-cols-[repeat(auto-fill,minmax(160px,1fr))] sm:gap-5">
     @foreach ($cards as $card)
     <div id="card-{{ $card->id() }}" class="relative scroll-mt-24">
         <x-card-faces-badge :card="$card" corner />

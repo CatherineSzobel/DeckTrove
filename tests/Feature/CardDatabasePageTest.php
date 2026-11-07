@@ -48,7 +48,7 @@ test('the list view is a table and the search keeps the view', function () {
     $html = $this->get(route('cards.index', ['yugioh', 'view' => 'list']))->getContent();
 
     expect($html)->toContain('<table')
-        ->toContain('<tbody data-results>')
+        ->toContain('<tbody>')
         ->toContain('<input type="hidden" name="view" value="list">')
         ->toMatch('/data-label="List"\s+aria-current="page"/');
 });

@@ -94,6 +94,21 @@ test('changing the password requires the correct current password', function () 
     expect(Hash::check('password', $user->fresh()->password))->toBeTrue();
 });
 
+test('a profile save that fails removes the picture it just uploaded', function () {
+    Storage::fake('public');
+    $user = User::factory()->create();
+    User::updating(fn () => throw new RuntimeException('Saving failed.'));
+
+    $this->withoutExceptionHandling();
+
+    expect(fn () => $this->actingAs($user)->put(route('profile.update'), [
+        'username' => $user->username,
+        'avatar' => UploadedFile::fake()->image('me.png'),
+    ]))->toThrow(RuntimeException::class, 'Saving failed.');
+
+    expect(Storage::disk('public')->allFiles())->toBe([]);
+});
+
 test('users can delete their account, decks and avatar', function () {
     Storage::fake('public');
     $user = User::factory()->create();

@@ -11,7 +11,7 @@ uses(RefreshDatabase::class);
 
 test('card search routes are rate limited', function (string $name) {
     expect(Route::getRoutes()->getByName($name)->gatherMiddleware())->toContain('throttle:card-search');
-})->with(['cards.index', 'cards.show', 'packs.show', 'decks.builder']);
+})->with(['cards.index', 'cards.show', 'packs.show', 'decks.builder', 'decks.edit']);
 
 test('guests are limited per IP and users per account', function () {
     $limiter = RateLimiter::limiter('card-search');
