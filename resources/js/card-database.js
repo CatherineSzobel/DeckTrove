@@ -1,7 +1,7 @@
 /**
  * Card database (resources/views/cards/cards.blade.php). The page works without JS (GET form and links); this loads
  * results in place: filters apply on change, the search on submit, chips and Clear all without a reload, Back and
- * Forward restore the form, and the next page is appended when the "Load more cards" link comes into view.
+ * Forward restore the form, and the page links swap pages in place.
  * The server answers AJAX requests with cards/partials/results.blade.php.
  */
 import { buildUrl, countFilters, syncValues, viewUrl } from "./cards/query.js";
@@ -16,22 +16,13 @@ document.addEventListener("alpine:init", () => {
         ...cardPreview(),
         showFilters: false,
         loading: false,
-        loadingMore: false,
         activeCount: 0,
         request: null,
-        moreRequest: null,
-        observer: null,
 
         init() {
-            // $refs aren't registered yet inside init(), so the panel's server state is read through $el, and the
-            // load-more link is watched on the next tick.
+            // $refs aren't registered yet inside init(), so the panel's server state is read through $el.
             this.showFilters = !this.$el.querySelector("#filters").hasAttribute("data-collapsed");
             this.activeCount = countFilters(new URLSearchParams(location.search), this.filterKeys(this.$el));
-            this.observer = new IntersectionObserver(
-                (entries) => entries.some((entry) => entry.isIntersecting) && this.loadMore(),
-                { rootMargin: "400px" }
-            );
-            this.$nextTick(() => this.watchLoadMore());
             window.addEventListener("popstate", () => this.refresh(location.href));
         },
 
@@ -51,8 +42,6 @@ document.addEventListener("alpine:init", () => {
         async refresh(url) {
             this.hidePreview();
             this.request?.abort();
-            this.moreRequest?.abort();
-            this.loadingMore = false;
             const request = (this.request = new AbortController());
             this.loading = true;
 
@@ -60,7 +49,6 @@ document.addEventListener("alpine:init", () => {
                 this.$refs.region.innerHTML = await this.fetchHtml(url, request.signal);
                 this.hidePreview();
                 this.syncForm(new URL(url, location.origin).searchParams);
-                this.watchLoadMore();
             } catch (error) {
                 if (error.name !== "AbortError") location.href = url;
             } finally {
@@ -86,44 +74,14 @@ document.addEventListener("alpine:init", () => {
         },
 
         onRegionClick(event) {
-            const link = event.target.closest("a[data-apply-link], a[data-load-more]");
+            const pageLink = event.target.closest('nav[aria-label="Pagination"] a');
+            const link = pageLink ?? event.target.closest("a[data-apply-link]");
             if (!link || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
 
             event.preventDefault();
-            link.hasAttribute("data-load-more") ? this.loadMore() : this.apply(link.href);
-        },
-
-        watchLoadMore() {
-            this.observer.disconnect();
-            const link = this.$refs.region.querySelector("[data-load-more]");
-            if (link) this.observer.observe(link);
-        },
-
-        /** Appends the next page's cards, and takes its count and next-page link. */
-        async loadMore() {
-            const link = this.$refs.region.querySelector("[data-load-more]");
-            const results = this.$refs.region.querySelector("[data-results]");
-            if (!link || !results || this.loadingMore) return;
-            this.loadingMore = true;
-            const request = (this.moreRequest = new AbortController());
-
-            try {
-                const page = document.createElement("template");
-                page.innerHTML = await this.fetchHtml(link.href, request.signal);
-
-                // The results were replaced (new search or filter) while this page loaded: drop it.
-                if (!results.isConnected) return;
-
-                results.append(...page.content.querySelector("[data-results]").children);
-                this.$refs.region.querySelector("[data-result-count]").replaceWith(page.content.querySelector("[data-result-count]"));
-                const next = page.content.querySelector("[data-load-more]");
-                next ? link.replaceWith(next) : link.remove();
-                this.watchLoadMore();
-            } catch (error) {
-                if (error.name !== "AbortError") location.href = link.href;
-            } finally {
-                if (this.moreRequest === request) this.loadingMore = false;
-            }
+            this.apply(link.href);
+            // A page link sits below the cards: go back up to the start of the new page.
+            if (pageLink) this.$refs.region.scrollIntoView({ block: "start" });
         },
     }));
 });

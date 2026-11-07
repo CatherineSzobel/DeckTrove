@@ -80,32 +80,31 @@ test('without a search or filters there are no chips and no clear all', function
 });
 
 test('the count says how many cards are shown so far', function () {
-    $this->get(route('cards.index', 'yugioh'))->assertSee('Showing 2 of 2 cards');
+    $this->get(route('cards.index', 'yugioh'))->assertSee('Showing 1–2 of 2 cards');
 });
 
-test('a load more link goes to the next page when there are more cards', function () {
+test('numbered pages link to each page and show which cards are on it', function () {
     YugiohCard::factory()->count(47)->create();
     // Full is the default view: 24 per page.
 
-    $html = $this->get(route('cards.index', 'yugioh'))->getContent();
+    $this->get(route('cards.index', 'yugioh'))
+        ->assertSee('Showing 1–24 of 49 cards')
+        ->assertSee('aria-label="Pagination"', false)
+        ->assertSee('href="'.e(route('cards.index', ['yugioh', 'page' => 2])).'"', false);
 
-    expect($html)->toContain('href="'.e(route('cards.index', ['yugioh', 'page' => 2])).'" data-load-more')
-        ->toContain('Load more cards')
-        ->toContain('Showing 24 of 49 cards');
-
-    $this->get(route('cards.index', ['yugioh', 'page' => 2]))
-        ->assertSee('Showing 48 of 49 cards')
-        ->assertSee('data-load-more', false);
-
-    $this->get(route('cards.index', ['yugioh', 'page' => 3]))
-        ->assertSee('Showing 49 of 49 cards')
-        ->assertDontSee('data-load-more', false);
+    $this->get(route('cards.index', ['yugioh', 'page' => 2]))->assertSee('Showing 25–48 of 49 cards');
+    $this->get(route('cards.index', ['yugioh', 'page' => 3]))->assertSee('Showing 49–49 of 49 cards');
 });
 
-test('one page of cards has no load more link and no numbered pages', function () {
-    $this->get(route('cards.index', 'yugioh'))
-        ->assertDontSee('data-load-more', false)
-        ->assertDontSee('role="navigation"', false);
+test('page links keep the search and filters', function () {
+    YugiohCard::factory()->count(30)->create(['name' => 'Blue test card']);
+
+    $this->get(route('cards.index', ['yugioh', 'search' => 'blue']))
+        ->assertSee('href="'.e(route('cards.index', ['yugioh', 'search' => 'blue', 'page' => 2])).'"', false);
+});
+
+test('one page of cards has no numbered pages', function () {
+    $this->get(route('cards.index', 'yugioh'))->assertDontSee('aria-label="Pagination"', false);
 });
 
 test('no results show the empty state with clear all when searching', function () {
@@ -140,8 +139,7 @@ test('the page loads results in place with the card database component', functio
     expect($html)->toContain('x-data="cardDatabase"')
         ->toContain('x-ref="form" @submit.prevent="apply()"')
         ->toContain('@change="apply()"')
-        ->toContain('x-ref="region" @click="onRegionClick($event)" :aria-busy="loading"')
-        ->toContain('Loading more cards…');
+        ->toContain('x-ref="region" @click="onRegionClick($event)" :aria-busy="loading"');
 });
 
 test('the filter panel starts collapsed without filters and open with one', function () {

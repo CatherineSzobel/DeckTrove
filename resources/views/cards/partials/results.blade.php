@@ -1,6 +1,6 @@
 {{--
-    The card database's results: filter chips, the count, the cards in the current view and the next-page link.
-    Also the AJAX response that resources/js/card-database.js swaps in or takes the next cards from.
+    The card database's results: filter chips, the count, the cards in the current view and the page links.
+    Also the AJAX response that resources/js/card-database.js swaps in.
 --}}
 <div class="flex flex-col gap-6">
     <div class="flex min-h-11 flex-wrap items-center justify-between gap-2">
@@ -30,7 +30,5 @@
     @include("cards.partials.results-{$query->view()}")
     @endif
 
-    @if ($query->nextPageUrl($cards))
-    <a href="{{ $query->nextPageUrl($cards) }}" data-load-more class="btn-secondary self-center">Load more cards</a>
-    @endif
+    <x-pagination :paginator="$cards" />
 </div>

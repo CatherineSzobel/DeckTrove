@@ -1,4 +1,4 @@
-{{-- List view: a compact table. The rows (tbody[data-results]) are what the next page appends. On phones only Name (with the type under it) and Price fit. --}}
+{{-- List view: a compact table. On phones only Name (with the type under it) and Price fit. --}}
 <div class="overflow-hidden rounded-2xl border border-line bg-surface">
     <table class="w-full text-left text-sm">
         <thead class="font-mono text-[11px] uppercase tracking-[0.08em] text-muted">

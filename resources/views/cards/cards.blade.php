@@ -1,7 +1,7 @@
 {{--
     The card database. Search, filters and the view are a GET form and links (App\Cards\CardQuery builds the URLs),
     so every state has its own URL and the page works without JS. resources/js/card-database.js (cardDatabase) loads
-    results in place and appends the next page when "Load more cards" scrolls into view.
+    results and pages in place.
 --}}
 
 <x-layout :title="$seriesLabel.' cards'" :game-switch="false" :js="['resources/js/card-database.js']">
@@ -68,11 +68,6 @@
         <div id="card-results" class="results-region" x-ref="region" @click="onRegionClick($event)" :aria-busy="loading">
             @include('cards.partials.results')
         </div>
-
-        <p x-show="loadingMore" x-cloak aria-live="polite" class="flex items-center justify-center gap-3 text-sm text-muted">
-            <span class="spinner" aria-hidden="true"></span>
-            Loading more cards…
-        </p>
 
         <x-deck.card-preview />
     </div>

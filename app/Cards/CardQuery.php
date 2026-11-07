@@ -3,7 +3,6 @@
 namespace App\Cards;
 
 use App\Support\QueryInput;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
 
 /**
@@ -103,16 +102,6 @@ final class CardQuery
     public function url(array $changes = []): string
     {
         return route('cards.index', [$this->series, ...$this->queryWith($changes)]);
-    }
-
-    public function pageUrl(int $page): string
-    {
-        return route('cards.index', [$this->series, ...$this->queryWith(), 'page' => $page]);
-    }
-
-    public function nextPageUrl(LengthAwarePaginator $cards): ?string
-    {
-        return $cards->hasMorePages() ? $this->pageUrl($cards->currentPage() + 1) : null;
     }
 
     /**

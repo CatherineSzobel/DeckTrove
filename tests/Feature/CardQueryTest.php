@@ -3,7 +3,6 @@
 use App\Cards\CardQuery;
 use App\Cards\FilterChoices;
 use Illuminate\Http\Request;
-use Illuminate\Pagination\LengthAwarePaginator;
 
 function cardQuery(array $params = [], string $series = 'yugioh', array $options = []): CardQuery
 {
@@ -44,16 +43,7 @@ test('links keep the search and filters, and drop the page and the default view'
         ->and($query->url(['race' => null]))->toBe(route('cards.index', ['yugioh', 'search' => 'blue']))
         ->and($query->url(['view' => 'list']))->toBe(route('cards.index', ['yugioh', 'view' => 'list', 'search' => 'blue', 'race' => 'Dragon']))
         ->and($query->url(['view' => 'images']))->toBe(route('cards.index', ['yugioh', 'view' => 'images', 'search' => 'blue', 'race' => 'Dragon']))
-        ->and($query->url(['view' => 'full']))->toBe(route('cards.index', ['yugioh', 'search' => 'blue', 'race' => 'Dragon']))
-        ->and($query->pageUrl(3))->toBe(route('cards.index', ['yugioh', 'search' => 'blue', 'race' => 'Dragon', 'page' => 3]));
-});
-
-test('the next page link exists only when there are more pages', function () {
-    $query = cardQuery(['search' => 'blue']);
-
-    expect($query->nextPageUrl(new LengthAwarePaginator([], 100, 24, 2)))
-        ->toBe(route('cards.index', ['yugioh', 'search' => 'blue', 'page' => 3]))
-        ->and($query->nextPageUrl(new LengthAwarePaginator([], 30, 24, 2)))->toBeNull();
+        ->and($query->url(['view' => 'full']))->toBe(route('cards.index', ['yugioh', 'search' => 'blue', 'race' => 'Dragon']));
 });
 
 test('view links come in the order Full, Images, List and mark the current one', function () {
